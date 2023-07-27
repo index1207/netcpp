@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="winapi">
+      <UniqueIdentifier>{02485cd7-a320-45e4-a3a9-fabe3b4eb1e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="net">
+      <UniqueIdentifier>{f4781336-e66d-4889-9615-73c548eadd2f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="net\IPAddress.hpp" />
+    <ClInclude Include="net\CorePch.hpp" />
+    <ClInclude Include="net\IPEndPoint.hpp" />
+    <ClInclude Include="net\Socket.hpp" />
+    <ClInclude Include="net\SocketAsyncEventArgs.hpp" />
+    <ClInclude Include="net\SocketEx.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="IPAddress.cpp" />
+    <ClCompile Include="IPEndPoint.cpp" />
+    <ClCompile Include="Socket.cpp" />
+    <ClCompile Include="SocketAsyncEventArgs.cpp" />
+    <ClCompile Include="SocketEx.cpp" />
+  </ItemGroup>
+</Project>
