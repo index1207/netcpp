@@ -8,9 +8,6 @@ LPFN_DISCONNECTEX Extension::DisconnectEx = NULL;
 
 void Extension::Initialize()
 {
-	WSADATA wsaData;
-	assert(WSAStartup(MAKEWORD(2, 2), &wsaData) == 0);
-
 	auto dummy = std::make_unique<Socket>(AddressFamily::Internetwork, SocketType::Stream, ProtocolType::Tcp);
 	assert(BindExtensionFunction(dummy->GetHandle(), WSAID_ACCEPTEX, reinterpret_cast<PVOID*>(&AcceptEx)));
 	assert(BindExtensionFunction(dummy->GetHandle(), WSAID_CONNECTEX, reinterpret_cast<PVOID*>(&ConnectEx)));

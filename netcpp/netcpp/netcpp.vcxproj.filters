@@ -19,6 +19,7 @@
     <ClInclude Include="net\netcpp.hpp">
       <Filter>net</Filter>
     </ClInclude>
+    <ClInclude Include="net\NetCore.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp" />
@@ -27,5 +28,6 @@
     <ClCompile Include="src\Socket.cpp" />
     <ClCompile Include="src\SocketAsyncEventArgs.cpp" />
     <ClCompile Include="src\Extension.cpp" />
+    <ClCompile Include="src\NetCore.cpp" />
   </ItemGroup>
 </Project>

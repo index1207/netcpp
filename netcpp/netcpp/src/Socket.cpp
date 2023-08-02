@@ -2,6 +2,7 @@
 #include <Socket.hpp>
 #include <Extension.hpp>
 #include <SocketAsyncEventArgs.hpp>
+#include <NetCore.hpp>
 
 #include <iostream>
 #include <chrono>
@@ -25,8 +26,8 @@ Socket::Socket(SOCKET s)
 
 Socket::~Socket()
 {
-	/*if(_sock != INVALID_SOCKET)
-		closesocket(_sock);*/
+	if(_sock != INVALID_SOCKET)
+		closesocket(_sock);
 }
 
 void Socket::Connect(IPEndPoint ep)
@@ -44,6 +45,7 @@ void Socket::Bind(IPEndPoint ep)
 void Socket::Listen(int backlog)
 {
 	assert(SOCKET_ERROR != listen(_sock, backlog));
+	GNetCore.Register(this);
 }
 
 SOCKET Socket::GetHandle() const
@@ -59,10 +61,10 @@ Socket Socket::Accept()
 bool Socket::AcceptAsync(class SocketAsyncEventArgs* args)
 {
 	args->type = EventType::Accept;
-	args->AcceptSocket = Socket(AddressFamily::Internetwork, SocketType::Stream, ProtocolType::Tcp);
+	args->AcceptSocket = std::make_unique<Socket>(AddressFamily::Internetwork, SocketType::Stream, ProtocolType::Tcp);
 
 	DWORD dwByte = 0;
-	if (!Extension::AcceptEx(_sock, args->AcceptSocket.GetHandle(), buffer, 0,
+	if (!Extension::AcceptEx(_sock, args->AcceptSocket->GetHandle(), buffer, 0,
 		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
 		&dwByte, reinterpret_cast<LPOVERLAPPED>(args)))
 	{
