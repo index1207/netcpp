@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "net/Socket.hpp"
-#include "net/SocketEx.hpp"
-#include "net/SocketAsyncEventArgs.hpp"
+#include <Socket.hpp>
+#include <Extension.hpp>
+#include <SocketAsyncEventArgs.hpp>
 
 #include <iostream>
 #include <chrono>
@@ -62,7 +62,7 @@ bool Socket::AcceptAsync(class SocketAsyncEventArgs* args)
 	args->AcceptSocket = Socket(AddressFamily::Internetwork, SocketType::Stream, ProtocolType::Tcp);
 
 	DWORD dwByte = 0;
-	if (!SocketEx::AcceptEx(_sock, args->AcceptSocket.GetHandle(), buffer, 0,
+	if (!Extension::AcceptEx(_sock, args->AcceptSocket.GetHandle(), buffer, 0,
 		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
 		&dwByte, reinterpret_cast<LPOVERLAPPED>(args)))
 	{

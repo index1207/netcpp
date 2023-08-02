@@ -9,20 +9,23 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h" />
+    <ClInclude Include="src\pch.h" />
     <ClInclude Include="net\IPAddress.hpp" />
     <ClInclude Include="net\CorePch.hpp" />
     <ClInclude Include="net\IPEndPoint.hpp" />
     <ClInclude Include="net\Socket.hpp" />
     <ClInclude Include="net\SocketAsyncEventArgs.hpp" />
-    <ClInclude Include="net\SocketEx.hpp" />
+    <ClInclude Include="net\Extension.hpp" />
+    <ClInclude Include="net\netcpp.hpp">
+      <Filter>net</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="pch.cpp" />
-    <ClCompile Include="IPAddress.cpp" />
-    <ClCompile Include="IPEndPoint.cpp" />
-    <ClCompile Include="Socket.cpp" />
-    <ClCompile Include="SocketAsyncEventArgs.cpp" />
-    <ClCompile Include="SocketEx.cpp" />
+    <ClCompile Include="src\pch.cpp" />
+    <ClCompile Include="src\IPAddress.cpp" />
+    <ClCompile Include="src\IPEndPoint.cpp" />
+    <ClCompile Include="src\Socket.cpp" />
+    <ClCompile Include="src\SocketAsyncEventArgs.cpp" />
+    <ClCompile Include="src\Extension.cpp" />
   </ItemGroup>
 </Project>

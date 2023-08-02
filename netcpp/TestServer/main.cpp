@@ -1,10 +1,6 @@
 ﻿#include <iostream>
 
-#include <WinSock2.h>
-#include "../netcpp/net/CorePch.hpp"
-#include "../netcpp/net/Socket.hpp"
-#include "../netcpp/net/SocketEx.hpp"
-#include "../netcpp/net/SocketAsyncEventArgs.hpp"
+#include <net/netcpp.hpp>
 
 using namespace std;
 
@@ -36,7 +32,9 @@ void WorkerMain(HANDLE hcp)
 
 Socket listenSock;
 
-void OnConnect(SocketAsyncEventArgs* args)
+void PostAccept(SocketAsyncEventArgs* args);
+
+void CompleteAccept(SocketAsyncEventArgs* args)
 {
 	if (args->SocketError == SocketError::Success)
 	{
@@ -48,13 +46,22 @@ void OnConnect(SocketAsyncEventArgs* args)
 	listenSock.AcceptAsync(args);
 }
 
+void PostAccept(SocketAsyncEventArgs* args)
+{
+	args->AcceptSocket = Socket();
+
+	bool pending = listenSock.AcceptAsync(args);
+	if (!pending)
+		CompleteAccept(args);
+}
+
 int main()
 {
-	SocketEx::Initialize();
+	Extension::Initialize();
 
 	listenSock = Socket(AddressFamily::Internetwork, SocketType::Stream, ProtocolType::Tcp);
-	listenSock.Bind(IPEndPoint(IPAddress::Any, 7777));
-	listenSock.Listen(4);
+	listenSock.Bind(IPEndPoint(IPAddress::Parse("127.0.0.1"), 7777));
+	listenSock.Listen(SOMAXCONN);
 
 	std::cout << "Listening\n";
 
@@ -64,18 +71,10 @@ int main()
 
 	std::thread worker(WorkerMain, hcp);
 
-	SocketAsyncEventArgs* args = new SocketAsyncEventArgs();
-	args->Completed = OnConnect;
-	bool pending = listenSock.AcceptAsync(args);
-	if (!pending)
-		OnConnect(args);
-
-	while (true)
-	{
-		this_thread::sleep_for(100ms);
-	}
+	SocketAsyncEventArgs args;
+	args.Completed = CompleteAccept;
+	PostAccept(&args);
 
 	worker.join();
-
 	return 0;
 }

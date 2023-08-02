@@ -21,24 +21,25 @@
   <ItemGroup>
     <ClInclude Include="net\IPAddress.hpp" />
     <ClInclude Include="net\IPEndPoint.hpp" />
+    <ClInclude Include="net\netcpp.hpp" />
     <ClInclude Include="net\CorePch.hpp" />
-    <ClInclude Include="net\SocketEx.hpp" />
-    <ClInclude Include="pch.h" />
+    <ClInclude Include="net\Extension.hpp" />
+    <ClInclude Include="src\pch.h" />
     <ClInclude Include="net\Socket.hpp" />
     <ClInclude Include="net\SocketAsyncEventArgs.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="IPAddress.cpp" />
-    <ClCompile Include="IPEndPoint.cpp" />
-    <ClCompile Include="SocketEx.cpp" />
-    <ClCompile Include="pch.cpp">
+    <ClCompile Include="src\IPAddress.cpp" />
+    <ClCompile Include="src\IPEndPoint.cpp" />
+    <ClCompile Include="src\Extension.cpp" />
+    <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Socket.cpp" />
-    <ClCompile Include="SocketAsyncEventArgs.cpp" />
+    <ClCompile Include="src\Socket.cpp" />
+    <ClCompile Include="src\SocketAsyncEventArgs.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -101,6 +102,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)netcpp\net\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -119,6 +121,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)netcpp\net\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -137,6 +140,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)netcpp\net\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -158,6 +162,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)netcpp\net\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>

@@ -1,12 +1,12 @@
 #include "pch.h"
-#include "net/SocketEx.hpp"
-#include "net/Socket.hpp"
+#include <Extension.hpp>
+#include <Socket.hpp>
 
-LPFN_ACCEPTEX SocketEx::AcceptEx = NULL;
-LPFN_CONNECTEX SocketEx::ConnectEx = NULL;
-LPFN_DISCONNECTEX SocketEx::DisconnectEx = NULL;
+LPFN_ACCEPTEX Extension::AcceptEx = NULL;
+LPFN_CONNECTEX Extension::ConnectEx = NULL;
+LPFN_DISCONNECTEX Extension::DisconnectEx = NULL;
 
-void SocketEx::Initialize()
+void Extension::Initialize()
 {
 	WSADATA wsaData;
 	assert(WSAStartup(MAKEWORD(2, 2), &wsaData) == 0);
@@ -18,7 +18,7 @@ void SocketEx::Initialize()
 	dummy.release();
 }
 
-bool SocketEx::BindExtensionFunction(SOCKET s, GUID guid, PVOID* func)
+bool Extension::BindExtensionFunction(SOCKET s, GUID guid, PVOID* func)
 {
 	DWORD dwBytes;
 	return SOCKET_ERROR != WSAIoctl(s, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid, sizeof(GUID), func, sizeof(*func), &dwBytes, NULL, NULL);

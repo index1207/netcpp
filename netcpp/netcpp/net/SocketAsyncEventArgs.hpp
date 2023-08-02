@@ -9,6 +9,7 @@ enum SocketError
 
 enum EventType
 {
+	None,
 	Accept,
 	Send,
 	Recv

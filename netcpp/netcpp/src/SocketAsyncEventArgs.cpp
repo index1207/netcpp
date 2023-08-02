@@ -1,8 +1,10 @@
 #include "pch.h"
-#include "net/SocketAsyncEventArgs.hpp"
+#include <SocketAsyncEventArgs.hpp>
 
 SocketAsyncEventArgs::SocketAsyncEventArgs()
 {
 	memset(this, 0, sizeof(WSAOVERLAPPED));
+
 	this->SocketError = (::SocketError)-1;
+	type = EventType::None;
 }

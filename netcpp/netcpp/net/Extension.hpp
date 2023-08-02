@@ -1,6 +1,6 @@
 #pragma once
 
-class SocketEx
+class Extension
 {
 public:
 	static LPFN_ACCEPTEX AcceptEx;

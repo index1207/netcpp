@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "net/IPAddress.hpp"
+#include <IPAddress.hpp>
 
 IPAddress IPAddress::Any = IPAddress::Parse(INADDR_ANY);
 IPAddress IPAddress::None = IPAddress::Parse(INADDR_NONE);
