@@ -4,11 +4,18 @@
 #include "net/SocketAsyncEventArgs.hpp"
 
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 Socket::Socket(AddressFamily af, SocketType st, ProtocolType pt)
 {
 	_sock = WSASocketW(int(af), int(st), int(pt), NULL, NULL, WSA_FLAG_OVERLAPPED);
 	assert(_sock != INVALID_SOCKET);
+}
+
+Socket::Socket()
+{
+
 }
 
 Socket::Socket(SOCKET s)
@@ -18,7 +25,8 @@ Socket::Socket(SOCKET s)
 
 Socket::~Socket()
 {
-	closesocket(_sock);
+	/*if(_sock != INVALID_SOCKET)
+		closesocket(_sock);*/
 }
 
 void Socket::Connect(IPEndPoint ep)
@@ -50,20 +58,16 @@ Socket Socket::Accept()
 
 bool Socket::AcceptAsync(class SocketAsyncEventArgs* args)
 {
-	SOCKET newClient{};
-	byte buffer[1 << 6] = { 0, };
+	args->type = EventType::Accept;
+	args->AcceptSocket = Socket(AddressFamily::Internetwork, SocketType::Stream, ProtocolType::Tcp);
+
 	DWORD dwByte = 0;
-	if (!SocketEx::AcceptEx(_sock, newClient, buffer, 0,
+	if (!SocketEx::AcceptEx(_sock, args->AcceptSocket.GetHandle(), buffer, 0,
 		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
-		&dwByte, reinterpret_cast<LPOVERLAPPED>(args)
-	))
+		&dwByte, reinterpret_cast<LPOVERLAPPED>(args)))
 	{
 		const auto err = WSAGetLastError();
-		args->socketError = (SocketError)err;
-
-		if (err == WSA_IO_PENDING)
-			return true;
-		return false;
-	}
+		return err == WSA_IO_PENDING;
+	}	
 	return false;
 }

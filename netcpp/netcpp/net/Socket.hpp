@@ -23,7 +23,7 @@ enum class ProtocolType
 class Socket
 {
 public:
-	Socket() = default;
+	Socket();
 	Socket(SOCKET s);
 	Socket(AddressFamily af, SocketType st, ProtocolType pt);
 	~Socket();
@@ -39,4 +39,5 @@ public:
 	bool AcceptAsync(class SocketAsyncEventArgs* args);
 private:
 	SOCKET _sock;
+	char buffer[1 << 6] = { 0, };
 };

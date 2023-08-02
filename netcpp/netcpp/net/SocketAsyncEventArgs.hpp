@@ -4,12 +4,23 @@
 
 enum SocketError
 {
-	Success = 0
+	Success,
 };
 
-class SocketAsyncEventArgs : public WSAOVERLAPPED 
+enum EventType
+{
+	Accept,
+	Send,
+	Recv
+};
+
+class SocketAsyncEventArgs : private WSAOVERLAPPED 
 {
 public:
-	Socket* acceptSocket;
-	SocketError socketError;
+	SocketAsyncEventArgs();
+public:
+	Socket AcceptSocket;
+	SocketError SocketError;
+	std::function<void(SocketAsyncEventArgs*)> Completed;
+	EventType type;
 };

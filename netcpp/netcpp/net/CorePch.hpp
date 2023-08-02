@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 #include <span>
 #include <vector>
@@ -13,6 +14,7 @@
 #include <memory>
 #include <functional>
 #include <future>
+#include <queue>
 
 #include <cmath>
 #include <cassert>

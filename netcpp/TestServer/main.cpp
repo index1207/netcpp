@@ -8,43 +8,74 @@
 
 using namespace std;
 
-void PostAccept(Socket& sock, SocketAsyncEventArgs& args);
-
-void CompleteAccept(void* sender, Socket& sock, SocketAsyncEventArgs& args)
+void WorkerMain(HANDLE hcp)
 {
-	if (args.socketError == SocketError::Success)
+	while (true)
 	{
-		cout << "Connected!\n";
+		DWORD numOfBytes = 0;
+		ULONG key = 0;
+		SocketAsyncEventArgs* args = nullptr;
+		if (!::GetQueuedCompletionStatus(hcp, &numOfBytes, reinterpret_cast<PULONG_PTR>(&key), reinterpret_cast<LPOVERLAPPED*>(&args), INFINITE))
+		{
+			if (numOfBytes == 0)
+				std::cout << "Disconnected\n";
+			continue;
+		}
+		else
+			args->SocketError = SocketError::Success;
+
+		switch (args->type)
+		{
+		case EventType::Accept:
+			CreateIoCompletionPort((HANDLE)args->AcceptSocket.GetHandle(), hcp, NULL, NULL);
+			break;
+		}
+		args->Completed(args);
 	}
-	
-	PostAccept(sock, args);
 }
 
-void PostAccept(Socket& sock, SocketAsyncEventArgs& args)
-{
-	args.acceptSocket = nullptr;
+Socket listenSock;
 
-	bool pending = sock.AcceptAsync(&args);
-	if (!pending)
-		CompleteAccept(nullptr, sock, args);
+void OnConnect(SocketAsyncEventArgs* args)
+{
+	if (args->SocketError == SocketError::Success)
+	{
+		cout << "Connected\n";
+	}
+	else
+		cout << "AcceptEx Error.\n";
+
+	listenSock.AcceptAsync(args);
 }
 
 int main()
 {
-	WSADATA wsaData;
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
-	{
-
-	}
-
 	SocketEx::Initialize();
 
-	auto sock = Socket(AddressFamily::Internetwork, SocketType::Stream, ProtocolType::Tcp);
-	sock.Bind(IPEndPoint(IPAddress::Any, 7777));
-	sock.Listen(4);
+	listenSock = Socket(AddressFamily::Internetwork, SocketType::Stream, ProtocolType::Tcp);
+	listenSock.Bind(IPEndPoint(IPAddress::Any, 7777));
+	listenSock.Listen(4);
 
-	SocketAsyncEventArgs args;
-	PostAccept(sock, args);
+	std::cout << "Listening\n";
 
-	WSACleanup();
+	auto hcp = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
+
+	CreateIoCompletionPort((HANDLE)listenSock.GetHandle(), hcp, NULL, NULL);
+
+	std::thread worker(WorkerMain, hcp);
+
+	SocketAsyncEventArgs* args = new SocketAsyncEventArgs();
+	args->Completed = OnConnect;
+	bool pending = listenSock.AcceptAsync(args);
+	if (!pending)
+		OnConnect(args);
+
+	while (true)
+	{
+		this_thread::sleep_for(100ms);
+	}
+
+	worker.join();
+
+	return 0;
 }
