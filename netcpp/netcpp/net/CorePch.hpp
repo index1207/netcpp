@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <string>
 #include <span>
 #include <vector>
@@ -22,3 +21,16 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <mswsock.h>
+
+#ifndef _DEBUG
+#pragma warning(disable: 6011)
+#undef assert
+#define assert(expr) \
+{ \
+	if(!(expr)) \
+	{ \
+		int* ptr = nullptr; \
+		*ptr = 0xABCDEF; \
+	} \
+}
+#endif // _DEBUG

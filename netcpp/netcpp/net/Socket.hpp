@@ -26,18 +26,29 @@ public:
 	Socket();
 	Socket(SOCKET s);
 	Socket(AddressFamily af, SocketType st, ProtocolType pt);
+	Socket(AddressFamily af, SocketType st);
 	~Socket();
 public:
-	void Connect(IPEndPoint ep);
+	bool Connect(IPEndPoint ep);
 
-	void Bind(IPEndPoint ep);
-	void Listen(int backlog = SOMAXCONN);
+	bool Bind(IPEndPoint ep);
+	bool Listen(int backlog = SOMAXCONN);
 public:
 	SOCKET GetHandle() const;
+	IPEndPoint* GetRemoteEndPoint() const;
+	IPEndPoint* GetLocalEndPoint() const;
+public:
+	void SetRemoteEndPoint(IPEndPoint ep);
+	void SetLocalEndPoint(IPEndPoint ep);
 public:
 	Socket Accept();
 	bool AcceptAsync(class SocketAsyncEventArgs* args);
+public:
+	void SetBlocking(bool isBlocking);
 private:
+	IPEndPoint* _remoteEp;
+	IPEndPoint* _localEp;
 	SOCKET _sock;
-	char buffer[1 << 6] = { 0, };
+public:
+	char buffer[(sizeof(SOCKADDR_IN)+16)*2] = {0,};
 };

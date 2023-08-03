@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "Socket.hpp"
 
 enum SocketError

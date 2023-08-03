@@ -1,6 +1,8 @@
 #pragma once
 
-#include "CorePch.hpp"
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#include <MSWSock.h>
 
 #include "Extension.hpp"
 #include "NetCore.hpp"

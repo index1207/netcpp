@@ -29,5 +29,6 @@
     <ClCompile Include="src\SocketAsyncEventArgs.cpp" />
     <ClCompile Include="src\Extension.cpp" />
     <ClCompile Include="src\NetCore.cpp" />
+    <ClCompile Include="src\netcpp.cpp" />
   </ItemGroup>
 </Project>
