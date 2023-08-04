@@ -27,7 +27,7 @@ void BindAcceptExSockAddress(SocketAsyncEventArgs* args)
 	IPAddress* localAdr = nullptr,
 		* remoteAdr = nullptr;
 	int l_len = 0, r_len = 0;
-	Extension::GetAcceptExSockaddrs(&args->AcceptSocket->buffer, 0,
+	Extension::GetAcceptExSockaddrs(&args->AcceptSocket->_AcceptexBuffer, 0,
 		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
 		reinterpret_cast<SOCKADDR**>(&localAdr), &l_len,
 		reinterpret_cast<SOCKADDR**>(&remoteAdr), &r_len);
@@ -57,8 +57,11 @@ unsigned CALLBACK Worker(HANDLE hcp)
 		case EventType::Accept:
 			GNetCore.Register(args->AcceptSocket.get());
 			BindAcceptExSockAddress(args);
+			args->Completed(args);
+			break;
+		case EventType::Connect:
+			args->Completed(args);
 			break;
 		}
-		args->Completed(args);
 	}
 }

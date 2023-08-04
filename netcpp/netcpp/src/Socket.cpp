@@ -45,12 +45,13 @@ bool Socket::Bind(IPEndPoint ep)
 {
 	_localEp = &ep;
 	IPAddress ipAdr = _localEp->GetAddress();
-	return SOCKET_ERROR != bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN));
+	const auto& ret = bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN));
+	GNetCore.Register(this);
+	return SOCKET_ERROR != ret;
 }
 
 bool Socket::Listen(int backlog)
 {
-	GNetCore.Register(this);
 	return SOCKET_ERROR != listen(_sock, backlog);
 }
 
@@ -90,7 +91,8 @@ bool Socket::AcceptAsync(class SocketAsyncEventArgs* args)
 	args->AcceptSocket = std::make_unique<Socket>(AddressFamily::Internetwork, SocketType::Stream);
 
 	DWORD dwByte = 0;
-	if (!Extension::AcceptEx(_sock, args->AcceptSocket->GetHandle(), &args->AcceptSocket->buffer, 0,
+	ZeroMemory(&args->AcceptSocket->_AcceptexBuffer, (sizeof(SOCKADDR_IN) + 16) * 2);
+	if (!Extension::AcceptEx(_sock, args->AcceptSocket->GetHandle(), args->AcceptSocket->_AcceptexBuffer, 0,
 		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
 		&dwByte, reinterpret_cast<LPOVERLAPPED>(args)))
 	{
@@ -100,8 +102,28 @@ bool Socket::AcceptAsync(class SocketAsyncEventArgs* args)
 	return false;
 }
 
+bool Socket::ConnectAsync(SocketAsyncEventArgs* args)
+{
+	args->type = EventType::Connect;
+
+	Bind(IPEndPoint(IPAddress::Any, 0));
+	IPAddress ipAdr = args->EndPoint.GetAddress();
+	DWORD dw;
+	if (!Extension::ConnectEx(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN), NULL, NULL, &dw, reinterpret_cast<LPOVERLAPPED>(args)))
+	{
+		const auto err = WSAGetLastError();
+		return WSA_IO_PENDING == err;
+	}
+	return false;
+}
+
 void Socket::SetBlocking(bool isBlocking)
 {
 	u_long opt = !isBlocking;
 	ioctlsocket(_sock, FIONBIO, &opt);
+}
+
+bool Socket::IsValid() const
+{
+	return INVALID_SOCKET != _sock;
 }

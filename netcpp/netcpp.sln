@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "netcpp", "netcpp\netcpp.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestServer", "TestServer\TestServer.vcxproj", "{AA13C1AB-B107-46AC-BD37-6257D51163A6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DummyClient", "DummyClient\DummyClient.vcxproj", "{88910DA9-4336-4FC5-B86D-59FAE55CE452}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,14 @@ Global
 		{AA13C1AB-B107-46AC-BD37-6257D51163A6}.Release|x64.Build.0 = Release|x64
 		{AA13C1AB-B107-46AC-BD37-6257D51163A6}.Release|x86.ActiveCfg = Release|Win32
 		{AA13C1AB-B107-46AC-BD37-6257D51163A6}.Release|x86.Build.0 = Release|Win32
+		{88910DA9-4336-4FC5-B86D-59FAE55CE452}.Debug|x64.ActiveCfg = Debug|x64
+		{88910DA9-4336-4FC5-B86D-59FAE55CE452}.Debug|x64.Build.0 = Debug|x64
+		{88910DA9-4336-4FC5-B86D-59FAE55CE452}.Debug|x86.ActiveCfg = Debug|Win32
+		{88910DA9-4336-4FC5-B86D-59FAE55CE452}.Debug|x86.Build.0 = Debug|Win32
+		{88910DA9-4336-4FC5-B86D-59FAE55CE452}.Release|x64.ActiveCfg = Release|x64
+		{88910DA9-4336-4FC5-B86D-59FAE55CE452}.Release|x64.Build.0 = Release|x64
+		{88910DA9-4336-4FC5-B86D-59FAE55CE452}.Release|x86.ActiveCfg = Release|Win32
+		{88910DA9-4336-4FC5-B86D-59FAE55CE452}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

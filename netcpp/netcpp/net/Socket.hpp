@@ -29,8 +29,6 @@ public:
 	Socket(AddressFamily af, SocketType st);
 	~Socket();
 public:
-	bool Connect(IPEndPoint ep);
-
 	bool Bind(IPEndPoint ep);
 	bool Listen(int backlog = SOMAXCONN);
 public:
@@ -43,12 +41,16 @@ public:
 public:
 	Socket Accept();
 	bool AcceptAsync(class SocketAsyncEventArgs* args);
+
+	bool Connect(IPEndPoint ep);
+	bool ConnectAsync(class SocketAsyncEventArgs* args);
 public:
 	void SetBlocking(bool isBlocking);
+	bool IsValid() const;
 private:
 	IPEndPoint* _remoteEp;
 	IPEndPoint* _localEp;
 	SOCKET _sock;
 public:
-	char buffer[(sizeof(SOCKADDR_IN)+16)*2] = {0,};
+	char _AcceptexBuffer[(sizeof(SOCKADDR_IN)+16)*2] = "";
 };

@@ -2,40 +2,41 @@
 #include <format>
 #include <cassert>
 
-
 #include <WinSock2.h>
 #include <MSWSock.h>
 #include <net/netcpp.hpp>
 
 using namespace std;
 
-//unique_ptr<Socket> listenSock;
-//
-//void PostAccept(SocketAsyncEventArgs* args);
-//
-//void CompleteAccept(SocketAsyncEventArgs* args)
-//{
-//	if (args->SocketError == SocketError::Success)
-//	{
-//		cout << "Connected " << args->AcceptSocket->GetRemoteEndPoint()->ToString() << "\n";
-//	}
-//	else
-//		cout << format("AcceptAsync error. ({})\n", WSAGetLastError());
-//
-//	(args);
-//}
-//
-//void PostAccept(SocketAsyncEventArgs* args)
-//{
-//	bool pending = listenSock->AcceptAsync(args);
-//	if (!pending)
-//		CompleteAccept(args);
-//}
+unique_ptr<Socket> listenSock;
+
+void PostAccept(SocketAsyncEventArgs* args);
+
+void CompleteAccept(SocketAsyncEventArgs* args)
+{
+	if (args->SocketError == SocketError::Success)
+	{
+		cout << "Connected " << args->AcceptSocket->GetRemoteEndPoint()->ToString() << "\n";
+	}
+	else
+		cout << format("AcceptAsync error. ({})\n", WSAGetLastError());
+
+	PostAccept(args);
+}
+
+void PostAccept(SocketAsyncEventArgs* args)
+{
+	args->AcceptSocket = nullptr;
+
+	bool pending = listenSock->AcceptAsync(args);
+	if (!pending)
+		CompleteAccept(args);
+}
 
 int main()
 {
-	auto listenSock = make_unique<Socket>(AddressFamily::Internetwork, SocketType::Stream);
-	if (!listenSock->Bind(IPEndPoint(IPAddress::Parse("127.0.0.1"), 7777)))
+	listenSock = make_unique<Socket>(AddressFamily::Internetwork, SocketType::Stream);
+	if (!listenSock->Bind(IPEndPoint(IPAddress::Any, 7777)))
 		return -1;
 	if (!listenSock->Listen(SOMAXCONN))
 		return -1;
@@ -43,10 +44,8 @@ int main()
 	std::cout << "Listening\n";
 
 	SocketAsyncEventArgs args;
-	args.Completed = [=](SocketAsyncEventArgs* args) {
-		cout << "Connected " << args->AcceptSocket->GetLocalEndPoint()->ToString() << "\n";
-	};
-	listenSock->AcceptAsync(&args);
+	args.Completed = CompleteAccept;
+	PostAccept(&args);
 
 	while (true)
 	{
