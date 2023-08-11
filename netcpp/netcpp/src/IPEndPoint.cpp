@@ -37,7 +37,7 @@ IPEndPoint IPEndPoint::Parse(SOCKADDR_IN addr)
 {
 	IPEndPoint ep;
 	ep.SetPort(ntohs(addr.sin_port));
-	ep.SetAddress(IPAddress::Parse(addr));
+	ep.SetAddress(addr);
 
 	return ep;
 }

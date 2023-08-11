@@ -3,6 +3,8 @@
 #include "SocketAsyncEvent.hpp"
 #include "Extension.hpp"
 
+#include <iostream>
+
 NetCore GNetCore;
 
 NetCore::NetCore()

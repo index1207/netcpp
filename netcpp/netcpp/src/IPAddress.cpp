@@ -26,14 +26,6 @@ IPAddress IPAddress::Parse(int ipNum)
 	return addr;
 }
 
-IPAddress IPAddress::Parse(SOCKADDR_IN addr)
-{
-	IPAddress ipaddr;
-	memcpy(&ipaddr, &addr, sizeof(SOCKADDR_IN));
-
-	return ipaddr;
-}
-
 IPAddress::IPAddress()
 {
 	ZeroMemory(this, sizeof(SOCKADDR_IN));

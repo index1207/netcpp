@@ -41,14 +41,14 @@ void Socket::Close()
 
 bool Socket::Connect(IPEndPoint ep)
 {
-	_remoteEp = &ep;
+	SetRemoteEndPoint(ep);
 	IPAddress ipAdr = _remoteEp->GetAddress();
 	return SOCKET_ERROR != connect(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN));
 }
 
 bool Socket::Bind(IPEndPoint ep)
 {
-	_localEp = &ep;
+	SetLocalEndPoint(ep);
 	IPAddress ipAdr = _localEp->GetAddress();
 	const auto& ret = bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN));
 	GNetCore.Register(this);
@@ -67,22 +67,22 @@ SOCKET Socket::GetHandle() const
 
 IPEndPoint* Socket::GetRemoteEndPoint() const
 {
-	return _remoteEp;
+	return _remoteEp.get();
 }
 
 IPEndPoint* Socket::GetLocalEndPoint() const
 {
-	return _localEp;
+	return _localEp.get();
 }
 
 void Socket::SetRemoteEndPoint(IPEndPoint ep)
 {
-	_remoteEp = &ep;
+	_remoteEp = std::make_unique<IPEndPoint>(ep);
 }
 
 void Socket::SetLocalEndPoint(IPEndPoint ep)
 {
-	_localEp = &ep;
+	_localEp = std::make_unique<IPEndPoint>(ep);
 }
 
 Socket Socket::Accept()

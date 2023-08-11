@@ -11,10 +11,8 @@ public:
 public:
 	static IPAddress Parse(std::string_view ipStr);
 	static IPAddress Parse(int ipNum);
-	static IPAddress Parse(SOCKADDR_IN addr);
 public:
 	IPAddress();
-private:
 	IPAddress(const SOCKADDR_IN& adrs);
 public:
 	std::string ToString() const;
