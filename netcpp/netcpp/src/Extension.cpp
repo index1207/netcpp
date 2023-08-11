@@ -15,6 +15,7 @@ void Extension::Initialize()
 	assert(BindExtensionFunction(dummy.GetHandle(), WSAID_CONNECTEX, reinterpret_cast<PVOID*>(&ConnectEx)));
 	assert(BindExtensionFunction(dummy.GetHandle(), WSAID_DISCONNECTEX, reinterpret_cast<PVOID*>(&DisconnectEx)));
 	assert(BindExtensionFunction(dummy.GetHandle(), WSAID_GETACCEPTEXSOCKADDRS, reinterpret_cast<PVOID*>(&Extension::GetAcceptExSockaddrs)));
+	dummy.Close();
 }
 
 bool Extension::BindExtensionFunction(SOCKET s, GUID guid, PVOID* func)

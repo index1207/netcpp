@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "NetCore.hpp"
-#include "SocketAsyncEventArgs.hpp"
+#include "SocketAsyncEvent.hpp"
 #include "Extension.hpp"
 
 NetCore GNetCore;
@@ -22,18 +22,18 @@ void NetCore::Register(class Socket* s)
 	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(s->GetHandle()), _hcp, NULL, NULL);
 }
 
-void BindAcceptExSockAddress(SocketAsyncEventArgs* args)
+void BindAcceptExSockAddress(AcceptEvent* args)
 {
-	IPAddress* localAdr = nullptr,
+	SOCKADDR_IN* localAdr = nullptr,
 		* remoteAdr = nullptr;
 	int l_len = 0, r_len = 0;
-	Extension::GetAcceptExSockaddrs(&args->AcceptSocket->_AcceptexBuffer, 0,
+	Extension::GetAcceptExSockaddrs(args->AcceptSocket->_AcceptexBuffer, 0,
 		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
 		reinterpret_cast<SOCKADDR**>(&localAdr), &l_len,
 		reinterpret_cast<SOCKADDR**>(&remoteAdr), &r_len);
 
-	args->AcceptSocket->SetRemoteEndPoint(IPEndPoint(*remoteAdr, ntohs(reinterpret_cast<SOCKADDR_IN*>(remoteAdr)->sin_port)));
-	args->AcceptSocket->SetLocalEndPoint(IPEndPoint(*localAdr, ntohs(reinterpret_cast<SOCKADDR_IN*>(localAdr)->sin_port)));
+	args->AcceptSocket->SetRemoteEndPoint(IPEndPoint::Parse(*remoteAdr));
+	args->AcceptSocket->SetLocalEndPoint(IPEndPoint::Parse(*localAdr));
 }
 
 unsigned CALLBACK Worker(HANDLE hcp)
@@ -42,26 +42,30 @@ unsigned CALLBACK Worker(HANDLE hcp)
 	{
 		DWORD numOfBytes = 0;
 		ULONG key = 0;
-		SocketAsyncEventArgs* args = nullptr;
-		if (!::GetQueuedCompletionStatus(hcp, &numOfBytes, reinterpret_cast<PULONG_PTR>(&key), reinterpret_cast<LPOVERLAPPED*>(&args), INFINITE))
+		SocketAsyncEvent* event = nullptr;
+		if (!::GetQueuedCompletionStatus(hcp, &numOfBytes, reinterpret_cast<PULONG_PTR>(&key), reinterpret_cast<LPOVERLAPPED*>(&event), INFINITE))
 		{
-			if (numOfBytes == 0)
-				// Disconnect
 			continue;
 		}
-		else
-			args->SocketError = SocketError::Success;
 
-		switch (args->type)
+		event->socketError = Success;
+
+		switch (event->eventType)
 		{
-		case EventType::Accept:
-			GNetCore.Register(args->AcceptSocket.get());
-			BindAcceptExSockAddress(args);
-			args->Completed(args);
-			break;
-		case EventType::Connect:
-			args->Completed(args);
-			break;
+			case EventType::Accept:
+			{
+				AcceptEvent* acceptEvent = (AcceptEvent*)event;
+				GNetCore.Register(acceptEvent->AcceptSocket.get());
+				BindAcceptExSockAddress(acceptEvent);
+				acceptEvent->Completed(acceptEvent);
+				break;
+			}
+			case EventType::Connect:
+			{
+				ConnectEvent* connectEvent = (ConnectEvent*)event;
+				connectEvent->Completed(connectEvent);
+				break;
+			}
 		}
 	}
 }

@@ -3,7 +3,7 @@
 
 #include <net/netcpp.hpp>
 
-void CompleteConnect(SocketAsyncEventArgs* args)
+void CompleteConnect(SocketAsyncEvent* args)
 {
 	if (args->SocketError == SocketError::Success)
 	{
@@ -17,12 +17,11 @@ void CompleteConnect(SocketAsyncEventArgs* args)
 
 int main()
 {
-	std::this_thread::sleep_for(std::chrono::duration<double>(0.1));
 	auto sock = Socket(AddressFamily::Internetwork, SocketType::Stream, ProtocolType::Tcp);
 	if (!sock.IsValid())
 		return -1;
 
-	SocketAsyncEventArgs args;
+	SocketAsyncEvent args;
 	args.EndPoint = IPEndPoint(IPAddress::Loopback, 7777);
 	args.Completed = CompleteConnect;
 	if (!sock.ConnectAsync(&args))

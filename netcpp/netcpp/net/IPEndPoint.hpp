@@ -15,6 +15,7 @@ public:
 	void SetPort(u_short port);
 	std::string ToString() const;
 public:
+	static IPEndPoint Parse(SOCKADDR_IN addr);
 	static bool TryParse(std::string_view s, IPEndPoint* ep);
 private:
 	int _port;

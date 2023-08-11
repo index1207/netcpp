@@ -10,21 +10,22 @@ using namespace std;
 
 unique_ptr<Socket> listenSock;
 
-void PostAccept(SocketAsyncEventArgs* args);
+void PostAccept(AcceptEvent* args);
 
-void CompleteAccept(SocketAsyncEventArgs* args)
+void CompleteAccept(SocketAsyncEvent* event)
 {
-	if (args->SocketError == SocketError::Success)
+	if (event->socketError == SocketError::Success)
 	{
-		cout << "Connected " << args->AcceptSocket->GetRemoteEndPoint()->ToString() << "\n";
+		AcceptEvent* acceptEvent = (AcceptEvent*)event;
+		cout << "Connected " << acceptEvent->AcceptSocket->GetRemoteEndPoint()->ToString() << "\n";
 	}
 	else
 		cout << format("AcceptAsync error. ({})\n", WSAGetLastError());
 
-	PostAccept(args);
+	PostAccept((AcceptEvent*)event);
 }
 
-void PostAccept(SocketAsyncEventArgs* args)
+void PostAccept(AcceptEvent* args)
 {
 	args->AcceptSocket = nullptr;
 
@@ -36,16 +37,16 @@ void PostAccept(SocketAsyncEventArgs* args)
 int main()
 {
 	listenSock = make_unique<Socket>(AddressFamily::Internetwork, SocketType::Stream);
-	if (!listenSock->Bind(IPEndPoint(IPAddress::Any, 7777)))
+	if (!listenSock->Bind(IPEndPoint(IPAddress::Parse("192.168.0.67"), 7777)))
 		return -1;
 	if (!listenSock->Listen(SOMAXCONN))
 		return -1;
 
 	std::cout << "Listening\n";
 
-	SocketAsyncEventArgs args;
-	args.Completed = CompleteAccept;
-	PostAccept(&args);
+	AcceptEvent acceptEvent;
+	acceptEvent.Completed = CompleteAccept;
+	PostAccept(&acceptEvent);
 
 	while (true)
 	{

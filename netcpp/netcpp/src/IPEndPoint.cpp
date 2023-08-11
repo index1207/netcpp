@@ -33,6 +33,15 @@ std::string IPEndPoint::ToString() const
 	return _ipAdr.ToString() + ":" + std::to_string(_port);
 }
 
+IPEndPoint IPEndPoint::Parse(SOCKADDR_IN addr)
+{
+	IPEndPoint ep;
+	ep.SetPort(ntohs(addr.sin_port));
+	ep.SetAddress(IPAddress::Parse(addr));
+
+	return ep;
+}
+
 bool IPEndPoint::TryParse(std::string_view s, IPEndPoint* ep)
 {
 	auto idx = s.find(":");

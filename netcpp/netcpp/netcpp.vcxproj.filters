@@ -20,15 +20,16 @@
       <Filter>net</Filter>
     </ClInclude>
     <ClInclude Include="net\NetCore.hpp" />
+    <ClInclude Include="net\SocketAsyncEvent.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp" />
     <ClCompile Include="src\IPAddress.cpp" />
     <ClCompile Include="src\IPEndPoint.cpp" />
     <ClCompile Include="src\Socket.cpp" />
-    <ClCompile Include="src\SocketAsyncEventArgs.cpp" />
     <ClCompile Include="src\Extension.cpp" />
     <ClCompile Include="src\NetCore.cpp" />
     <ClCompile Include="src\netcpp.cpp" />
+    <ClCompile Include="src\SocketAsyncEvent.cpp" />
   </ItemGroup>
 </Project>

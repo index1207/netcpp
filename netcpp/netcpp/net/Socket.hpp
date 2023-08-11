@@ -20,6 +20,13 @@ enum class ProtocolType
 	Udp = IPPROTO_UDP
 };
 
+struct ArraySegment
+{
+	byte* Array;
+	int Offset;
+	int Count;
+};
+
 class Socket
 {
 public:
@@ -29,6 +36,8 @@ public:
 	Socket(AddressFamily af, SocketType st);
 	~Socket();
 public:
+	void Close();
+
 	bool Bind(IPEndPoint ep);
 	bool Listen(int backlog = SOMAXCONN);
 public:
@@ -40,10 +49,16 @@ public:
 	void SetLocalEndPoint(IPEndPoint ep);
 public:
 	Socket Accept();
-	bool AcceptAsync(class SocketAsyncEventArgs* args);
+	bool AcceptAsync(class AcceptEvent* args);
 
 	bool Connect(IPEndPoint ep);
-	bool ConnectAsync(class SocketAsyncEventArgs* args);
+	bool ConnectAsync(class ConnectEvent* args);
+
+	int Send(ArraySegment seg);
+	bool SendAsync(class SendEvent* args);
+
+	int Receive(ArraySegment seg);
+	bool ReceiveAsync(class ReceiveEvent* args);
 public:
 	void SetBlocking(bool isBlocking);
 	bool IsValid() const;

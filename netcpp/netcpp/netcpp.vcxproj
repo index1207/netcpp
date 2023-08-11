@@ -25,6 +25,7 @@
     <ClInclude Include="net\netcpp.hpp" />
     <ClInclude Include="net\CorePch.hpp" />
     <ClInclude Include="net\Extension.hpp" />
+    <ClInclude Include="net\SocketAsyncEvent.hpp" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="net\Socket.hpp" />
     <ClInclude Include="net\SocketAsyncEventArgs.hpp" />
@@ -42,7 +43,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\Socket.cpp" />
-    <ClCompile Include="src\SocketAsyncEventArgs.cpp" />
+    <ClCompile Include="src\SocketAsyncEvent.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include <Socket.hpp>
 #include <Extension.hpp>
-#include <SocketAsyncEventArgs.hpp>
+#include <SocketAsyncEvent.hpp>
 #include <NetCore.hpp>
 
 #include <iostream>
@@ -32,6 +32,11 @@ Socket::~Socket()
 {
 	if(_sock != INVALID_SOCKET)
 		closesocket(_sock);
+}
+
+void Socket::Close()
+{
+	closesocket(_sock);
 }
 
 bool Socket::Connect(IPEndPoint ep)
@@ -85,9 +90,8 @@ Socket Socket::Accept()
 	return accept(_sock, nullptr, nullptr);
 }
 
-bool Socket::AcceptAsync(class SocketAsyncEventArgs* args)
+bool Socket::AcceptAsync(AcceptEvent* args)
 {
-	args->type = EventType::Accept;
 	args->AcceptSocket = std::make_unique<Socket>(AddressFamily::Internetwork, SocketType::Stream);
 
 	DWORD dwByte = 0;
@@ -102,10 +106,8 @@ bool Socket::AcceptAsync(class SocketAsyncEventArgs* args)
 	return false;
 }
 
-bool Socket::ConnectAsync(SocketAsyncEventArgs* args)
+bool Socket::ConnectAsync(ConnectEvent* args)
 {
-	args->type = EventType::Connect;
-
 	Bind(IPEndPoint(IPAddress::Any, 0));
 	IPAddress ipAdr = args->EndPoint.GetAddress();
 	DWORD dw;
@@ -114,6 +116,17 @@ bool Socket::ConnectAsync(SocketAsyncEventArgs* args)
 		const auto err = WSAGetLastError();
 		return WSA_IO_PENDING == err;
 	}
+	return false;
+}
+
+int Socket::Send(ArraySegment seg)
+{
+	return send(_sock, (const char*)(seg.Array + seg.Offset), seg.Count, NULL);
+}
+
+bool Socket::SendAsync(SendEvent* args)
+{
+	WSABUF wsaBuf;
 	return false;
 }
 
