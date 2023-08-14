@@ -34,13 +34,13 @@ void BindAcceptExSockAddress(AcceptEvent* args)
 	SOCKADDR_IN* localAdr = nullptr,
 		* remoteAdr = nullptr;
 	int l_len = 0, r_len = 0;
-	Extension::GetAcceptExSockaddrs(args->AcceptSocket->_AcceptexBuffer, 0,
+	Extension::GetAcceptExSockaddrs(args->acceptSocket->_AcceptexBuffer, 0,
 		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
 		reinterpret_cast<SOCKADDR**>(&localAdr), &l_len,
 		reinterpret_cast<SOCKADDR**>(&remoteAdr), &r_len);
 
-	args->AcceptSocket->SetRemoteEndPoint(IPEndPoint::Parse(*remoteAdr));
-	args->AcceptSocket->SetLocalEndPoint(IPEndPoint::Parse(*localAdr));
+	args->acceptSocket->SetRemoteEndPoint(IPEndPoint::Parse(*remoteAdr));
+	args->acceptSocket->SetLocalEndPoint(IPEndPoint::Parse(*localAdr));
 }
 
 unsigned CALLBACK Worker(HANDLE hcp)
@@ -62,7 +62,7 @@ unsigned CALLBACK Worker(HANDLE hcp)
 			case EventType::Accept:
 			{
 				auto acceptEvent = static_cast<AcceptEvent*>(event);
-				GNetCore.Register(acceptEvent->AcceptSocket->GetHandle());
+				GNetCore.Register(acceptEvent->acceptSocket->GetHandle());
 				BindAcceptExSockAddress(acceptEvent);
 
 				acceptEvent->completed(acceptEvent);
@@ -77,8 +77,8 @@ unsigned CALLBACK Worker(HANDLE hcp)
 			case EventType::Send:
 			{
 				auto sendEvent = static_cast<SendEvent*>(event);
-				sendEvent->completed(sendEvent);
 				sendEvent->sentBytes = numOfBytes;
+				sendEvent->completed(sendEvent);
 				break;
 			}
 			case EventType::Recv:

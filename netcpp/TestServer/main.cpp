@@ -30,13 +30,13 @@ void OnCompletedAccept(SocketAsyncEvent* event)
 	if (event->socketError == SocketError::Success)
 	{
 		auto acceptEvent = static_cast<AcceptEvent*>(event);
-		cout << "Connected " << acceptEvent->AcceptSocket->GetRemoteEndPoint().ToString() << "\n";
+		cout << "Connected " << acceptEvent->acceptSocket->GetRemoteEndPoint().ToString() << "\n";
 
 		char buf[1024] = "";
 		auto recvEvent = new RecvEvent;
 		recvEvent->segment = ArraySegment(buf, 0, 1024);
 		recvEvent->completed = OnCompletedReceive;
-		if (!acceptEvent->AcceptSocket->ReceiveAsync(recvEvent))
+		if (!acceptEvent->acceptSocket->ReceiveAsync(recvEvent));
 			OnCompletedReceive(recvEvent);
 	}
 	else
@@ -47,7 +47,7 @@ void OnCompletedAccept(SocketAsyncEvent* event)
 
 void PostAccept(AcceptEvent* args)
 {
-	args->AcceptSocket = nullptr;
+	args->acceptSocket = nullptr;
 
 	bool pending = listenSock->AcceptAsync(args);
 	if (!pending)

@@ -32,7 +32,7 @@ class AcceptEvent : public SocketAsyncEvent
 {
 public:
 	AcceptEvent() : SocketAsyncEvent(EventType::Accept) { }
-	Socket* AcceptSocket;
+	std::shared_ptr<Socket> acceptSocket;
 };
 
 class ConnectEvent : public SocketAsyncEvent

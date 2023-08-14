@@ -69,10 +69,10 @@ public:
 public:
 	void SetBlocking(bool isBlocking);
 	bool IsValid() const;
+public:
+	char _AcceptexBuffer[(sizeof(SOCKADDR_IN)+16)*2] = "";
 private:
 	std::unique_ptr<IPEndPoint> _remoteEp;
 	std::unique_ptr<IPEndPoint> _localEp;
 	SOCKET _sock;
-public:
-	char _AcceptexBuffer[(sizeof(SOCKADDR_IN)+16)*2] = "";
 };

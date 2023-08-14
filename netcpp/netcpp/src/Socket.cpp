@@ -92,11 +92,11 @@ Socket Socket::Accept()
 
 bool Socket::AcceptAsync(AcceptEvent* event)
 {
-	event->AcceptSocket = new Socket(AddressFamily::Internetwork, SocketType::Stream);
+	event->acceptSocket = new Socket(AddressFamily::Internetwork, SocketType::Stream);
 
 	DWORD dwByte = 0;
-	ZeroMemory(&event->AcceptSocket->_AcceptexBuffer, (sizeof(SOCKADDR_IN) + 16) * 2);
-	if (!Extension::AcceptEx(_sock, event->AcceptSocket->GetHandle(), event->AcceptSocket->_AcceptexBuffer, 0,
+	ZeroMemory(&event->acceptSocket->_AcceptexBuffer, (sizeof(SOCKADDR_IN) + 16) * 2);
+	if (!Extension::AcceptEx(_sock, event->acceptSocket->GetHandle(), event->acceptSocket->_AcceptexBuffer, 0,
 		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
 		&dwByte, event))
 	{
