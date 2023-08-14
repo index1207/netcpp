@@ -32,14 +32,14 @@ class AcceptEvent : public SocketAsyncEvent
 {
 public:
 	AcceptEvent() : SocketAsyncEvent(EventType::Accept) { }
-	std::shared_ptr<Socket> acceptSocket;
+	Socket* acceptSocket;
 };
 
 class ConnectEvent : public SocketAsyncEvent
 {
 public:
 	ConnectEvent() : SocketAsyncEvent(EventType::Connect) { }
-	IPEndPoint EndPoint;
+	IPEndPoint endPoint;
 };
 
 class SendEvent : public SocketAsyncEvent

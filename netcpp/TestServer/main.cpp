@@ -36,7 +36,7 @@ void OnCompletedAccept(SocketAsyncEvent* event)
 		auto recvEvent = new RecvEvent;
 		recvEvent->segment = ArraySegment(buf, 0, 1024);
 		recvEvent->completed = OnCompletedReceive;
-		if (!acceptEvent->acceptSocket->ReceiveAsync(recvEvent));
+		if (!acceptEvent->acceptSocket->ReceiveAsync(recvEvent))
 			OnCompletedReceive(recvEvent);
 	}
 	else

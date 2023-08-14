@@ -109,7 +109,7 @@ bool Socket::AcceptAsync(AcceptEvent* event)
 bool Socket::ConnectAsync(ConnectEvent* event)
 {
 	Bind(IPEndPoint(IPAddress::Any, 0));
-	IPAddress ipAdr = event->EndPoint.GetAddress();
+	IPAddress ipAdr = event->endPoint.GetAddress();
 	DWORD dw;
 	if (!Extension::ConnectEx(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN), NULL, NULL, &dw, event))
 	{
@@ -136,7 +136,7 @@ bool Socket::SendAsync(SendEvent* args)
 		const int err = WSAGetLastError();
 		return err == WSA_IO_PENDING;
 	}
-	return false;
+	return true;
 }
 
 int Socket::Receive(ArraySegment seg)
@@ -156,7 +156,7 @@ bool Socket::ReceiveAsync(RecvEvent* args)
 		const int err = WSAGetLastError();
 		return err == WSA_IO_PENDING;
 	}
-	return false;
+	return true;
 }
 
 void Socket::SetBlocking(bool isBlocking)

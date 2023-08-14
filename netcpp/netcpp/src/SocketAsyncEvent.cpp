@@ -4,7 +4,7 @@
 void SocketAsyncEvent::Init()
 {
 	memset(this, 0, sizeof(WSAOVERLAPPED));
-	this->socketError = (::SocketError)0;
+	this->socketError = (::SocketError)-1;
 }
 
 SocketAsyncEvent::SocketAsyncEvent(EventType eventType)

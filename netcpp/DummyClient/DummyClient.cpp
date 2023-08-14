@@ -10,7 +10,7 @@ void OnCompletedSend(SocketAsyncEvent* event)
 	if (event->socketError == SocketError::Success)
 	{
 		auto sendEvent = static_cast<SendEvent*>(event);
-		std::cout << "Sent " << sendEvent->sentBytes << "Bytes.\n";
+		std::cout << "Sent " << sendEvent->sentBytes << " Bytes.\n";
 	}
 	else
 	{
@@ -25,31 +25,35 @@ void OnCompletedConnect(SocketAsyncEvent* event)
 	{
 		std::cout << "Connected!\n";
 
-		std::string data = "Hello";
+		/*std::string data = "Hello";
 		SendEvent* sendEvent = new SendEvent;
 		sendEvent->completed = OnCompletedSend;
 		sendEvent->segment = ArraySegment(data.data(), 0, data.size());
 		if (!sock->SendAsync(sendEvent))
-			OnCompletedSend(sendEvent);
+			OnCompletedSend(sendEvent);*/
 	}
 	else
 	{
-		std::cout << "Connect Error\n";
+		std::cout << "Connect Error";
 	}
 }
 
 int main()
 {
 	Sleep(500);
-	sock = new Socket(AddressFamily::Internetwork, SocketType::Stream, ProtocolType::Tcp);
-	if (!sock->IsValid())
-		return -1;
+	for (int i = 0; i < 100; ++i)
+	{
+		auto sock = new Socket(AddressFamily::Internetwork, SocketType::Stream, ProtocolType::Tcp);
+		if (!sock->IsValid())
+			return -1;
 
-	ConnectEvent args;
-	args.EndPoint = IPEndPoint(IPAddress::Loopback, 8080);
-	args.completed = OnCompletedConnect;
-	if (!sock->ConnectAsync(&args))
-		OnCompletedConnect(&args);
+		ConnectEvent args;
+		args.endPoint = IPEndPoint(IPAddress::Loopback, 8080);
+		args.completed = OnCompletedConnect;
+		if (!sock->ConnectAsync(&args))
+			OnCompletedConnect(&args);
+		Sleep(1);
+	}
 
 	while (true)
 	{
