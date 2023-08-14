@@ -10,7 +10,7 @@
 
 Socket::Socket(AddressFamily af, SocketType st, ProtocolType pt)
 {
-	_sock = WSASocket(int(af), int(st), int(pt), NULL, NULL, WSA_FLAG_OVERLAPPED);
+	_sock = socket(int(af), int(st), int(pt));
 	assert(_sock != INVALID_SOCKET);
 }
 
@@ -65,14 +65,14 @@ SOCKET Socket::GetHandle() const
 	return _sock;
 }
 
-IPEndPoint* Socket::GetRemoteEndPoint() const
+IPEndPoint Socket::GetRemoteEndPoint() const
 {
-	return _remoteEp.get();
+	return *_remoteEp;
 }
 
-IPEndPoint* Socket::GetLocalEndPoint() const
+IPEndPoint Socket::GetLocalEndPoint() const
 {
-	return _localEp.get();
+	return *_localEp;
 }
 
 void Socket::SetRemoteEndPoint(IPEndPoint ep)
@@ -90,15 +90,15 @@ Socket Socket::Accept()
 	return accept(_sock, nullptr, nullptr);
 }
 
-bool Socket::AcceptAsync(AcceptEvent* args)
+bool Socket::AcceptAsync(AcceptEvent* event)
 {
-	args->AcceptSocket = std::make_unique<Socket>(AddressFamily::Internetwork, SocketType::Stream);
+	event->AcceptSocket = new Socket(AddressFamily::Internetwork, SocketType::Stream);
 
 	DWORD dwByte = 0;
-	ZeroMemory(&args->AcceptSocket->_AcceptexBuffer, (sizeof(SOCKADDR_IN) + 16) * 2);
-	if (!Extension::AcceptEx(_sock, args->AcceptSocket->GetHandle(), args->AcceptSocket->_AcceptexBuffer, 0,
+	ZeroMemory(&event->AcceptSocket->_AcceptexBuffer, (sizeof(SOCKADDR_IN) + 16) * 2);
+	if (!Extension::AcceptEx(_sock, event->AcceptSocket->GetHandle(), event->AcceptSocket->_AcceptexBuffer, 0,
 		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
-		&dwByte, reinterpret_cast<LPOVERLAPPED>(args)))
+		&dwByte, event))
 	{
 		const auto err = WSAGetLastError();
 		return err == WSA_IO_PENDING;
@@ -106,12 +106,12 @@ bool Socket::AcceptAsync(AcceptEvent* args)
 	return false;
 }
 
-bool Socket::ConnectAsync(ConnectEvent* args)
+bool Socket::ConnectAsync(ConnectEvent* event)
 {
 	Bind(IPEndPoint(IPAddress::Any, 0));
-	IPAddress ipAdr = args->EndPoint.GetAddress();
+	IPAddress ipAdr = event->EndPoint.GetAddress();
 	DWORD dw;
-	if (!Extension::ConnectEx(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN), NULL, NULL, &dw, reinterpret_cast<LPOVERLAPPED>(args)))
+	if (!Extension::ConnectEx(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN), NULL, NULL, &dw, event))
 	{
 		const auto err = WSAGetLastError();
 		return WSA_IO_PENDING == err;
@@ -121,12 +121,41 @@ bool Socket::ConnectAsync(ConnectEvent* args)
 
 int Socket::Send(ArraySegment seg)
 {
-	return send(_sock, (const char*)(seg.Array + seg.Offset), seg.Count, NULL);
+	return send(_sock, seg.Array + seg.Offset, seg.Count, NULL);
 }
 
 bool Socket::SendAsync(SendEvent* args)
 {
 	WSABUF wsaBuf;
+	wsaBuf.buf = args->segment.Array + args->segment.Offset;
+	wsaBuf.len = args->segment.Count;
+
+	DWORD sentBytes = 0, flags = 0;
+	if (SOCKET_ERROR == WSASend(_sock, &wsaBuf, 1, &sentBytes, flags, args, NULL))
+	{
+		const int err = WSAGetLastError();
+		return err == WSA_IO_PENDING;
+	}
+	return false;
+}
+
+int Socket::Receive(ArraySegment seg)
+{
+	return 0 < recv(_sock, seg.Array + seg.Offset, seg.Count, NULL);
+}
+
+bool Socket::ReceiveAsync(RecvEvent* args)
+{
+	WSABUF wsaBuf;
+	wsaBuf.buf = args->segment.Array + args->segment.Offset;
+	wsaBuf.len = args->segment.Count;
+
+	DWORD recvBytes = 0, flags = 0;
+	if (SOCKET_ERROR == WSARecv(_sock, &wsaBuf, 1, &recvBytes, &flags, args, NULL))
+	{
+		const int err = WSAGetLastError();
+		return err == WSA_IO_PENDING;
+	}
 	return false;
 }
 

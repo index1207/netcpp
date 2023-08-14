@@ -25,14 +25,14 @@ public:
 	SocketAsyncEvent(EventType eventType);
 	EventType eventType;
 	SocketError socketError;
-	std::function<void(SocketAsyncEvent*)> Completed;
+	std::function<void(SocketAsyncEvent*)> completed;
 };
 
 class AcceptEvent : public SocketAsyncEvent
 {
 public:
 	AcceptEvent() : SocketAsyncEvent(EventType::Accept) { }
-	std::unique_ptr<Socket> AcceptSocket;
+	Socket* AcceptSocket;
 };
 
 class ConnectEvent : public SocketAsyncEvent
@@ -40,4 +40,19 @@ class ConnectEvent : public SocketAsyncEvent
 public:
 	ConnectEvent() : SocketAsyncEvent(EventType::Connect) { }
 	IPEndPoint EndPoint;
+};
+
+class SendEvent : public SocketAsyncEvent
+{
+public:
+	SendEvent() : SocketAsyncEvent(EventType::Send) { }
+	ArraySegment segment;
+	int sentBytes = 0;
+};
+
+class RecvEvent : public SocketAsyncEvent
+{
+public:
+	RecvEvent() : SocketAsyncEvent(EventType::Recv) { }
+	ArraySegment segment;
 };

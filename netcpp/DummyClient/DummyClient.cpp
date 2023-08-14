@@ -3,9 +3,9 @@
 
 #include <net/netcpp.hpp>
 
-void CompleteConnect(SocketAsyncEvent* args)
+void OnCompletedConnect(SocketAsyncEvent* event)
 {
-	if (args->SocketError == SocketError::Success)
+	if (event->socketError == SocketError::Success)
 	{
 		std::cout << "Connected!\n";
 	}
@@ -15,17 +15,38 @@ void CompleteConnect(SocketAsyncEvent* args)
 	}
 }
 
+void OnCompletedSend(SocketAsyncEvent* event)
+{
+	if (event->socketError == SocketError::Success)
+	{
+		auto sendEvent = static_cast<SendEvent*>(event);
+		std::cout << "Sent " << sendEvent->sentBytes << "Bytes.\n";
+	}
+	else
+	{
+		std::cout << "Connect Error\n";
+	}
+}
+
 int main()
 {
+	Sleep(500);
 	auto sock = Socket(AddressFamily::Internetwork, SocketType::Stream, ProtocolType::Tcp);
 	if (!sock.IsValid())
 		return -1;
 
-	SocketAsyncEvent args;
-	args.EndPoint = IPEndPoint(IPAddress::Loopback, 7777);
-	args.Completed = CompleteConnect;
+	ConnectEvent args;
+	args.EndPoint = IPEndPoint(IPAddress::Loopback, 8080);
+	args.completed = OnCompletedConnect;
 	if (!sock.ConnectAsync(&args))
-		CompleteConnect(&args);
+		OnCompletedConnect(&args);
+	
+	std::string data = "Hello";
+	SendEvent sendEvent;
+	sendEvent.completed = OnCompletedSend;
+	sendEvent.segment = ArraySegment(data.data(), 0, data.size());
+	if (!sock.SendAsync(&sendEvent))
+		OnCompletedSend(&sendEvent);
 
 	while (true)
 	{

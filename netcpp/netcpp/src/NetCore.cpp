@@ -21,7 +21,12 @@ NetCore::~NetCore()
 
 void NetCore::Register(class Socket* s)
 {
-	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(s->GetHandle()), _hcp, NULL, NULL);
+	Register(s->GetHandle());
+}
+
+void NetCore::Register(SOCKET s)
+{
+	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(s), _hcp, NULL, NULL);
 }
 
 void BindAcceptExSockAddress(AcceptEvent* args)
@@ -56,16 +61,30 @@ unsigned CALLBACK Worker(HANDLE hcp)
 		{
 			case EventType::Accept:
 			{
-				AcceptEvent* acceptEvent = (AcceptEvent*)event;
-				GNetCore.Register(acceptEvent->AcceptSocket.get());
+				auto acceptEvent = static_cast<AcceptEvent*>(event);
+				GNetCore.Register(acceptEvent->AcceptSocket->GetHandle());
 				BindAcceptExSockAddress(acceptEvent);
-				acceptEvent->Completed(acceptEvent);
+
+				acceptEvent->completed(acceptEvent);
 				break;
 			}
 			case EventType::Connect:
 			{
-				ConnectEvent* connectEvent = (ConnectEvent*)event;
-				connectEvent->Completed(connectEvent);
+				auto connectEvent = static_cast<ConnectEvent*>(event);
+				connectEvent->completed(connectEvent);
+				break;
+			}
+			case EventType::Send:
+			{
+				auto sendEvent = static_cast<SendEvent*>(event);
+				sendEvent->completed(sendEvent);
+				sendEvent->sentBytes = numOfBytes;
+				break;
+			}
+			case EventType::Recv:
+			{
+				auto recvEvent = static_cast<RecvEvent*>(event);
+				recvEvent->completed(recvEvent);
 				break;
 			}
 		}

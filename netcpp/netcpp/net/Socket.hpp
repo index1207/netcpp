@@ -22,7 +22,14 @@ enum class ProtocolType
 
 struct ArraySegment
 {
-	byte* Array;
+	ArraySegment() = default;
+	explicit ArraySegment(char* array, int offset, int count)
+	{
+		Array = array;
+		Offset = offset;
+		Count = count;
+	}
+	char* Array;
 	int Offset;
 	int Count;
 };
@@ -42,23 +49,23 @@ public:
 	bool Listen(int backlog = SOMAXCONN);
 public:
 	SOCKET GetHandle() const;
-	IPEndPoint* GetRemoteEndPoint() const;
-	IPEndPoint* GetLocalEndPoint() const;
+	IPEndPoint GetRemoteEndPoint() const;
+	IPEndPoint GetLocalEndPoint() const;
 public:
 	void SetRemoteEndPoint(IPEndPoint ep);
 	void SetLocalEndPoint(IPEndPoint ep);
 public:
 	Socket Accept();
-	bool AcceptAsync(class AcceptEvent* args);
+	bool AcceptAsync(class AcceptEvent* acceptEvent);
 
 	bool Connect(IPEndPoint ep);
-	bool ConnectAsync(class ConnectEvent* args);
+	bool ConnectAsync(class ConnectEvent* connectEvent);
 
 	int Send(ArraySegment seg);
-	bool SendAsync(class SendEvent* args);
+	bool SendAsync(class SendEvent* sendEvent);
 
 	int Receive(ArraySegment seg);
-	bool ReceiveAsync(class ReceiveEvent* args);
+	bool ReceiveAsync(class RecvEvent* recvEvent);
 public:
 	void SetBlocking(bool isBlocking);
 	bool IsValid() const;
