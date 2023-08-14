@@ -20,17 +20,17 @@ int main()
 	std::cout << "Listening\n";
 
 	AcceptEvent acceptEvent;
-	acceptEvent.completed = [](SocketAsyncEvent* acceptEvent)
-    {
-        if (event->socketError == SocketError::Success)
+	acceptEvent.completed = [](SocketAsyncEvent* event)
         {
-            std::cout << "Accepted!\n";
-        }
-        else
-        {
-            std::cout << "Accept Error\n";
-        }
-    };
+	        if (event->socketError == SocketError::Success)
+	        {
+	            std::cout << "Accepted!\n";
+	        }
+	        else
+	        {
+	            std::cout << "Accept Error\n";
+	        }
+        };
 	listenSock.AcceptAsync(&acceptEvent);
 
 	while (true)
@@ -57,16 +57,16 @@ int main()
 	ConnectEvent args;
 	args.endPoint = IPEndPoint(IPAddress::Loopback, 8080);
 	args.completed = [](SocketAsyncEvent* event)
-    {
-        if (event->socketError == SocketError::Success)
-        {
-            std::cout << "Connected!\n";
-        }
-        else
-        {
-            std::cout << "Connect Error\n";
-        }
-    };
+	{
+		if (event->socketError == SocketError::Success)
+	        {
+	            std::cout << "Connected!\n";
+	        }
+	        else
+	        {
+	            std::cout << "Connect Error\n";
+	        }
+	};
 	sock.ConnectAsync(&args);
 
 	while (true)
