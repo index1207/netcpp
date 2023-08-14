@@ -1,7 +1,8 @@
 #include "pch.h"
-#include <Extension.hpp>
-#include <Socket.hpp>
-#include <iostream>
+#include "Extension.hpp"
+#include "Socket.hpp"
+
+using namespace net;
 
 LPFN_ACCEPTEX Extension::AcceptEx = NULL;
 LPFN_CONNECTEX Extension::ConnectEx = NULL;

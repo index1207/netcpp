@@ -2,16 +2,23 @@
 #include "NetCore.hpp"
 #include "SocketAsyncEvent.hpp"
 #include "Extension.hpp"
+#include "Agent.hpp"
 
-#include <iostream>
+using namespace net;
 
-NetCore GNetCore;
+NetCore net::GNetCore;
 
 NetCore::NetCore()
 {
 	_hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, NULL);
 
-	HANDLE thread = (HANDLE)::_beginthreadex(NULL, NULL, Worker, _hcp, 0, NULL);
+	SYSTEM_INFO info;
+	GetSystemInfo(&info);
+	for (int i = 0; i < info.dwNumberOfProcessors * 2; ++i)
+	{
+		HANDLE thread = (HANDLE)::_beginthreadex(NULL, NULL, Worker, _hcp, 0, NULL);
+		assert(thread);
+	}
 }
 
 NetCore::~NetCore()
@@ -29,12 +36,17 @@ void NetCore::Register(SOCKET s)
 	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(s), _hcp, NULL, NULL);
 }
 
+void net::NetCore::Register(Agent* agent)
+{
+	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(agent->GetSocket().GetHandle()), _hcp, (ULONG_PTR)agent, NULL);
+}
+
 void BindAcceptExSockAddress(AcceptEvent* args)
 {
 	SOCKADDR_IN* localAdr = nullptr,
 		* remoteAdr = nullptr;
 	int l_len = 0, r_len = 0;
-	Extension::GetAcceptExSockaddrs(args->acceptSocket->_AcceptexBuffer, 0,
+	Extension::GetAcceptExSockaddrs(args->_acceptexBuffer, 0,
 		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
 		reinterpret_cast<SOCKADDR**>(&localAdr), &l_len,
 		reinterpret_cast<SOCKADDR**>(&remoteAdr), &r_len);
@@ -43,14 +55,22 @@ void BindAcceptExSockAddress(AcceptEvent* args)
 	args->acceptSocket->SetLocalEndPoint(IPEndPoint::Parse(*localAdr));
 }
 
-unsigned CALLBACK Worker(HANDLE hcp)
+#define USE_AGENT
+
+#ifdef USE_AGENT
+using Key = Agent;
+#else
+using Key = ULONG_PTR;
+#endif
+
+unsigned CALLBACK net::Worker(HANDLE hcp)
 {
 	while (true)
 	{
-		DWORD numOfBytes = 0;
-		ULONG key = 0;
+		DWORD transfferredBytes = 0;
+		Key* agent = nullptr;
 		SocketAsyncEvent* event = nullptr;
-		if (!::GetQueuedCompletionStatus(hcp, &numOfBytes, reinterpret_cast<PULONG_PTR>(&key), reinterpret_cast<LPOVERLAPPED*>(&event), INFINITE))
+		if (!::GetQueuedCompletionStatus(hcp, &transfferredBytes, reinterpret_cast<PULONG_PTR>(&agent), reinterpret_cast<LPOVERLAPPED*>(&event), INFINITE))
 		{
 			continue;
 		}
@@ -62,28 +82,36 @@ unsigned CALLBACK Worker(HANDLE hcp)
 			case EventType::Accept:
 			{
 				auto acceptEvent = static_cast<AcceptEvent*>(event);
+#ifdef USE_AGENT
+				GNetCore.Register(agent);
+#else
 				GNetCore.Register(acceptEvent->acceptSocket->GetHandle());
-				BindAcceptExSockAddress(acceptEvent);
+#endif // USE_AGENT
 
+				BindAcceptExSockAddress(acceptEvent);
 				acceptEvent->completed(acceptEvent);
 				break;
 			}
 			case EventType::Connect:
 			{
 				auto connectEvent = static_cast<ConnectEvent*>(event);
+#ifdef USE_AGENT
+				agent->OnConnected();
+#endif
 				connectEvent->completed(connectEvent);
 				break;
 			}
 			case EventType::Send:
 			{
 				auto sendEvent = static_cast<SendEvent*>(event);
-				sendEvent->sentBytes = numOfBytes;
+				sendEvent->sentBytes = transfferredBytes;
 				sendEvent->completed(sendEvent);
 				break;
 			}
 			case EventType::Recv:
 			{
 				auto recvEvent = static_cast<RecvEvent*>(event);
+				recvEvent->recvBytes = transfferredBytes;
 				recvEvent->completed(recvEvent);
 				break;
 			}

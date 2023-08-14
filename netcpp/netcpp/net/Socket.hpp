@@ -2,77 +2,80 @@
 
 #include "IPEndPoint.hpp"
 
-enum class AddressFamily
+namespace net
 {
-	Internetwork = AF_INET,
-	Internetwork6 = AF_INET6
-};
-
-enum class SocketType
-{
-	Stream = SOCK_STREAM,
-	Dgram = SOCK_DGRAM
-};
-
-enum class ProtocolType
-{
-	Tcp = IPPROTO_TCP,
-	Udp = IPPROTO_UDP
-};
-
-struct ArraySegment
-{
-	ArraySegment() = default;
-	explicit ArraySegment(char* array, int offset, int count)
+	enum class AddressFamily
 	{
-		Array = array;
-		Offset = offset;
-		Count = count;
-	}
-	char* Array;
-	int Offset;
-	int Count;
-};
+		Internetwork = AF_INET,
+		Internetwork6 = AF_INET6
+	};
 
-class Socket
-{
-public:
-	Socket();
-	Socket(SOCKET s);
-	Socket(AddressFamily af, SocketType st, ProtocolType pt);
-	Socket(AddressFamily af, SocketType st);
-	~Socket();
-public:
-	void Close();
+	enum class SocketType
+	{
+		Stream = SOCK_STREAM,
+		Dgram = SOCK_DGRAM
+	};
 
-	bool Bind(IPEndPoint ep);
-	bool Listen(int backlog = SOMAXCONN);
-public:
-	SOCKET GetHandle() const;
-	IPEndPoint GetRemoteEndPoint() const;
-	IPEndPoint GetLocalEndPoint() const;
-public:
-	void SetRemoteEndPoint(IPEndPoint ep);
-	void SetLocalEndPoint(IPEndPoint ep);
-public:
-	Socket Accept();
-	bool AcceptAsync(class AcceptEvent* acceptEvent);
+	enum class ProtocolType
+	{
+		Tcp = IPPROTO_TCP,
+		Udp = IPPROTO_UDP
+	};
 
-	bool Connect(IPEndPoint ep);
-	bool ConnectAsync(class ConnectEvent* connectEvent);
+	struct ArraySegment
+	{
+		ArraySegment() = default;
+		explicit ArraySegment(char* array, int offset, int count)
+		{
+			Array = array;
+			Offset = offset;
+			Count = count;
+		}
+		char* Array;
+		int Offset;
+		int Count;
+	};
 
-	int Send(ArraySegment seg);
-	bool SendAsync(class SendEvent* sendEvent);
+	class Socket
+	{
+	public:
+		Socket();
+		Socket(AddressFamily af, SocketType st, ProtocolType pt);
+		Socket(AddressFamily af, SocketType st);
+		Socket(const Socket& sock);
+		~Socket();
+	public:
+		void SetHandle(SOCKET s);
 
-	int Receive(ArraySegment seg);
-	bool ReceiveAsync(class RecvEvent* recvEvent);
-public:
-	void SetBlocking(bool isBlocking);
-	bool IsValid() const;
-public:
-	char _AcceptexBuffer[(sizeof(SOCKADDR_IN)+16)*2] = "";
-private:
-	std::unique_ptr<IPEndPoint> _remoteEp;
-	std::unique_ptr<IPEndPoint> _localEp;
-	SOCKET _sock;
-};
+		void Close();
+
+		bool Bind(IPEndPoint ep);
+		bool Listen(int backlog = SOMAXCONN);
+	public:
+		SOCKET GetHandle() const;
+		IPEndPoint GetRemoteEndPoint() const;
+		IPEndPoint GetLocalEndPoint() const;
+	public:
+		void SetRemoteEndPoint(IPEndPoint ep);
+		void SetLocalEndPoint(IPEndPoint ep);
+	public:
+		Socket Accept();
+		bool AcceptAsync(class AcceptEvent* acceptEvent);
+
+		bool Connect(IPEndPoint ep);
+		bool ConnectAsync(class ConnectEvent* connectEvent);
+
+		int Send(ArraySegment seg);
+		bool SendAsync(class SendEvent* sendEvent);
+
+		int Receive(ArraySegment seg);
+		bool ReceiveAsync(class RecvEvent* recvEvent);
+	public:
+		void SetBlocking(bool isBlocking);
+		bool IsValid() const;
+	private:
+		std::unique_ptr<IPEndPoint> _remoteEp;
+		std::unique_ptr<IPEndPoint> _localEp;
+		SOCKET _sock;
+	};
+}

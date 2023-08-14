@@ -25,12 +25,5 @@
 #ifndef _DEBUG
 #pragma warning(disable: 6011)
 #undef assert
-#define assert(expr) \
-{ \
-	if(!(expr)) \
-	{ \
-		int* ptr = nullptr; \
-		*ptr = 0xABCDEF; \
-	} \
-}
+#define assert(expr) (expr)
 #endif // _DEBUG

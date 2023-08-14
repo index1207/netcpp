@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="winapi">
-      <UniqueIdentifier>{02485cd7-a320-45e4-a3a9-fabe3b4eb1e3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="net">
       <UniqueIdentifier>{f4781336-e66d-4889-9615-73c548eadd2f}</UniqueIdentifier>
     </Filter>
@@ -21,6 +18,7 @@
     </ClInclude>
     <ClInclude Include="net\NetCore.hpp" />
     <ClInclude Include="net\SocketAsyncEvent.hpp" />
+    <ClInclude Include="net\Agent.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp" />
@@ -31,5 +29,6 @@
     <ClCompile Include="src\NetCore.cpp" />
     <ClCompile Include="src\netcpp.cpp" />
     <ClCompile Include="src\SocketAsyncEvent.cpp" />
+    <ClCompile Include="src\Agent.cpp" />
   </ItemGroup>
 </Project>

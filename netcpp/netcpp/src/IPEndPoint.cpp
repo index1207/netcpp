@@ -1,5 +1,7 @@
 #include "pch.h"
-#include <IPEndPoint.hpp>
+#include "IPEndPoint.hpp"
+
+using namespace net;
 
 IPEndPoint::IPEndPoint(IPAddress ipAddress, u_short port) : _ipAdr(ipAddress), _port(port)
 {

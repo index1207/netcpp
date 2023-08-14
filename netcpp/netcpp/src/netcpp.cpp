@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "netcpp.hpp"
 
+using namespace net;
+
 class netcpp final
 {
 public:

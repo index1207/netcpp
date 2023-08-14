@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="net\Agent.hpp" />
     <ClInclude Include="net\NetCore.hpp" />
     <ClInclude Include="net\IPAddress.hpp" />
     <ClInclude Include="net\IPEndPoint.hpp" />
@@ -31,6 +32,7 @@
     <ClInclude Include="net\SocketAsyncEventArgs.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Agent.cpp" />
     <ClCompile Include="src\NetCore.cpp" />
     <ClCompile Include="src\IPAddress.cpp" />
     <ClCompile Include="src\IPEndPoint.cpp" />

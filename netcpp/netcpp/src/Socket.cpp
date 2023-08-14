@@ -1,12 +1,10 @@
 #include "pch.h"
-#include <Socket.hpp>
-#include <Extension.hpp>
-#include <SocketAsyncEvent.hpp>
-#include <NetCore.hpp>
+#include "Socket.hpp"
+#include "Extension.hpp"
+#include "SocketAsyncEvent.hpp"
+#include "NetCore.hpp"
 
-#include <iostream>
-#include <chrono>
-#include <thread>
+using namespace net;
 
 Socket::Socket(AddressFamily af, SocketType st, ProtocolType pt)
 {
@@ -18,25 +16,37 @@ Socket::Socket(AddressFamily af, SocketType st) : Socket(af, st, (ProtocolType)0
 {
 }
 
-Socket::Socket()
+Socket::Socket(const Socket& sock)
 {
-
+	_sock = sock._sock;
+	SetLocalEndPoint(sock.GetLocalEndPoint());
+	SetRemoteEndPoint(sock.GetRemoteEndPoint());
 }
 
-Socket::Socket(SOCKET s)
+Socket::Socket()
 {
-	_sock = s;
+	_sock = INVALID_SOCKET;
+	_localEp = nullptr;
+	_remoteEp = nullptr;
 }
 
 Socket::~Socket()
 {
-	if(_sock != INVALID_SOCKET)
-		closesocket(_sock);
+	Close();
+}
+
+void Socket::SetHandle(SOCKET s)
+{
+	_sock = s;
 }
 
 void Socket::Close()
 {
-	closesocket(_sock);
+	if (_sock != INVALID_SOCKET)
+	{
+		closesocket(_sock);
+		_sock = INVALID_SOCKET;
+	}
 }
 
 bool Socket::Connect(IPEndPoint ep)
@@ -87,7 +97,10 @@ void Socket::SetLocalEndPoint(IPEndPoint ep)
 
 Socket Socket::Accept()
 {
-	return accept(_sock, nullptr, nullptr);
+	Socket clientSock;
+	clientSock.SetHandle(accept(_sock, nullptr, nullptr));
+
+	return clientSock;
 }
 
 bool Socket::AcceptAsync(AcceptEvent* event)
@@ -95,8 +108,8 @@ bool Socket::AcceptAsync(AcceptEvent* event)
 	event->acceptSocket = new Socket(AddressFamily::Internetwork, SocketType::Stream);
 
 	DWORD dwByte = 0;
-	ZeroMemory(&event->acceptSocket->_AcceptexBuffer, (sizeof(SOCKADDR_IN) + 16) * 2);
-	if (!Extension::AcceptEx(_sock, event->acceptSocket->GetHandle(), event->acceptSocket->_AcceptexBuffer, 0,
+	ZeroMemory(&event->_acceptexBuffer, (sizeof(SOCKADDR_IN) + 16) * 2);
+	if (!Extension::AcceptEx(_sock, event->acceptSocket->GetHandle(), event->_acceptexBuffer, 0,
 		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
 		&dwByte, event))
 	{

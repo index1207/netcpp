@@ -7,6 +7,7 @@
 #include <net/netcpp.hpp>
 
 using namespace std;
+using namespace net;
 
 unique_ptr<Socket> listenSock;
 
@@ -17,7 +18,9 @@ void OnCompletedReceive(SocketAsyncEvent* event)
 	if (event->socketError == SocketError::Success)
 	{
 		auto recvEvent = static_cast<RecvEvent*>(event);
-		cout << "Received " << recvEvent->segment.Array << '\n';
+		if (recvEvent->recvBytes == 0)
+			cout << "Disconnected\n";
+		else cout << "Received " << recvEvent->segment.Array << '\n';
 	}
 	else
 	{
@@ -62,7 +65,7 @@ int main()
 	if (!listenSock->Listen(SOMAXCONN))
 		return -1;
 
-	std::cout << "Listening\n";
+	std::cout << format("Listening on {}\n", listenSock->GetLocalEndPoint().ToString());
 
 	for (int i = 0; i < 10; ++i)
 	{
