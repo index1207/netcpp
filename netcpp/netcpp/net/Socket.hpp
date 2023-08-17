@@ -60,6 +60,7 @@ namespace net
 		void SetLocalEndPoint(IPEndPoint ep);
 	public:
 		void Disconnect();
+		bool DisconnectAsync(class DisconnectEvent* disconnectEvent);
 
 		Socket Accept();
 		bool AcceptAsync(class AcceptEvent* acceptEvent);

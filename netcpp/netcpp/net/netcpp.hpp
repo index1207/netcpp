@@ -12,7 +12,5 @@
 #include "Socket.hpp"
 #include "SocketAsyncEvent.hpp"
 
-#ifdef USE_AGENT
 #include "Agent.hpp"
 #include "Listener.hpp"
-#endif // USE_AGENT

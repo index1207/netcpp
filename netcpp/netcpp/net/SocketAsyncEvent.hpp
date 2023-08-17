@@ -37,7 +37,7 @@ namespace net
 		{
 			ZeroMemory(_acceptexBuffer, sizeof(_acceptexBuffer));
 		}
-		Socket* acceptSocket;
+		std::shared_ptr<Socket> acceptSocket;
 		char _acceptexBuffer[(sizeof(SOCKADDR_IN) + 16) * 2];
 	};
 

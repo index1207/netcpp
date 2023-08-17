@@ -9,7 +9,6 @@ namespace net
 	{
 	public:
 		Agent() = default;
-		Agent(Socket s);
 		virtual ~Agent();
 	public:
 		virtual void OnSend(int len) abstract;
@@ -17,14 +16,15 @@ namespace net
 		virtual void OnConnected() abstract;
 		virtual void OnDisconnected() abstract;
 	public:
-		void Run(Socket s);
+		void Run(std::shared_ptr<Socket> s);
 	private:
 		void Disconnect();
 		void PostRecv(RecvEvent* recvEvent);
 	public:
 		Socket GetSocket();
 	private:
-		Socket _sock;
+		std::shared_ptr<Socket> _sock;
 		RecvEvent _recvEvent;
+		std::atomic_bool _isDisconnect;
 	};
 }

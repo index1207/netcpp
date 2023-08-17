@@ -21,7 +21,7 @@ NetCore::NetCore()
 
 	SYSTEM_INFO info;
 	GetSystemInfo(&info);
-	//for (int i = 0; i < info.dwNumberOfProcessors * 2; ++i)
+	for (int i = 0; i < info.dwNumberOfProcessors * 2; ++i)
 	{
 		HANDLE thread = (HANDLE)::_beginthreadex(NULL, NULL, Worker, _hcp, 0, NULL);
 		assert(thread);
@@ -111,12 +111,12 @@ unsigned CALLBACK net::Worker(HANDLE hcp)
 			case EventType::Recv:
 			{
 				auto recvEvent = static_cast<RecvEvent*>(event);
-#ifdef USE_AGENT
-				if (transfferredBytes == 0)
-					agent->OnDisconnected();
-				else
-					agent->OnRecv(recvEvent->segment.Array, transfferredBytes);
-#endif // USE_AGENT
+//#ifdef USE_AGENT
+//				if (transfferredBytes == 0)
+//					agent->OnDisconnected();
+//				else
+//					agent->OnRecv(recvEvent->segment.Array, transfferredBytes);
+//#endif // USE_AGENT
 
 				recvEvent->recvBytes = transfferredBytes;
 				recvEvent->completed(recvEvent);

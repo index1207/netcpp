@@ -3,30 +3,30 @@
 
 using namespace net;
 
-net::Agent::Agent(Socket s) : _sock(s)
-{
-}
-
 net::Agent::~Agent()
 {
 }
 
 Socket net::Agent::GetSocket()
 {
-	return _sock;
+	return *_sock;
 }
 
-void net::Agent::Run(Socket s)
+void net::Agent::Run(std::shared_ptr<Socket> s)
 {
+	_isDisconnect = false;
 	_sock = s;
 
+	_recvEvent.segment = net::ArraySegment(new char[128] {""}, 0, 128);
 	_recvEvent.completed = [this](SocketAsyncEvent* args)
 	{
 		if (args->socketError == SocketError::Success)
 		{
 			auto recvEvent = static_cast<RecvEvent*>(args);
-			if (OnRecv(recvEvent->segment.Array, recvEvent->recvBytes) == 0)
+			if (recvEvent->recvBytes == 0)
 				Disconnect();
+
+			OnRecv(recvEvent->segment.Array, recvEvent->recvBytes);
 
 			PostRecv(static_cast<RecvEvent*>(args));
 		}
@@ -38,9 +38,17 @@ void net::Agent::Run(Socket s)
 
 void net::Agent::Disconnect()
 {
-	_sock.Disconnect();
+	if (!_isDisconnect)
+	{
+		_sock->Disconnect();
+		OnDisconnected();
+
+		_isDisconnect.store(true);
+	}
 }
 
 void net::Agent::PostRecv(RecvEvent* recvEvent)
 {
+	if (!_sock->ReceiveAsync(recvEvent))
+		Disconnect();
 }

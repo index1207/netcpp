@@ -97,8 +97,18 @@ void Socket::SetLocalEndPoint(IPEndPoint ep)
 
 void net::Socket::Disconnect()
 {
-	DisconnectEvent disconnectEvent;
-	Extension::DisconnectEx(_sock, &disconnectEvent, 0, 0);
+	shutdown(_sock, SD_BOTH);
+	Close();
+}
+
+bool net::Socket::DisconnectAsync(DisconnectEvent* disconnectEvent)
+{
+	if (!Extension::DisconnectEx(_sock, disconnectEvent, 0, 0))
+	{
+		const int err = WSAGetLastError();
+		return err == WSA_IO_PENDING;
+	}
+	return false;
 }
 
 Socket Socket::Accept()
@@ -111,7 +121,7 @@ Socket Socket::Accept()
 
 bool Socket::AcceptAsync(AcceptEvent* event)
 {
-	event->acceptSocket = new Socket(AddressFamily::Internetwork, SocketType::Stream);
+	event->acceptSocket = std::make_shared<Socket>(AddressFamily::Internetwork, SocketType::Stream);
 
 	DWORD dwByte = 0;
 	ZeroMemory(&event->_acceptexBuffer, (sizeof(SOCKADDR_IN) + 16) * 2);

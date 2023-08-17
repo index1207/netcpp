@@ -1,5 +1,4 @@
 ﻿// Server
-#define USE_AGENT
 #include <iostream>
 #include <thread>
 #include <net/netcpp.hpp>
@@ -17,7 +16,8 @@ public:
 	}
 	virtual int OnRecv(char* buffer, int len) override
 	{
-		return 0;
+		std::cout << "OnRecv : " << buffer << ", " << len << '\n';
+		return len;
 	}
 	virtual void OnConnected() override
 	{
@@ -35,6 +35,7 @@ int main()
 		{
 			return new MyAgent;
 		});
+
 	if (!listener->Run())
 		return -1;
 

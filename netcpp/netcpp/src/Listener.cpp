@@ -24,8 +24,10 @@ bool net::Listener::Run(int backlog)
 	{
 		if (args->socketError == SocketError::Success)
 		{
+			auto acceptEvent = static_cast<AcceptEvent*>(args);
 			auto agent = _generateAgent();
 			agent->OnConnected();
+			agent->Run(acceptEvent->acceptSocket);
 		}
 		PostAccept(static_cast<AcceptEvent*>(args));
 	};
