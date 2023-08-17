@@ -59,6 +59,8 @@ namespace net
 		void SetRemoteEndPoint(IPEndPoint ep);
 		void SetLocalEndPoint(IPEndPoint ep);
 	public:
+		void Disconnect();
+
 		Socket Accept();
 		bool AcceptAsync(class AcceptEvent* acceptEvent);
 
@@ -73,6 +75,8 @@ namespace net
 	public:
 		void SetBlocking(bool isBlocking);
 		bool IsValid() const;
+	public:
+		void operator=(Socket sock);
 	private:
 		std::unique_ptr<IPEndPoint> _remoteEp;
 		std::unique_ptr<IPEndPoint> _localEp;

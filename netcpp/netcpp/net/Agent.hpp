@@ -1,20 +1,30 @@
 #pragma once
 
+#include "Socket.hpp"
+#include "SocketAsyncEvent.hpp"
+
 namespace net
 {
-	class Agent
+	class Agent abstract
 	{
 	public:
-		Agent(class Socket* s);
+		Agent() = default;
+		Agent(Socket s);
 		virtual ~Agent();
 	public:
-		virtual void OnSend(int len) { };
-		virtual int OnRecv(char* buffer, int len) { };
-		virtual void OnConnected() { };
-		virtual void OnDisconnected() { };
+		virtual void OnSend(int len) abstract;
+		virtual int OnRecv(char* buffer, int len) abstract;
+		virtual void OnConnected() abstract;
+		virtual void OnDisconnected() abstract;
+	public:
+		void Run(Socket s);
+	private:
+		void Disconnect();
+		void PostRecv(RecvEvent* recvEvent);
 	public:
 		Socket GetSocket();
 	private:
-		Socket* _sock;
+		Socket _sock;
+		RecvEvent _recvEvent;
 	};
 }

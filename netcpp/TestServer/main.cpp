@@ -1,83 +1,47 @@
-﻿#include <iostream>
-#include <format>
-#include <cassert>
-
-#include <WinSock2.h>
-#include <MSWSock.h>
+﻿// Server
+#define USE_AGENT
+#include <iostream>
+#include <thread>
 #include <net/netcpp.hpp>
 
-using namespace std;
 using namespace net;
 
-unique_ptr<Socket> listenSock;
-
-void PostAccept(AcceptEvent* args);
-
-void OnCompletedReceive(SocketAsyncEvent* event)
+class MyAgent : public Agent
 {
-	if (event->socketError == SocketError::Success)
+public:
+	MyAgent() = default;
+public:
+	virtual void OnSend(int len) override
 	{
-		auto recvEvent = static_cast<RecvEvent*>(event);
-		if (recvEvent->recvBytes == 0)
-			cout << "Disconnected\n";
-		else cout << "Received " << recvEvent->segment.Array << '\n';
+
 	}
-	else
+	virtual int OnRecv(char* buffer, int len) override
 	{
-		cout << format("ReceiveAsync error. ({})\n", WSAGetLastError());
+		return 0;
 	}
-}
-
-void OnCompletedAccept(SocketAsyncEvent* event)
-{
-	if (event->socketError == SocketError::Success)
+	virtual void OnConnected() override
 	{
-		auto acceptEvent = static_cast<AcceptEvent*>(event);
-		cout << "Connected " << acceptEvent->acceptSocket->GetRemoteEndPoint().ToString() << "\n";
-
-		char buf[1024] = "";
-		auto recvEvent = new RecvEvent;
-		recvEvent->segment = ArraySegment(buf, 0, 1024);
-		recvEvent->completed = OnCompletedReceive;
-		if (!acceptEvent->acceptSocket->ReceiveAsync(recvEvent))
-			OnCompletedReceive(recvEvent);
+		std::cout << "Connected!!!!\n";
 	}
-	else
-		cout << format("AcceptAsync error. ({})\n", WSAGetLastError());
-
-	PostAccept((AcceptEvent*)event);
-}
-
-void PostAccept(AcceptEvent* args)
-{
-	args->acceptSocket = nullptr;
-
-	bool pending = listenSock->AcceptAsync(args);
-	if (!pending)
-		OnCompletedAccept(args);
-}
+	virtual void OnDisconnected() override
+	{
+		std::cout << "Disconnected\n";
+	}
+};
 
 int main()
 {
-	listenSock = make_unique<Socket>(AddressFamily::Internetwork, SocketType::Stream);
-	if (!listenSock->Bind(IPEndPoint(IPAddress::Any, 8080)))
+	auto listener = new Listener(IPEndPoint(IPAddress::Any, 8080), []()
+		{
+			return new MyAgent;
+		});
+	if (!listener->Run())
 		return -1;
-	if (!listenSock->Listen(SOMAXCONN))
-		return -1;
-
-	std::cout << format("Listening on {}\n", listenSock->GetLocalEndPoint().ToString());
-
-	for (int i = 0; i < 10; ++i)
-	{
-		auto acceptEvent = new AcceptEvent;
-		acceptEvent->completed = OnCompletedAccept;
-		PostAccept(acceptEvent);
-	}
 
 	while (true)
 	{
-		this_thread::sleep_for(1s);
+		Sleep(100);
 	}
-	
+
 	return 0;
 }

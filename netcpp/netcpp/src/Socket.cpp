@@ -95,6 +95,12 @@ void Socket::SetLocalEndPoint(IPEndPoint ep)
 	_localEp = std::make_unique<IPEndPoint>(ep);
 }
 
+void net::Socket::Disconnect()
+{
+	DisconnectEvent disconnectEvent;
+	Extension::DisconnectEx(_sock, &disconnectEvent, 0, 0);
+}
+
 Socket Socket::Accept()
 {
 	Socket clientSock;
@@ -181,4 +187,11 @@ void Socket::SetBlocking(bool isBlocking)
 bool Socket::IsValid() const
 {
 	return INVALID_SOCKET != _sock;
+}
+
+void net::Socket::operator=(Socket sock)
+{
+	_sock = sock.GetHandle();
+	_remoteEp = std::make_unique<IPEndPoint>(sock.GetRemoteEndPoint());
+	_localEp = std::make_unique<IPEndPoint>(sock.GetLocalEndPoint());
 }

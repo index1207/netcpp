@@ -15,6 +15,7 @@ namespace net
 	{
 		Accept,
 		Connect,
+		Disconnect,
 		Send,
 		Recv
 	};
@@ -61,6 +62,12 @@ namespace net
 		RecvEvent() : SocketAsyncEvent(EventType::Recv) { }
 		ArraySegment segment;
 		int recvBytes = 0;
+	};
+
+	class DisconnectEvent : public SocketAsyncEvent
+	{
+	public:
+		DisconnectEvent() : SocketAsyncEvent(EventType::Disconnect) { }
 	};
 }
 

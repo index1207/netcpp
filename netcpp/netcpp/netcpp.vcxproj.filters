@@ -19,6 +19,7 @@
     <ClInclude Include="net\NetCore.hpp" />
     <ClInclude Include="net\SocketAsyncEvent.hpp" />
     <ClInclude Include="net\Agent.hpp" />
+    <ClInclude Include="net\Listener.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp" />
@@ -30,5 +31,6 @@
     <ClCompile Include="src\netcpp.cpp" />
     <ClCompile Include="src\SocketAsyncEvent.cpp" />
     <ClCompile Include="src\Agent.cpp" />
+    <ClCompile Include="src\Listener.cpp" />
   </ItemGroup>
 </Project>

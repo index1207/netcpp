@@ -11,11 +11,11 @@ namespace net
 		static IPAddress Loopback;
 		static IPAddress Broadcast;
 	public:
-		static IPAddress Parse(std::string_view ipStr);
-		static IPAddress Parse(int ipNum);
-	public:
 		IPAddress();
 		IPAddress(const SOCKADDR_IN& adrs);
+	public:
+		static IPAddress Parse(std::string_view ipStr);
+		static IPAddress Parse(int ipNum);
 	public:
 		std::string ToString() const;
 	};
