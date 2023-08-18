@@ -2,14 +2,6 @@
 #include "NetCore.hpp"
 #include "SocketAsyncEvent.hpp"
 #include "Extension.hpp"
-#include "Agent.hpp"
-
-#ifdef USE_AGENT
-using CompletionKey = Agent;
-#else
-using CompletionKey = ULONG_PTR;
-#endif
-
 
 using namespace net;
 
@@ -43,11 +35,6 @@ void NetCore::Register(SOCKET s)
 	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(s), _hcp, NULL, NULL);
 }
 
-void net::NetCore::Register(Agent* agent)
-{
-	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(agent->GetSocket().GetHandle()), _hcp, (ULONG_PTR)agent, NULL);
-}
-
 void BindAcceptExSockAddress(AcceptEvent* args)
 {
 	SOCKADDR_IN* localAdr = nullptr,
@@ -68,9 +55,9 @@ unsigned CALLBACK net::Worker(HANDLE hcp)
 	while (true)
 	{
 		DWORD transfferredBytes = 0;
-		CompletionKey* agent = nullptr;
+		ULONG_PTR agent = 0;
 		SocketAsyncEvent* event = nullptr;
-		if (!::GetQueuedCompletionStatus(hcp, &transfferredBytes, reinterpret_cast<PULONG_PTR>(&agent), reinterpret_cast<LPOVERLAPPED*>(&event), INFINITE))
+		if (!::GetQueuedCompletionStatus(hcp, &transfferredBytes, &agent, reinterpret_cast<LPOVERLAPPED*>(&event), INFINITE))
 		{
 			continue;
 		}
@@ -82,11 +69,7 @@ unsigned CALLBACK net::Worker(HANDLE hcp)
 			case EventType::Accept:
 			{
 				auto acceptEvent = static_cast<AcceptEvent*>(event);
-#ifdef USE_AGENT
-				GNetCore.Register(agent);
-#else
 				GNetCore.Register(acceptEvent->acceptSocket->GetHandle());
-#endif // USE_AGENT
 
 				BindAcceptExSockAddress(acceptEvent);
 				acceptEvent->completed(acceptEvent);
@@ -95,10 +78,12 @@ unsigned CALLBACK net::Worker(HANDLE hcp)
 			case EventType::Connect:
 			{
 				auto connectEvent = static_cast<ConnectEvent*>(event);
-#ifdef USE_AGENT
-				agent->OnConnected();
-#endif
 				connectEvent->completed(connectEvent);
+				break;
+			}
+			case EventType::Disconnect:
+			{
+				event->completed(static_cast<DisconnectEvent*>(event));
 				break;
 			}
 			case EventType::Send:
@@ -111,12 +96,6 @@ unsigned CALLBACK net::Worker(HANDLE hcp)
 			case EventType::Recv:
 			{
 				auto recvEvent = static_cast<RecvEvent*>(event);
-//#ifdef USE_AGENT
-//				if (transfferredBytes == 0)
-//					agent->OnDisconnected();
-//				else
-//					agent->OnRecv(recvEvent->segment.Array, transfferredBytes);
-//#endif // USE_AGENT
 
 				recvEvent->recvBytes = transfferredBytes;
 				recvEvent->completed(recvEvent);

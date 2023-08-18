@@ -12,7 +12,6 @@ namespace net
 	public:
 		void Register(class Socket* s);
 		void Register(SOCKET s);
-		void Register(class Agent* agent);
 	private:
 		HANDLE _hcp;
 		std::thread _worker;
