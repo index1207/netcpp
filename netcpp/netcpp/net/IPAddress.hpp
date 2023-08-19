@@ -5,6 +5,7 @@ namespace net
 	class IPAddress : private SOCKADDR_IN
 	{
 		friend class IPEndPoint;
+		friend class Dns;
 	public:
 		static IPAddress Any;
 		static IPAddress None;
