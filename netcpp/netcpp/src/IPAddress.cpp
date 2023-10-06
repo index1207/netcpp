@@ -3,10 +3,10 @@
 
 using namespace net;
 
-IPAddress IPAddress::Any = IPAddress::Parse(INADDR_ANY);
-IPAddress IPAddress::None = IPAddress::Parse(INADDR_NONE);
-IPAddress IPAddress::Loopback = IPAddress::Parse("127.0.0.1");
-IPAddress IPAddress::Broadcast = IPAddress::Parse(INADDR_BROADCAST);
+IPAddress IPAddress::Any = Parse(INADDR_ANY);
+IPAddress IPAddress::None = Parse(INADDR_NONE);
+IPAddress IPAddress::Loopback = Parse("127.0.0.1");
+IPAddress IPAddress::Broadcast = Parse(INADDR_BROADCAST);
 
 IPAddress IPAddress::Parse(std::string_view ipStr)
 {

@@ -4,7 +4,7 @@
 
 using namespace net;
 
-std::string net::Dns::GetHostName()
+std::string Dns::GetHostName()
 {
 	char buf[128] = "";
 	gethostname(buf, 128);
@@ -12,7 +12,7 @@ std::string net::Dns::GetHostName()
 	return buf;
 }
 
-net::IPHostEntry net::Dns::GetHostEntry(std::string hostname)
+IPHostEntry Dns::GetHostEntry(std::string hostname)
 {
 	auto entry = gethostbyname(hostname.c_str());
 	if (entry == nullptr)

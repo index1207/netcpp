@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include "IPAddress.hpp"
 
 namespace net
@@ -10,7 +11,7 @@ namespace net
 		IPEndPoint() = default;
 		IPEndPoint(IPAddress ipAddress, u_short port);
 	public:
-		IPAddress GetAddress() const;
+		const IPAddress& GetAddress() const;
 		void SetAddress(IPAddress ipAddress);
 		int GetPort() const;
 	#undef SetPort

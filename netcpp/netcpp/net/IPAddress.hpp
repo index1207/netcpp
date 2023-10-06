@@ -1,5 +1,7 @@
 #pragma once
 
+#include <WinSock2.h>
+
 namespace net
 {
 	class IPAddress : private SOCKADDR_IN
