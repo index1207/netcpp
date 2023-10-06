@@ -62,8 +62,8 @@ unsigned CALLBACK net::Worker(HANDLE hcp)
 			continue;
 		}
 
-		event->socketError = Success;
-
+		event->socketError = SocketError::Success;
+		
 		switch (event->eventType)
 		{
 			case EventType::Accept:

@@ -6,12 +6,13 @@
 
 namespace net
 {
-	enum SocketError
+	enum class SocketError
 	{
+		Error,
 		Success,
 	};
 
-	enum EventType
+	enum class EventType
 	{
 		Accept,
 		Connect,
@@ -20,7 +21,8 @@ namespace net
 		Recv
 	};
 
-	class SocketAsyncEvent : public OVERLAPPED
+	class SocketAsyncEvent
+		: public OVERLAPPED, public std::enable_shared_from_this<SocketAsyncEvent>
 	{
 		void Init();
 	public:

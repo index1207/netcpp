@@ -29,7 +29,6 @@
     <ClInclude Include="net\SocketAsyncEvent.hpp" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="net\Socket.hpp" />
-    <ClInclude Include="net\SocketAsyncEventArgs.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Dns.cpp" />

@@ -60,19 +60,19 @@ namespace net
 		void SetLocalEndPoint(IPEndPoint ep);
 	public:
 		void Disconnect();
-		bool DisconnectAsync(class DisconnectEvent* disconnectEvent);
+		bool DisconnectAsync(std::shared_ptr<class DisconnectEvent> disconnectEvent);
 
 		Socket Accept();
-		bool AcceptAsync(class AcceptEvent* acceptEvent);
+		bool AcceptAsync(std::shared_ptr<class AcceptEvent> acceptEvent);
 
 		bool Connect(IPEndPoint ep);
-		bool ConnectAsync(class ConnectEvent* connectEvent);
+		bool ConnectAsync(std::shared_ptr<class ConnectEvent> connectEvent);
 
 		int Send(ArraySegment seg);
-		bool SendAsync(class SendEvent* sendEvent);
+		bool SendAsync(std::shared_ptr<class SendEvent> sendEvent);
 
 		int Receive(ArraySegment seg);
-		bool ReceiveAsync(class RecvEvent* recvEvent);
+		bool ReceiveAsync(std::shared_ptr<class RecvEvent> recvEvent);
 	public:
 		void SetBlocking(bool isBlocking);
 		bool IsValid() const;
