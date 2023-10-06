@@ -165,7 +165,17 @@ bool Socket::ConnectAsync(const std::shared_ptr<ConnectEvent>& event)
 
 int Socket::Send(ArraySegment seg) const
 {
-	return send(_sock, seg.Array + seg.Offset, seg.Count, NULL);
+	return send(_sock, seg.Array + seg.Offset, seg.Count - seg.Offset, NULL);
+}
+
+int Socket::SendTo(ArraySegment seg, IPEndPoint target) const
+{
+	auto& addr = target.GetAddress();
+	return sendto(_sock,
+		seg.Array + seg.Offset, seg.Count - seg.Offset,
+		NULL,
+		reinterpret_cast<const sockaddr*>(&addr), sizeof(SOCKADDR_IN)
+		);
 }
 
 bool Socket::SendAsync(const std::shared_ptr<SendEvent>& sendEvent) const
@@ -189,7 +199,16 @@ bool Socket::SendAsync(const std::shared_ptr<SendEvent>& sendEvent) const
 
 int Socket::Receive(ArraySegment seg) const
 {
-	return 0 < recv(_sock, seg.Array + seg.Offset, seg.Count, NULL);
+	return 0 < recv(_sock, seg.Array + seg.Offset, seg.Count - seg.Offset, NULL);
+}
+
+int Socket::ReceiveFrom(ArraySegment seg, IPEndPoint target) const
+{
+	auto& addr = const_cast<IPAddress&>(target.GetAddress());
+	int len = sizeof(SOCKADDR_IN);
+	return 0 < recvfrom(_sock,
+		seg.Array + seg.Offset, seg.Count - seg.Offset,
+		NULL, reinterpret_cast<sockaddr*>(&addr), &len);
 }
 
 bool Socket::ReceiveAsync(const std::shared_ptr<RecvEvent>& recvEvent) const
@@ -216,6 +235,44 @@ void Socket::SetBlocking(bool isBlocking) const
 {
 	u_long opt = !isBlocking;
 	ioctlsocket(_sock, FIONBIO, &opt);
+}
+
+void Socket::SetLinger(LingerOption linger) const
+{
+	SetSocketOption(SocketOptionLevel::Socket, SocketOptionName::Linger, linger);
+}
+
+void Socket::SetBroadcast(bool isBroadcast) const
+{
+	BOOL val = isBroadcast;
+	SetSocketOption(SocketOptionLevel::Socket, SocketOptionName::Broadcast, val);
+}
+
+void Socket::SetReuseAddress(bool isReuseAddr) const
+{
+	BOOL val = isReuseAddr;
+	SetSocketOption(SocketOptionLevel::Socket, SocketOptionName::ReuseAddress, val);
+}
+
+void Socket::SetNoDelay(bool isNoDelay) const
+{
+	DWORD val = isNoDelay;
+	SetSocketOption(static_cast<SocketOptionLevel>(ProtocolType::Tcp), SocketOptionName::NoDelay, val);
+}
+
+void Socket::SetTTL(int ttl) const
+{
+	SetSocketOption(SocketOptionLevel::IP, SocketOptionName::TTL, ttl);
+}
+
+void Socket::SetSendBufferSize(int size) const
+{
+	SetSocketOption(SocketOptionLevel::Socket, SocketOptionName::SendBuffer, size);
+}
+
+void Socket::SetReceiveBufferSize(int size) const
+{
+	SetSocketOption(SocketOptionLevel::Socket, SocketOptionName::ReceiveBuffer, size);
 }
 
 bool Socket::IsValid() const

@@ -9,7 +9,7 @@ IPEndPoint::IPEndPoint(IPAddress ipAddress, u_short port) : _ipAdr(ipAddress), _
 	_ipAdr.sin_port = htons(_port);
 }
 
-IPAddress IPEndPoint::GetAddress() const
+const IPAddress& IPEndPoint::GetAddress() const
 {
 	return _ipAdr;
 }
