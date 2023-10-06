@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Socket.hpp"
+#include <thread>
+
 namespace net
 {
 	unsigned CALLBACK Worker(HANDLE hcp);
@@ -10,7 +13,7 @@ namespace net
 		NetCore();
 		~NetCore();
 	public:
-		void Register(class Socket* s);
+		void Register(Socket& sock);
 		void Register(SOCKET s);
 	private:
 		HANDLE _hcp;

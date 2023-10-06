@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IPEndPoint.hpp"
+#include <memory>
 
 namespace net
 {
@@ -43,6 +44,7 @@ namespace net
 		Socket(AddressFamily af, SocketType st, ProtocolType pt);
 		Socket(AddressFamily af, SocketType st);
 		Socket(const Socket& sock);
+		Socket(Socket&& sock) noexcept;
 		~Socket();
 	public:
 		void SetHandle(SOCKET s);
@@ -50,7 +52,7 @@ namespace net
 		void Close();
 
 		bool Bind(IPEndPoint ep);
-		bool Listen(int backlog = SOMAXCONN);
+		bool Listen(int backlog = SOMAXCONN) const;
 	public:
 		SOCKET GetHandle() const;
 		IPEndPoint GetRemoteEndPoint() const;
@@ -60,24 +62,25 @@ namespace net
 		void SetLocalEndPoint(IPEndPoint ep);
 	public:
 		void Disconnect();
-		bool DisconnectAsync(std::shared_ptr<class DisconnectEvent> disconnectEvent);
+		bool DisconnectAsync(const std::shared_ptr<class DisconnectEvent>& disconnectEvent) const;
 
-		Socket Accept();
-		bool AcceptAsync(std::shared_ptr<class AcceptEvent> acceptEvent);
+		Socket Accept() const;
+		bool AcceptAsync(const std::shared_ptr<class AcceptEvent>& acceptEvent) const;
 
 		bool Connect(IPEndPoint ep);
-		bool ConnectAsync(std::shared_ptr<class ConnectEvent> connectEvent);
+		bool ConnectAsync(const std::shared_ptr<class ConnectEvent>& connectEvent);
 
-		int Send(ArraySegment seg);
-		bool SendAsync(std::shared_ptr<class SendEvent> sendEvent);
+		int Send(ArraySegment seg) const;
+		bool SendAsync(const std::shared_ptr<class SendEvent>& sendEvent) const;
 
-		int Receive(ArraySegment seg);
-		bool ReceiveAsync(std::shared_ptr<class RecvEvent> recvEvent);
+		int Receive(ArraySegment seg) const;
+		bool ReceiveAsync(const std::shared_ptr<class RecvEvent>& recvEvent) const;
 	public:
-		void SetBlocking(bool isBlocking);
+		void SetBlocking(bool isBlocking) const;
 		bool IsValid() const;
 	public:
-		void operator=(Socket sock);
+		Socket& operator=(const Socket& sock);
+		Socket& operator=(Socket&& sock) noexcept;
 	private:
 		std::unique_ptr<IPEndPoint> _remoteEp;
 		std::unique_ptr<IPEndPoint> _localEp;

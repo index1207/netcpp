@@ -1,5 +1,9 @@
 #include "pch.h"
 #include "NetCore.hpp"
+
+#include <cassert>
+#include <windef.h>
+
 #include "SocketAsyncEvent.hpp"
 #include "Extension.hpp"
 
@@ -13,10 +17,11 @@ NetCore::NetCore()
 
 	SYSTEM_INFO info;
 	GetSystemInfo(&info);
-	for (int i = 0; i < info.dwNumberOfProcessors * 2; ++i)
+	for (unsigned i = 0; i < info.dwNumberOfProcessors * 2; ++i)
 	{
-		HANDLE thread = (HANDLE)::_beginthreadex(NULL, NULL, Worker, _hcp, 0, NULL);
-		assert(thread);
+		auto thread = reinterpret_cast<HANDLE>(::_beginthreadex(NULL, NULL, Worker, _hcp, 0, NULL));
+		if(thread == nullptr)
+			throw std::runtime_error("Failed create thread.");
 	}
 }
 
@@ -25,9 +30,9 @@ NetCore::~NetCore()
 	CloseHandle(_hcp);
 }
 
-void NetCore::Register(class Socket* s)
+void NetCore::Register(Socket& sock)
 {
-	Register(s->GetHandle());
+	Register(sock.GetHandle());
 }
 
 void NetCore::Register(SOCKET s)
@@ -54,10 +59,10 @@ unsigned CALLBACK net::Worker(HANDLE hcp)
 {
 	while (true)
 	{
-		DWORD transfferredBytes = 0;
+		DWORD transferredBytes = 0;
 		ULONG_PTR agent = 0;
 		SocketAsyncEvent* event = nullptr;
-		if (!::GetQueuedCompletionStatus(hcp, &transfferredBytes, &agent, reinterpret_cast<LPOVERLAPPED*>(&event), INFINITE))
+		if (!::GetQueuedCompletionStatus(hcp, &transferredBytes, &agent, reinterpret_cast<LPOVERLAPPED*>(&event), INFINITE))
 		{
 			continue;
 		}
@@ -89,7 +94,7 @@ unsigned CALLBACK net::Worker(HANDLE hcp)
 			case EventType::Send:
 			{
 				auto sendEvent = static_cast<SendEvent*>(event);
-				sendEvent->sentBytes = transfferredBytes;
+				sendEvent->sentBytes = transferredBytes;
 				sendEvent->completed(sendEvent);
 				break;
 			}
@@ -97,7 +102,7 @@ unsigned CALLBACK net::Worker(HANDLE hcp)
 			{
 				auto recvEvent = static_cast<RecvEvent*>(event);
 
-				recvEvent->recvBytes = transfferredBytes;
+				recvEvent->recvBytes = transferredBytes;
 				recvEvent->completed(recvEvent);
 				break;
 			}

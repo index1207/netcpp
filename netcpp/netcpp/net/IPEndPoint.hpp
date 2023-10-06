@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include "IPAddress.hpp"
 
 namespace net

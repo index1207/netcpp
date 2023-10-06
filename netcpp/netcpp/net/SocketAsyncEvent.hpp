@@ -47,14 +47,14 @@ namespace net
 	{
 	public:
 		ConnectEvent() : SocketAsyncEvent(EventType::Connect) { }
-		IPEndPoint endPoint;
+		IPEndPoint endPoint {};
 	};
 
 	class SendEvent : public SocketAsyncEvent
 	{
 	public:
 		SendEvent() : SocketAsyncEvent(EventType::Send) { }
-		ArraySegment segment;
+		ArraySegment segment {};
 		int sentBytes = 0;
 	};
 
@@ -62,7 +62,7 @@ namespace net
 	{
 	public:
 		RecvEvent() : SocketAsyncEvent(EventType::Recv) { }
-		ArraySegment segment;
+		ArraySegment segment {};
 		int recvBytes = 0;
 	};
 

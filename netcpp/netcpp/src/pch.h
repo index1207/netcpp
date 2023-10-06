@@ -1,3 +1,10 @@
 #pragma once
 
-#include "CorePch.hpp"
+#include <WinSock2.h>
+#include <MSWSock.h>
+#include <WS2tcpip.h>
+
+#include <string>
+#include <vector>
+
+#include <stdexcept>
