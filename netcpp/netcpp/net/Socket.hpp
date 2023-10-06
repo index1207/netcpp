@@ -94,18 +94,18 @@ namespace net
 		bool DisconnectAsync(const std::shared_ptr<class DisconnectEvent>& disconnectEvent) const;
 
 		Socket Accept() const;
-		bool AcceptAsync(const std::shared_ptr<class AcceptEvent>& acceptEvent) const;
+		bool AcceptAsync(std::shared_ptr<class AcceptEvent> acceptEvent) const;
 
 		bool Connect(IPEndPoint ep);
-		bool ConnectAsync(const std::shared_ptr<class ConnectEvent>& connectEvent);
+		bool ConnectAsync(std::shared_ptr<class ConnectEvent> connectEvent);
 
 		int Send(ArraySegment seg) const;
 		int SendTo(ArraySegment seg, IPEndPoint target) const;
-		bool SendAsync(const std::shared_ptr<class SendEvent>& sendEvent) const;
+		bool SendAsync(std::shared_ptr<class SendEvent> sendEvent) const;
 
 		int Receive(ArraySegment seg) const;
 		int ReceiveFrom(ArraySegment seg, IPEndPoint target) const;
-		bool ReceiveAsync(const std::shared_ptr<class RecvEvent>& recvEvent) const;
+		bool ReceiveAsync(std::shared_ptr<class RecvEvent> recvEvent) const;
 	public:
 		template<class T>
 		void SetSocketOption(SocketOptionLevel level, SocketOptionName name, T value) const
@@ -113,7 +113,7 @@ namespace net
 			setsockopt(_sock,
 				static_cast<int>(level),
 				static_cast<int>(name),
-				reinterpret_cast<const char*>(value),
+				reinterpret_cast<const char*>(&value),
 				sizeof(T)
 			);
 		}

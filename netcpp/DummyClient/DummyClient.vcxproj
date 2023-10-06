@@ -139,9 +139,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DummyClient.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\netcpp\netcpp.vcxproj">
       <Project>{57f35502-a158-4a58-b273-611ebe66aa46}</Project>
     </ProjectReference>

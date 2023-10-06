@@ -18,6 +18,7 @@ int main()
 	std::cout << "Listening " << listenSock.GetLocalEndPoint().ToString() << '\n';
 	
 	auto acceptEvent = std::make_shared<AcceptEvent>();
+	std::cout << acceptEvent.use_count() << '\n';
 	acceptEvent->completed = [](SocketAsyncEvent* event)
 	{
 		if (event->socketError == SocketError::Success)

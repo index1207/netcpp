@@ -130,10 +130,11 @@ Socket Socket::Accept() const
 	return clientSock;
 }
 
-bool Socket::AcceptAsync(const std::shared_ptr<AcceptEvent>& event) const
+bool Socket::AcceptAsync(std::shared_ptr<AcceptEvent> event) const
 {
 	event->acceptSocket = std::make_shared<Socket>(AddressFamily::Internetwork, SocketType::Stream);
-
+	std::cout << event.use_count() << '\n';
+	
 	DWORD dwByte = 0;
 	ZeroMemory(&event->_acceptexBuffer, (sizeof(SOCKADDR_IN) + 16) * 2);
 	if (!Extension::AcceptEx(_sock, event->acceptSocket->GetHandle(), event->_acceptexBuffer, 0,
@@ -146,7 +147,7 @@ bool Socket::AcceptAsync(const std::shared_ptr<AcceptEvent>& event) const
 	return false;
 }
 
-bool Socket::ConnectAsync(const std::shared_ptr<ConnectEvent>& event)
+bool Socket::ConnectAsync(std::shared_ptr<ConnectEvent> event)
 {
 	Bind(IPEndPoint(IPAddress::Any, 0));
 	IPAddress ipAdr = event->endPoint.GetAddress();
@@ -178,7 +179,7 @@ int Socket::SendTo(ArraySegment seg, IPEndPoint target) const
 		);
 }
 
-bool Socket::SendAsync(const std::shared_ptr<SendEvent>& sendEvent) const
+bool Socket::SendAsync(std::shared_ptr<SendEvent> sendEvent) const
 {
 	WSABUF wsaBuf;
 	wsaBuf.buf = sendEvent->segment.Array + sendEvent->segment.Offset;
@@ -211,7 +212,7 @@ int Socket::ReceiveFrom(ArraySegment seg, IPEndPoint target) const
 		NULL, reinterpret_cast<sockaddr*>(&addr), &len);
 }
 
-bool Socket::ReceiveAsync(const std::shared_ptr<RecvEvent>& recvEvent) const
+bool Socket::ReceiveAsync(std::shared_ptr<RecvEvent> recvEvent) const
 {
 	WSABUF wsaBuf = {
 		.len = static_cast<ULONG>(recvEvent->segment.Count),
