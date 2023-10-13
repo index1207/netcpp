@@ -32,7 +32,7 @@ namespace net
 		std::function<void(SocketAsyncEvent*)> completed;
 	};
 
-	class AcceptEvent : public SocketAsyncEvent,
+	class AcceptEvent : public SocketAsyncEvent
 	{
 	public:
 		AcceptEvent() : SocketAsyncEvent(EventType::Accept)
