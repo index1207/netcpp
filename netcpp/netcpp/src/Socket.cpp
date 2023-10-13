@@ -133,7 +133,6 @@ Socket Socket::Accept() const
 bool Socket::AcceptAsync(std::shared_ptr<AcceptEvent> event) const
 {
 	event->acceptSocket = std::make_shared<Socket>(AddressFamily::Internetwork, SocketType::Stream);
-	std::cout << event.use_count() << '\n';
 	
 	DWORD dwByte = 0;
 	ZeroMemory(&event->_acceptexBuffer, (sizeof(SOCKADDR_IN) + 16) * 2);

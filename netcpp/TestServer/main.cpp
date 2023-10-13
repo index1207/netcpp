@@ -10,16 +10,14 @@ using namespace std::chrono_literals;
 int main()
 {
 	Socket listenSock = Socket(AddressFamily::Internetwork, SocketType::Stream, ProtocolType::Tcp);
-	if (!listenSock.Bind(IPEndPoint(Dns::GetHostEntry(Dns::GetHostName()).AddressList[0], 8085)))
+	if (!listenSock.Bind(IPEndPoint(Dns::GetHostEntry(Dns::GetHostName()).AddressList[2], 8085)))
 		return -1;
 	if (!listenSock.Listen())
 		return -1;
 
-	std::cout << "Listening " << listenSock.GetLocalEndPoint().ToString() << '\n';
-	
 	auto acceptEvent = std::make_shared<AcceptEvent>();
-	std::cout << acceptEvent.use_count() << '\n';
-	acceptEvent->completed = [](SocketAsyncEvent* event)
+	std::cout << "Listening " << listenSock.GetLocalEndPoint().ToString() << '\n';
+	acceptEvent->completed = [&](SocketAsyncEvent* event)
 	{
 		if (event->socketError == SocketError::Success)
 		{
@@ -32,10 +30,7 @@ int main()
 	};
 	listenSock.AcceptAsync(acceptEvent);
 
-	while (true)
-	{
-		std::this_thread::sleep_for(1s);
-	}
-
+	getchar();
+	
 	return 0;
 }

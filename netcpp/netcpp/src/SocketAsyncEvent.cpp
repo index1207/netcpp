@@ -6,7 +6,7 @@ using namespace net;
 void SocketAsyncEvent::Init()
 {
 	memset(this, 0, sizeof(WSAOVERLAPPED));
-	this->socketError = (::SocketError)-1;
+	this->socketError = SocketError::Error;
 }
 
 SocketAsyncEvent::SocketAsyncEvent(EventType eventType)
