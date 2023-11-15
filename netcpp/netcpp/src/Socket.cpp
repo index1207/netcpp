@@ -37,8 +37,6 @@ Socket::Socket(Socket&& sock) noexcept
 Socket::Socket()
 {
 	_sock = INVALID_SOCKET;
-	_localEp = nullptr;
-	_remoteEp = nullptr;
 }
 
 Socket::~Socket()
@@ -63,14 +61,14 @@ void Socket::Close()
 bool Socket::Connect(IPEndPoint ep)
 {
 	SetRemoteEndPoint(ep);
-	IPAddress ipAdr = _remoteEp->GetAddress();
+	IPAddress ipAdr = _remoteEp.GetAddress();
 	return SOCKET_ERROR != connect(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN));
 }
 
 bool Socket::Bind(IPEndPoint ep)
 {
 	SetLocalEndPoint(ep);
-	IPAddress ipAdr = _localEp->GetAddress();
+	IPAddress ipAdr = _localEp.GetAddress();
 	const auto& ret = bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN));
 	GNetCore.Register(*this);
 	return SOCKET_ERROR != ret;
@@ -88,22 +86,22 @@ SOCKET Socket::GetHandle() const
 
 IPEndPoint Socket::GetRemoteEndPoint() const
 {
-	return *_remoteEp;
+	return _remoteEp;
 }
 
 IPEndPoint Socket::GetLocalEndPoint() const
 {
-	return *_localEp;
+	return _localEp;
 }
 
 void Socket::SetRemoteEndPoint(IPEndPoint ep)
 {
-	_remoteEp = std::make_unique<IPEndPoint>(ep);
+	_remoteEp = ep;
 }
 
 void Socket::SetLocalEndPoint(IPEndPoint ep)
 {
-	_localEp = std::make_unique<IPEndPoint>(ep);
+	_localEp = ep;
 }
 
 void net::Socket::Disconnect()
@@ -128,7 +126,7 @@ Socket Socket::Accept() const
 	clientSock.SetHandle(accept(_sock, nullptr, nullptr));
 
 	return clientSock;
-}
+}	
 
 bool Socket::AcceptAsync(std::shared_ptr<AcceptEvent> event) const
 {
@@ -142,9 +140,9 @@ bool Socket::AcceptAsync(std::shared_ptr<AcceptEvent> event) const
 	{
 		const auto err = WSAGetLastError();
 		return err == WSA_IO_PENDING;
-	}	
+	}
 	return false;
-}
+}		
 
 bool Socket::ConnectAsync(std::shared_ptr<ConnectEvent> event)
 {
@@ -282,16 +280,16 @@ bool Socket::IsValid() const
 
 Socket& Socket::operator=(const Socket& sock)
 {
-	_sock = sock.GetHandle();
-	_remoteEp = std::make_unique<IPEndPoint>(sock.GetRemoteEndPoint());
-	_localEp = std::make_unique<IPEndPoint>(sock.GetLocalEndPoint());
+	_sock = sock._sock;
+	SetLocalEndPoint(sock.GetLocalEndPoint());
+	SetRemoteEndPoint(sock.GetRemoteEndPoint());
 	return *this;
 }
 
 Socket& Socket::operator=(Socket&& sock) noexcept
 {
-	_sock = sock.GetHandle();
-	_remoteEp = std::make_unique<IPEndPoint>(sock.GetRemoteEndPoint());
-	_localEp = std::make_unique<IPEndPoint>(sock.GetLocalEndPoint());
+	_sock = sock._sock;
+	SetLocalEndPoint(sock.GetLocalEndPoint());
+	SetRemoteEndPoint(sock.GetRemoteEndPoint());
 	return *this;
 }

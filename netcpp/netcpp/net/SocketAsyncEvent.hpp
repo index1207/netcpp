@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <iostream>
 
 #include "Socket.hpp"
 
@@ -22,11 +23,12 @@ namespace net
 	};
 
 	class SocketAsyncEvent
-		: public OVERLAPPED, public std::enable_shared_from_this<AcceptEvent>
+		: public OVERLAPPED
 	{
 		void Init();
 	public:
 		SocketAsyncEvent(EventType eventType);
+		~SocketAsyncEvent() { std::cout << "Event Distroyed.\n"; }
 		EventType eventType;
 		SocketError socketError;
 		std::function<void(SocketAsyncEvent*)> completed;

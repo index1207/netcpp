@@ -73,7 +73,7 @@ unsigned CALLBACK net::Worker(HANDLE hcp)
 		{
 			case EventType::Accept:
 			{
-				auto acceptEvent = static_cast<AcceptEvent*>(event);
+				auto acceptEvent(static_cast<AcceptEvent*>(event));
 				GNetCore.Register(acceptEvent->acceptSocket->GetHandle());
 
 				BindAcceptExSockAddress(acceptEvent);
@@ -82,25 +82,25 @@ unsigned CALLBACK net::Worker(HANDLE hcp)
 			}
 			case EventType::Connect:
 			{
-				auto connectEvent = static_cast<ConnectEvent*>(event);
+				auto connectEvent(static_cast<ConnectEvent*>(event));
 				connectEvent->completed(connectEvent);
 				break;
 			}
 			case EventType::Disconnect:
 			{
-				event->completed(static_cast<DisconnectEvent*>(event));
+				event->completed(event);
 				break;
 			}
 			case EventType::Send:
 			{
-				auto sendEvent = static_cast<SendEvent*>(event);
+				auto sendEvent(static_cast<SendEvent*>(event));
 				sendEvent->sentBytes = transferredBytes;
 				sendEvent->completed(sendEvent);
 				break;
 			}
 			case EventType::Recv:
 			{
-				auto recvEvent = static_cast<RecvEvent*>(event);
+				auto recvEvent(static_cast<RecvEvent*>(event));
 
 				recvEvent->recvBytes = transferredBytes;
 				recvEvent->completed(recvEvent);

@@ -7,6 +7,19 @@
 using namespace net;
 using namespace std::chrono_literals;
 
+void OnAcceptCompleted(SocketAsyncEvent* event)
+{
+	std::cout << "Connected!\n";
+	auto e = static_cast<AcceptEvent*>(event);
+}
+
+void AcceptStart(std::shared_ptr<AcceptEvent> acceptEvent, Socket& listenSock)
+{
+	acceptEvent->completed = OnAcceptCompleted;
+	if (!listenSock.AcceptAsync(acceptEvent))
+		OnAcceptCompleted(acceptEvent.get());
+}
+
 int main()
 {
 	Socket listenSock = Socket(AddressFamily::Internetwork, SocketType::Stream, ProtocolType::Tcp);
@@ -15,20 +28,10 @@ int main()
 	if (!listenSock.Listen())
 		return -1;
 
-	auto acceptEvent = std::make_shared<AcceptEvent>();
 	std::cout << "Listening " << listenSock.GetLocalEndPoint().ToString() << '\n';
-	acceptEvent->completed = [&](SocketAsyncEvent* event)
-	{
-		if (event->socketError == SocketError::Success)
-		{
-			std::cout << "Accepted!\n";
-		}
-		else
-		{
-			std::cout << "Accept Error\n";
-		}
-	};
-	listenSock.AcceptAsync(acceptEvent);
+
+	auto acceptEvent = std::make_shared<AcceptEvent>();
+	AcceptStart(acceptEvent, listenSock);
 
 	getchar();
 	
