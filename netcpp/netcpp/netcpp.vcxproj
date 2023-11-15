@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="net\Netexcept.hpp" />
     <ClInclude Include="net\Dns.hpp" />
     <ClInclude Include="net\Extension.hpp" />
     <ClInclude Include="net\IPAddress.hpp" />
@@ -30,6 +31,7 @@
     <ClInclude Include="src\pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Netexcept.cpp" />
     <ClCompile Include="src\Dns.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -826,16 +828,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)lib\$(Configuration)</OutDir>
+    <OutDir>$(SolutionDir)lib\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)lib\$(Configuration)</OutDir>
+    <OutDir>$(SolutionDir)lib\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)lib\$(Configuration)</OutDir>
+    <OutDir>$(SolutionDir)lib\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)lib\$(Configuration)</OutDir>
+    <OutDir>$(SolutionDir)lib\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

@@ -1,7 +1,11 @@
 #pragma once
 
-#include "IPEndPoint.hpp"
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+
 #include <memory>
+
+#include "IPEndPoint.hpp"
 
 namespace net
 {
@@ -91,21 +95,21 @@ namespace net
 		void SetLocalEndPoint(IPEndPoint ep);
 	public:
 		void Disconnect();
-		bool DisconnectAsync(const std::shared_ptr<class DisconnectEvent>& disconnectEvent) const;
+		bool DisconnectAsync(class DisconnectEvent* disconnectEvent) const;
 
 		Socket Accept() const;
-		bool AcceptAsync(std::shared_ptr<class AcceptEvent> acceptEvent) const;
+		bool AcceptAsync(class AcceptEvent* acceptEvent) const;
 
 		bool Connect(IPEndPoint ep);
-		bool ConnectAsync(std::shared_ptr<class ConnectEvent> connectEvent);
+		bool ConnectAsync(class ConnectEvent* connectEvent);
 
 		int Send(ArraySegment seg) const;
 		int SendTo(ArraySegment seg, IPEndPoint target) const;
-		bool SendAsync(std::shared_ptr<class SendEvent> sendEvent) const;
+		bool SendAsync(class SendEvent* sendEvent) const;
 
 		int Receive(ArraySegment seg) const;
 		int ReceiveFrom(ArraySegment seg, IPEndPoint target) const;
-		bool ReceiveAsync(std::shared_ptr<class RecvEvent> recvEvent) const;
+		bool ReceiveAsync(class RecvEvent* recvEvent) const;
 	public:
 		template<class T>
 		void SetSocketOption(SocketOptionLevel level, SocketOptionName name, T value) const
@@ -126,7 +130,7 @@ namespace net
 		void SetTTL(int ttl) const;
 		void SetSendBufferSize(int size) const;
 		void SetReceiveBufferSize(int size) const;
-		bool IsValid() const;
+		bool IsOpen() const;
 	public:
 		Socket& operator=(const Socket& sock);
 		Socket& operator=(Socket&& sock) noexcept;

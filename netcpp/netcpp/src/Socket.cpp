@@ -34,14 +34,14 @@ Socket::Socket(Socket&& sock) noexcept
 	SetRemoteEndPoint(sock.GetRemoteEndPoint());
 }
 
+net::Socket::~Socket()
+{
+	Close();
+}
+
 Socket::Socket()
 {
 	_sock = INVALID_SOCKET;
-}
-
-Socket::~Socket()
-{
-	Close();
 }
 
 void Socket::SetHandle(SOCKET s)
@@ -110,9 +110,9 @@ void net::Socket::Disconnect()
 	Close();
 }
 
-bool net::Socket::DisconnectAsync(const std::shared_ptr<DisconnectEvent>& disconnectEvent) const
+bool net::Socket::DisconnectAsync(DisconnectEvent* disconnectEvent) const
 {
-	if (!Extension::DisconnectEx(_sock, disconnectEvent.get(), 0, 0))
+	if (!Extension::DisconnectEx(_sock, disconnectEvent, 0, 0))
 	{
 		const int err = WSAGetLastError();
 		return err == WSA_IO_PENDING;
@@ -128,7 +128,7 @@ Socket Socket::Accept() const
 	return clientSock;
 }	
 
-bool Socket::AcceptAsync(std::shared_ptr<AcceptEvent> event) const
+bool Socket::AcceptAsync(AcceptEvent* event) const
 {
 	event->acceptSocket = std::make_shared<Socket>(AddressFamily::Internetwork, SocketType::Stream);
 	
@@ -136,7 +136,7 @@ bool Socket::AcceptAsync(std::shared_ptr<AcceptEvent> event) const
 	ZeroMemory(&event->_acceptexBuffer, (sizeof(SOCKADDR_IN) + 16) * 2);
 	if (!Extension::AcceptEx(_sock, event->acceptSocket->GetHandle(), event->_acceptexBuffer, 0,
 		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
-		&dwByte, event.get()))
+		&dwByte, event))
 	{
 		const auto err = WSAGetLastError();
 		return err == WSA_IO_PENDING;
@@ -144,7 +144,7 @@ bool Socket::AcceptAsync(std::shared_ptr<AcceptEvent> event) const
 	return false;
 }		
 
-bool Socket::ConnectAsync(std::shared_ptr<ConnectEvent> event)
+bool Socket::ConnectAsync(ConnectEvent* event)
 {
 	Bind(IPEndPoint(IPAddress::Any, 0));
 	IPAddress ipAdr = event->endPoint.GetAddress();
@@ -152,7 +152,7 @@ bool Socket::ConnectAsync(std::shared_ptr<ConnectEvent> event)
 	if (!Extension::ConnectEx(_sock,
 		reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN),
 		nullptr, NULL,
-		&dw, event.get())
+		&dw, event)
 		)
 	{
 		const auto err = WSAGetLastError();
@@ -176,7 +176,7 @@ int Socket::SendTo(ArraySegment seg, IPEndPoint target) const
 		);
 }
 
-bool Socket::SendAsync(std::shared_ptr<SendEvent> sendEvent) const
+bool Socket::SendAsync(SendEvent* sendEvent) const
 {
 	WSABUF wsaBuf;
 	wsaBuf.buf = sendEvent->segment.Array + sendEvent->segment.Offset;
@@ -186,7 +186,7 @@ bool Socket::SendAsync(std::shared_ptr<SendEvent> sendEvent) const
 	if (SOCKET_ERROR == WSASend(_sock,
 		&wsaBuf, 1,
 		&sentBytes, flags,
-		sendEvent.get(), nullptr)
+		sendEvent, nullptr)
 		)
 	{
 		const int err = WSAGetLastError();
@@ -209,7 +209,7 @@ int Socket::ReceiveFrom(ArraySegment seg, IPEndPoint target) const
 		NULL, reinterpret_cast<sockaddr*>(&addr), &len);
 }
 
-bool Socket::ReceiveAsync(std::shared_ptr<RecvEvent> recvEvent) const
+bool Socket::ReceiveAsync(RecvEvent* recvEvent) const
 {
 	WSABUF wsaBuf = {
 		.len = static_cast<ULONG>(recvEvent->segment.Count),
@@ -220,7 +220,7 @@ bool Socket::ReceiveAsync(std::shared_ptr<RecvEvent> recvEvent) const
 	if (SOCKET_ERROR == WSARecv(_sock,
 		&wsaBuf, 1,
 		&recvBytes, &flags,
-		recvEvent.get(), nullptr)
+		recvEvent, nullptr)
 		)
 	{
 		const int err = WSAGetLastError();
@@ -273,7 +273,7 @@ void Socket::SetReceiveBufferSize(int size) const
 	SetSocketOption(SocketOptionLevel::Socket, SocketOptionName::ReceiveBuffer, size);
 }
 
-bool Socket::IsValid() const
+bool Socket::IsOpen() const
 {
 	return INVALID_SOCKET != _sock;
 }

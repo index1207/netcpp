@@ -28,7 +28,6 @@ namespace net
 		void Init();
 	public:
 		SocketAsyncEvent(EventType eventType);
-		~SocketAsyncEvent() { std::cout << "Event Distroyed.\n"; }
 		EventType eventType;
 		SocketError socketError;
 		std::function<void(SocketAsyncEvent*)> completed;

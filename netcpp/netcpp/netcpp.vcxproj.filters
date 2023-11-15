@@ -17,6 +17,7 @@
     <ClInclude Include="net\NetCore.hpp" />
     <ClInclude Include="net\SocketAsyncEvent.hpp" />
     <ClInclude Include="net\Dns.hpp" />
+    <ClInclude Include="net\Netexcept.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp" />
@@ -28,5 +29,6 @@
     <ClCompile Include="src\netcpp.cpp" />
     <ClCompile Include="src\SocketAsyncEvent.cpp" />
     <ClCompile Include="src\Dns.cpp" />
+    <ClCompile Include="src\Netexcept.cpp" />
   </ItemGroup>
 </Project>
