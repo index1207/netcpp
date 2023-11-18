@@ -1,25 +1,24 @@
 #include "Listener.hpp"
 #include <iostream>
-#include <net/Netexcept.hpp>
-#include "Listener.hpp"
+#include <net\exception.hpp>
 
 using namespace std;
 
-Listener::Listener() : _listenSock(Socket(AddressFamily::Internetwork, SocketType::Stream))
+Listener::Listener() : _listenSock(net::socket(address_family::IPV4, socket_type::STREAM))
 {
-	if (!_listenSock.IsOpen())
+	if (!_listenSock.valid())
 		throw network_error("Invalid socket.");
 }
 
-Listener::Listener(IPEndPoint ep) : _listenSock(AddressFamily::Internetwork, SocketType::Stream)
+Listener::Listener(endpoint ep) : _listenSock(address_family::IPV4, socket_type::STREAM)
 {
-	if (!_listenSock.IsOpen())
+	if (!_listenSock.valid())
 		throw network_error("Invalid socket.");
 
-	if (!_listenSock.Bind(ep))
-		throw network_error("Bind()");
-	if(!_listenSock.Listen())
-		throw network_error("Listen()");
+	if (!_listenSock.bind(ep))
+		throw network_error("bind()");
+	if(!_listenSock.listen())
+		throw network_error("listen()");
 }
 
 Listener::~Listener()
@@ -32,9 +31,9 @@ Listener::~Listener()
 
 void Listener::Run(int count)
 {
-	cout << "Server is running on " << _listenSock.GetLocalEndPoint().ToString() << '\n';
+	cout << "Server is running on " << _listenSock.get_local().ToString() << '\n';
 	for (int i = 0; i < count; ++i) {
-		auto acceptEvent = new AcceptEvent;
+		auto acceptEvent = new context::accept;
 		_acceptEvents.push(acceptEvent);
 
 		acceptEvent->completed = std::bind(&Listener::OnAcceptCompleted, this, std::placeholders::_1);
@@ -42,27 +41,29 @@ void Listener::Run(int count)
 	}
 }
 
-void Listener::Run(IPEndPoint ep, int count)
+void Listener::Run(endpoint ep, int count)
 {
-	if (!_listenSock.Bind(ep))
-		throw network_error("Bind()");
-	if (!_listenSock.Listen())
-		throw network_error("Listen()");
+	if (!_listenSock.bind(ep))
+		throw network_error("bind()");
+	if (!_listenSock.listen())
+		throw network_error("listen()");
 
 	Run(count);
 }
 
-void Listener::StartAccept(AcceptEvent* event)
+void Listener::StartAccept(context::accept* event)
 {
-	if (!_listenSock.AcceptAsync(event)) {
-		throw network_error("AcceptAsync()");
+	if (!_listenSock.accept_async(event)) {
+		throw network_error("accept_async()");
 	}
 }
 
-void Listener::OnAcceptCompleted(net::SocketAsyncEvent* event)
+void Listener::OnAcceptCompleted(net::io_context* event)
 {
-	if (event->socketError == SocketError::Success) {
+	if (event->socketError == socket_error::SUCCESS) {
 		cout << "Connected!\n";
-		StartAccept(static_cast<AcceptEvent*>(event));
+
+		auto acceptEvent = static_cast<context::accept*>(event);
+		StartAccept(acceptEvent);
 	}
 }

@@ -10,6 +10,5 @@ public:
 	virtual char const* what() const;
 private:
 	std::string _msg;
-	std::string _cause;
 };
 

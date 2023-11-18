@@ -5,7 +5,7 @@
 
 namespace net
 {
-	class Extension
+	class wsock
 	{
 	public:
 		static LPFN_ACCEPTEX AcceptEx;

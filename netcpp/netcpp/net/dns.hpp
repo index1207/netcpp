@@ -5,19 +5,19 @@
 
 namespace net
 {
-	struct IPHostEntry
+	struct host_entry
 	{
-		std::vector<class IPAddress> AddressList;
+		std::vector<class ip_address> AddressList;
 		std::vector<std::string> Aliases;
 		std::string HostName;
 	};
 
-	class Dns
+	class dns
 	{
 	public:
 		static std::string GetHostName();
-		static IPHostEntry GetHostEntry(std::string hostname);
-		static IPHostEntry GetHostEntry(IPAddress ipAddress);
+		static host_entry GetHostEntry(std::string hostname);
+		static host_entry GetHostEntry(ip_address ipAddress);
 	};
 }
 

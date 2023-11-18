@@ -1,34 +1,81 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="net">
-      <UniqueIdentifier>{f4781336-e66d-4889-9615-73c548eadd2f}</UniqueIdentifier>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="헤더 파일">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\pch.h" />
-    <ClInclude Include="net\IPAddress.hpp" />
-    <ClInclude Include="net\IPEndPoint.hpp" />
-    <ClInclude Include="net\Socket.hpp" />
-    <ClInclude Include="net\Extension.hpp" />
-    <ClInclude Include="net\netcpp.hpp">
-      <Filter>net</Filter>
+    <ClInclude Include="net\Dns.hpp">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="net\NetCore.hpp" />
-    <ClInclude Include="net\SocketAsyncEvent.hpp" />
-    <ClInclude Include="net\Dns.hpp" />
-    <ClInclude Include="net\Netexcept.hpp" />
+    <ClInclude Include="net\Extension.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="net\IPAddress.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="net\IPEndPoint.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="net\NetCore.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="net\netcpp.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="net\Netexcept.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="net\Socket.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="net\SocketAsyncEvent.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pch.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\pch.cpp" />
-    <ClCompile Include="src\IPAddress.cpp" />
-    <ClCompile Include="src\IPEndPoint.cpp" />
-    <ClCompile Include="src\Socket.cpp" />
-    <ClCompile Include="src\Extension.cpp" />
-    <ClCompile Include="src\NetCore.cpp" />
-    <ClCompile Include="src\netcpp.cpp" />
-    <ClCompile Include="src\SocketAsyncEvent.cpp" />
-    <ClCompile Include="src\Dns.cpp" />
-    <ClCompile Include="src\Netexcept.cpp" />
+    <ClCompile Include="src\Dns.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Extension.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IPAddress.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IPEndPoint.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NetCore.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="src\netcpp.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Netexcept.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pch.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Socket.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SocketAsyncEvent.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

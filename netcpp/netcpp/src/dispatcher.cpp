@@ -1,106 +1,106 @@
 #include "pch.h"
-#include "NetCore.hpp"
+#include "dispatcher.hpp"
 
 #include <cassert>
 #include <windef.h>
 
-#include "SocketAsyncEvent.hpp"
-#include "Extension.hpp"
+#include "io_context.hpp"
+#include "..\net\wsock.hpp"
 
 using namespace net;
 
-NetCore net::GNetCore;
+dispatcher net::GNetCore;
 
-NetCore::NetCore()
+dispatcher::dispatcher()
 {
 	_hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, NULL);
 
 	SYSTEM_INFO info;
 	GetSystemInfo(&info);
-	for (unsigned i = 0; i < info.dwNumberOfProcessors * 2; ++i)
+	for (unsigned i = 0; i < info.dwNumberOfProcessors; ++i)
 	{
-		auto thread = reinterpret_cast<HANDLE>(::_beginthreadex(NULL, NULL, Worker, _hcp, 0, NULL));
+		auto thread = reinterpret_cast<HANDLE>(::_beginthreadex(NULL, NULL, worker, _hcp, 0, NULL));
 		if(thread == nullptr)
 			throw std::runtime_error("Failed create thread.");
 	}
 }
 
-NetCore::~NetCore()
+dispatcher::~dispatcher()
 {
 	CloseHandle(_hcp);
 }
 
-void NetCore::Register(Socket& sock)
+void dispatcher::push(socket& sock)
 {
-	Register(sock.GetHandle());
+	push(sock.get_handle());
 }
 
-void NetCore::Register(SOCKET s)
+void dispatcher::push(SOCKET s)
 {
 	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(s), _hcp, NULL, NULL);
 }
 
-void BindAcceptExSockAddress(AcceptEvent* args)
+void BindAcceptExSockAddress(context::accept* args)
 {
 	SOCKADDR_IN* localAdr = nullptr,
 		* remoteAdr = nullptr;
 	int l_len = 0, r_len = 0;
-	Extension::GetAcceptExSockaddrs(args->_acceptexBuffer, 0,
+	wsock::GetAcceptExSockaddrs(args->_acceptexBuffer, 0,
 		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
 		reinterpret_cast<SOCKADDR**>(&localAdr), &l_len,
 		reinterpret_cast<SOCKADDR**>(&remoteAdr), &r_len);
 
-	args->acceptSocket->SetRemoteEndPoint(IPEndPoint::Parse(*remoteAdr));
-	args->acceptSocket->SetLocalEndPoint(IPEndPoint::Parse(*localAdr));
+	args->acceptSocket->set_remote(endpoint::Parse(*remoteAdr));
+	args->acceptSocket->set_local(endpoint::Parse(*localAdr));
 }
 
 
-unsigned CALLBACK net::Worker(HANDLE hcp)
+unsigned CALLBACK net::worker(HANDLE hcp)
 {
 	while (true)
 	{
 		DWORD transferredBytes = 0;
 		ULONG_PTR agent = 0;
-		SocketAsyncEvent* event = nullptr;
+		io_context* event = nullptr;
 		if (!::GetQueuedCompletionStatus(hcp, &transferredBytes, &agent, reinterpret_cast<LPOVERLAPPED*>(&event), INFINITE))
 		{
 			continue;
 		}
 
-		event->socketError = SocketError::Success;
+		event->socketError = socket_error::SUCCESS;
 		
 		switch (event->eventType)
 		{
-			case EventType::Accept:
+			case context_type::ACCEPT:
 			{
-				auto acceptEvent(static_cast<AcceptEvent*>(event));
-				GNetCore.Register(acceptEvent->acceptSocket->GetHandle());
+				auto acceptEvent(static_cast<context::accept*>(event));
+				GNetCore.push(acceptEvent->acceptSocket->get_handle());
 
 				BindAcceptExSockAddress(acceptEvent);
 				acceptEvent->completed(acceptEvent);
 				break;
 			}
-			case EventType::Connect:
+			case context_type::CONNECT:
 			{
-				auto connectEvent(static_cast<ConnectEvent*>(event));
+				auto connectEvent(static_cast<context::connect*>(event));
 				connectEvent->completed(connectEvent);
 				break;
 			}
-			case EventType::Disconnect:
+			case context_type::DISCONNECT:
 			{
 				event->completed(event);
 				break;
 			}
-			case EventType::Send:
+			case context_type::SEND:
 			{
-				auto sendEvent(static_cast<SendEvent*>(event));
+				auto sendEvent(static_cast<context::send*>(event));
 				sendEvent->sentBytes = transferredBytes;
 				sendEvent->completed(sendEvent);
 				break;
 			}
-			case EventType::Recv:
+			case context_type::RECEIVE:
 			{
-				auto recvEvent(static_cast<RecvEvent*>(event));
+				auto recvEvent(static_cast<context::receive*>(event));
 
 				recvEvent->recvBytes = transferredBytes;
 				recvEvent->completed(recvEvent);

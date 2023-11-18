@@ -7,7 +7,7 @@ using namespace std;
 int main()
 {
 	try {
-		Listener listener(IPEndPoint(IPAddress::Any, 8888));
+		Listener listener(endpoint(ip_address::Any, 8888));
 		listener.Run();
 
 		getchar();
