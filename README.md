@@ -18,11 +18,11 @@ To build this library, you need upper VS2019 compiler version.
 #include <iostream>
 
 int main() {
-    net::socket sock(net::AddressFamily::IPv4, net::SocketType::Stream);
+    net::Socket sock(net::AddressFamily::IPv4, net::SocketType::Stream);
     if (!sock.isOpen()) {
         return -1;
     }
-    if (!sock.ConnectContext(net::endpoint(net::IpAddress::Loopback, 8085))) {
+    if (!sock.connect(net::Endpoint(net::IpAddress::Loopback, 8085))) {
         return -1;
     }
     std::cout << "Connected!";
@@ -35,11 +35,11 @@ int main() {
 #include <iostream>
 
 int main() {
-    net::socket sock(net::AddressFamily::IPv4, net::SocketType::Stream);
+    net::Socket sock(net::AddressFamily::IPv4, net::SocketType::Stream);
     if (!sock.isOpen()) {
         return -1;
     }
-    if(!sock.bind(net::endpoint(net::IpAddress::Loopback, 8085))) {
+    if(!sock.bind(net::Endpoint(net::IpAddress::Loopback, 8085))) {
       return -1;
     }
     if(!sock.listen()) {
@@ -47,7 +47,7 @@ int main() {
     }
 
     while(true) {
-        auto client = sock.AcceptContext();
+        auto client = sock.accept();
         std::cout << "Connected\n";
     }
 }
