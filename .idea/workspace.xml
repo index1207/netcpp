@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="CMakePresetLoader">{
+  &quot;useNewFormat&quot;: true
+}</component>
+  <component name="CMakeReloadState">
+    <option name="reloaded" value="true" />
+  </component>
+  <component name="CMakeRunConfigurationManager">
+    <generated>
+      <config projectName="test" targetName="netcpp" />
+      <config projectName="test" targetName="test" />
+      <config projectName="test" targetName="example" />
+    </generated>
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Release-Visual Studio" ENABLED="true" CONFIG_NAME="Release" TOOLCHAIN_NAME="Visual Studio" GENERATION_OPTIONS="-G &quot;Visual Studio 17 2022&quot;" />
+      <configuration PROFILE_NAME="Debug-Visual Studio" ENABLED="true" CONFIG_NAME="Debug" TOOLCHAIN_NAME="Visual Studio" GENERATION_OPTIONS="-G &quot;Visual Studio 17 2022&quot;" />
+      <configuration PROFILE_NAME="RelWithDebInfo-Visual Studio" ENABLED="true" CONFIG_NAME="RelWithDebInfo" TOOLCHAIN_NAME="Visual Studio" GENERATION_OPTIONS="-G &quot;Visual Studio 17 2022&quot;" />
+      <configuration PROFILE_NAME="MinSizeRel-Visual Studio" ENABLED="true" CONFIG_NAME="MinSizeRel" TOOLCHAIN_NAME="Visual Studio" GENERATION_OPTIONS="-G &quot;Visual Studio 17 2022&quot;" />
+      <configuration PROFILE_NAME="x64-debug" ENABLED="false" FROM_PRESET="true" GENERATION_DIR="$PROJECT_DIR$/out/build/x64-debug" />
+      <configuration PROFILE_NAME="x64-release" ENABLED="false" FROM_PRESET="true" GENERATION_DIR="$PROJECT_DIR$/out/build/x64-release" />
+      <configuration PROFILE_NAME="x86-debug" ENABLED="false" FROM_PRESET="true" GENERATION_DIR="$PROJECT_DIR$/out/build/x86-debug" />
+      <configuration PROFILE_NAME="x86-release" ENABLED="false" FROM_PRESET="true" GENERATION_DIR="$PROJECT_DIR$/out/build/x86-release" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="b046e7a1-a13d-474f-b63f-1ae06d8fe1aa" name="Changes" comment="Add example code">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example/connect.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/example/connect.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/net/dispatcher.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/IoCore.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/net/dns.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/Dns.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/net/endpoint.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/Endpoint.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/net/exception.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/Exception.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/net/io_context.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/Context.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/net/ip_address.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/IpAddress.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/net/netcpp.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/netcpp.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/net/socket.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/Socket.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/net/wsock.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/Native.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dispatcher.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/IoCore.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dns.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Dns.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/endpoint.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Endpoint.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/exception.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Exception.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/io_context.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Context.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ip_address.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/IpAddress.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/netcpp.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/netcpp.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pch.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/PCH.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pch.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/PCH.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/socket.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Socket.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/wsock.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Native.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/test/test.cpp" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug-Visual Studio" />
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="CMakeLists.txt" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="PUSH_AUTO_UPDATE" value="true" />
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="feature-crossplatform" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectApplicationVersion">
+    <option name="ide" value="CLion" />
+    <option name="majorVersion" value="2023" />
+    <option name="minorVersion" value="2.2" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 5
+}</component>
+  <component name="ProjectId" id="2YLR1wb5LclJAxHxeoLcT3TGA0K" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;release&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;structure.view.defaults.are.configured&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Project\netcpp" />
+    </key>
+  </component>
+  <component name="RunManager" selected="CMake 애플리케이션.test">
+    <configuration name="example" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="test" TARGET_NAME="example" CONFIG_NAME="Release-Visual Studio" RUN_TARGET_PROJECT_NAME="test" RUN_TARGET_NAME="example">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="netcpp" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="test" TARGET_NAME="netcpp" CONFIG_NAME="Release-Visual Studio">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="test" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="test" TARGET_NAME="test" CONFIG_NAME="Release-Visual Studio" RUN_TARGET_PROJECT_NAME="test" RUN_TARGET_NAME="test">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="main.cpp" type="CppFileRunConfiguration" factoryName="CppFileRunConfiguration" temporary="true" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="netcpp" TARGET_NAME="main.cpp" CONFIG_NAME="main.cpp">
+      <option name="sourceFile" value="test\main.cpp" />
+      <method v="2">
+        <option name="com.jetbrains.cidr.cpp.runfile.CppFileBuildBeforeRunTaskProvider$BasicBuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="C/C++ 파일.main.cpp" />
+      <item itemvalue="CMake 애플리케이션.example" />
+      <item itemvalue="CMake 애플리케이션.netcpp" />
+      <item itemvalue="CMake 애플리케이션.test" />
+    </list>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b046e7a1-a13d-474f-b63f-1ae06d8fe1aa" name="Changes" comment="" />
+      <created>1700302663387</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1700302663387</updated>
+      <workItem from="1700302665553" duration="4743000" />
+      <workItem from="1700374109543" duration="1385000" />
+      <workItem from="1700396980472" duration="8035000" />
+      <workItem from="1700444889856" duration="2107000" />
+      <workItem from="1700532259658" duration="2692000" />
+      <workItem from="1700644428884" duration="715000" />
+      <workItem from="1700649882802" duration="2133000" />
+    </task>
+    <task id="LOCAL-00001" summary="Fix bind error message">
+      <option name="closed" value="true" />
+      <created>1700314216751</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1700314216751</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Fix bind error message">
+      <option name="closed" value="true" />
+      <created>1700374140998</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1700374140999</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Remove directory">
+      <option name="closed" value="true" />
+      <created>1700377722375</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1700377722375</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Add example code">
+      <option name="closed" value="true" />
+      <created>1700443418534</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1700443418534</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VCPKGProject">
+    <isAutomaticEditVcpkgJson value="false" />
+    <isAutomaticCheckingOnLaunch value="false" />
+    <isAutomaticFoundErrors value="true" />
+    <isAutomaticFoundErrors value="true" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="release" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Fix bind error message" />
+    <MESSAGE value="Remove directory" />
+    <MESSAGE value="Add example code" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add example code" />
+  </component>
+</project>
