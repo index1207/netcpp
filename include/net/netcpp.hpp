@@ -16,6 +16,8 @@
 #include <stdexcept>
 
 
+#ifdef _WIN32
+
 class netcpp final
 {
 public:
@@ -34,3 +36,5 @@ public:
 };
 
 static netcpp _netcpp;
+
+#endif

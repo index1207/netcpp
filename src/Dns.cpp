@@ -23,7 +23,7 @@ HostEntry Dns::getHostEntry(std::string hostname)
 	{
 		SOCKADDR_IN addr_in;
 		addr_in.sin_addr.s_addr = *reinterpret_cast<long*>(entry->h_addr_list[i]);
-		hostentry.address_list.emplace_back(addr_in);
+		hostentry.addressList.emplace_back(addr_in);
 	}
 
 	for (int i = 0; entry->h_aliases[i] != nullptr; ++i)
@@ -44,7 +44,7 @@ HostEntry Dns::getHostEntry(IpAddress ipAddress)
 	{
 		SOCKADDR_IN addr_in;
 		addr_in.sin_addr.s_addr = *reinterpret_cast<long*>(entry->h_addr_list[i]);
-		hostentry.address_list.emplace_back(addr_in);
+		hostentry.addressList.emplace_back(addr_in);
 	}
 	for (int i = 0; entry->h_aliases[i] != nullptr; ++i)
 	{

@@ -7,7 +7,7 @@ namespace net
 {
 	struct HostEntry
 	{
-		std::vector<class IpAddress> address_list;
+		std::vector<class IpAddress> addressList;
 		std::vector<std::string> aliases;
 		std::string host_name;
 	};

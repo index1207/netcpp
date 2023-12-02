@@ -1,6 +1,7 @@
 #pragma once
 
 #include <span>
+#include <memory>
 
 #include "IpAddress.hpp"
 #include "Endpoint.hpp"
@@ -21,6 +22,7 @@ namespace net
 
 	enum class Protocol
 	{
+        Ip = IPPROTO_IP,
 		Tcp = IPPROTO_TCP,
 		Udp = IPPROTO_UDP
 	};
@@ -41,12 +43,15 @@ namespace net
 		RecvBuffer = SO_RCVBUF,
 		Broadcast = SO_BROADCAST,
 
-		// IP Level
+        UpdateAcceptContext = SO_UPDATE_ACCEPT_CONTEXT,
+        UpdateConnectContext = SO_UPDATE_CONNECT_CONTEXT,
+
+        // IP Level
 		TTL = 4,
 		
 		// Tcp Level
-		NoDelay = TCP_NODELAY,
-	};
+		NoDelay = TCP_NODELAY
+    };
 
 	struct Linger
 	{
@@ -54,17 +59,19 @@ namespace net
 		int time;
 	};
 
+    class Context;
+
 	class Socket
     {
 	public:
 		Socket();
-		Socket(AddressFamily af, SocketType st, Protocol pt);
-		Socket(AddressFamily af, SocketType st);
+		Socket(Protocol pt);
 		Socket(const Socket& sock);
 		Socket(Socket&& sock) noexcept;
 		~Socket();
 	public:
 		void close();
+        void create(Protocol pt = Protocol::Ip);
 
 		void setHandle(SOCKET s);
 		
@@ -79,21 +86,21 @@ namespace net
 		void setLocalEndpoint(Endpoint ep);
 	public:
 		void disconnect();
-		bool disconnect(class DisconnectContext* disconnectEvent) const;
+		bool disconnect(Context* context) const;
 
 		Socket accept() const;
-		bool accept(class AcceptContext* event) const;
+		bool accept(Context* context) const;
 
 		bool connect(Endpoint ep);
-		bool connect(class ConnectContext* event);
+		bool connect(Context* context);
 
 		int send(std::span<char> s) const;
 		int send(std::span<char> s, Endpoint target) const;
-		bool send(class SendContext* sendEvent) const;
+		bool send(Context* context) const;
 
 		int receive(std::span<char> s) const;
 		int receive(std::span<char> s, Endpoint target) const;
-		bool receive(class ReceiveContext* recvEvent) const;
+		bool receive(Context* context) const;
 	public:
 		template<class T>
 		void setSocketOption(OptionLevel level, OptionName name, T value) const
@@ -115,12 +122,14 @@ namespace net
 		void setSendBuffer(int size) const;
 		void setReceiveBuffer(int size) const;
 		bool isOpen() const;
+
+        void BindEndpoint(Endpoint endpoint);
 	public:
 		Socket& operator=(const Socket& sock);
 		Socket& operator=(Socket&& sock) noexcept;
-	private:
-		Endpoint _remoteEp;
-		Endpoint _localEp;
+    private:
+		std::unique_ptr<Endpoint> _remoteEndpoint;
+        std::unique_ptr<Endpoint> _localEndpoint;
 		SOCKET _sock;
 	};
 }

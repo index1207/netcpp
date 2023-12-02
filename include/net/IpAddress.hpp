@@ -9,6 +9,7 @@ namespace net
 	{
 		friend class Endpoint;
 		friend class Dns;
+        friend class Socket;
 	public:
 		static IpAddress Any;
 		static IpAddress None;
@@ -18,10 +19,10 @@ namespace net
 		IpAddress();
 		explicit IpAddress(const SOCKADDR_IN& adrs);
 	public:
-		static IpAddress Parse(std::string_view ipStr);
-		static IpAddress Parse(int ipNum);
+		static IpAddress parse(std::string_view ipStr);
+		static IpAddress parse(int ipNum);
 	public:
-		[[nodiscard]] std::string ToString() const;
-	};
+		[[nodiscard]] std::string toString() const;
+    };
 }
 

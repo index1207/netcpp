@@ -37,23 +37,9 @@ void IoCore::push(Socket& sock)
 
 void IoCore::push(SOCKET s)
 {
-	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(s), _hcp, NULL, NULL);
+	if(INVALID_HANDLE_VALUE == ::CreateIoCompletionPort(reinterpret_cast<HANDLE>(s), _hcp, NULL, NULL))
+        throw network_error("CreateIoCompletionPort");
 }
-
-void BindAcceptExSockAddress(AcceptContext* args)
-{
-	SOCKADDR_IN* localAdr = nullptr,
-		* remoteAdr = nullptr;
-	int l_len = 0, r_len = 0;
-	Native::GetAcceptExSockaddrs(args->_buf, 0,
-		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
-                                 reinterpret_cast<SOCKADDR**>(&localAdr), &l_len,
-                                 reinterpret_cast<SOCKADDR**>(&remoteAdr), &r_len);
-
-    args->accept_socket->setRemoteEndpoint(Endpoint::parse(*remoteAdr));
-    args->accept_socket->setLocalEndpoint(Endpoint::parse(*localAdr));
-}
-
 
 unsigned CALLBACK net::worker(HANDLE hcp)
 {
@@ -61,51 +47,36 @@ unsigned CALLBACK net::worker(HANDLE hcp)
 	{
 		DWORD transferredBytes = 0;
 		ULONG_PTR agent = 0;
-		Context* event = nullptr;
-		if (!::GetQueuedCompletionStatus(hcp, &transferredBytes, &agent, reinterpret_cast<LPOVERLAPPED*>(&event), INFINITE))
+		Context* context = nullptr;
+		if (!::GetQueuedCompletionStatus(hcp, &transferredBytes, &agent, reinterpret_cast<LPOVERLAPPED*>(&context), INFINITE))
 		{
 			continue;
 		}
 
-		event->socketError = SocketError::Success;
+        context->socketError = SocketError::Success;
 		
-		switch (event->eventType)
+		switch (context->contextType)
 		{
 			case ContextType::Accept:
-			{
-				auto acceptEvent(static_cast<AcceptContext*>(event));
-				g_dispatcher.push(acceptEvent->accept_socket->getHandle());
-
-				BindAcceptExSockAddress(acceptEvent);
-				acceptEvent->completed(acceptEvent);
-				break;
-			}
+            {
+                Socket& listenSock = *reinterpret_cast<Socket*>(context->token);
+                context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateAcceptContext, listenSock.getHandle());
+                context->acceptSocket->BindEndpoint(listenSock.getLocalEndpoint());
+                break;
+            }
 			case ContextType::Connect:
-			{
-				auto connectEvent(static_cast<ConnectContext*>(event));
-				connectEvent->completed(connectEvent);
-				break;
-			}
+                context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateConnectContext, NULL);
+                break;
 			case ContextType::Disconnect:
-			{
-				event->completed(event);
-				break;
-			}
-			case ContextType::Send:
-			{
-				auto sendEvent(static_cast<SendContext*>(event));
-				sendEvent->length = transferredBytes;
-				sendEvent->completed(sendEvent);
-				break;
-			}
+                break;
+            case ContextType::Send:
 			case ContextType::Receive:
 			{
-				auto recvEvent(static_cast<ReceiveContext*>(event));
-
-				recvEvent->length = transferredBytes;
-				recvEvent->completed(recvEvent);
+                context->length = transferredBytes;
 				break;
 			}
 		}
-	}
+        context->completed(context);
+
+    }
 }

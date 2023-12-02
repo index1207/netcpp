@@ -9,7 +9,7 @@ using namespace net;
 network_error::network_error(std::string_view msg) : _msg(msg)
 {
     _error = WSAGetLastError();
-    const_cast<std::string&>(_msg) = std::format("{}: {}", _msg, std::system_category().message(_error));
+    const_cast<std::string&>(_msg) = std::format("[{}] {}: {}", _error, _msg, std::system_category().message(_error));
 }
 
 char const* network_error::what() const

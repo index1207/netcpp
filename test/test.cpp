@@ -1,21 +1,20 @@
-#include <iostream>
-#include <vector>
-
 #include <net/netcpp.hpp>
-
-using namespace std;
-using namespace net;
+#include <iostream>
 
 int main() {
-    Socket sock(AddressFamily::IPv4, net::SocketType::Stream);
-    if(!sock.isOpen())
+    net::Socket sock(net::Protocol::Tcp);
+    if (!sock.isOpen()) {
         return -1;
-    sock.bind(Endpoint(IpAddress::Loopback, 9999));
-    sock.listen();
+    }
+    if(!sock.bind(net::Endpoint(net::IpAddress::Loopback, 8085))) {
+        return -1;
+    }
+    if(!sock.listen()) {
+        return -1;
+    }
 
-    string data = "HEllo";
-    while (true) {
-        auto s = sock.accept();
-        s.send(data);
+    while(true) {
+        auto client = sock.accept();
+        std::cout << "Connected\n";
     }
 }

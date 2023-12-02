@@ -22,7 +22,7 @@ bool bindExtensionFunction(SOCKET s, GUID guid, PVOID* func)
 
 void Native::initialize()
 {
-	Socket dummy(AddressFamily::IPv4, SocketType::Stream);
+	Socket dummy(Protocol::Tcp);
 	if(!bindExtensionFunction(dummy.getHandle(), WSAID_ACCEPTEX, reinterpret_cast<PVOID *>(&AcceptEx)))
 		throw std::runtime_error("Can't bind `AcceptEx` function.");
 	if(!bindExtensionFunction(dummy.getHandle(), WSAID_CONNECTEX, reinterpret_cast<PVOID *>(&ConnectEx)))

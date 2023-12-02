@@ -22,55 +22,22 @@ namespace net
 		Receive
 	};
 
-	class Context
-		: public OVERLAPPED
+    class Context
+		: private OVERLAPPED
 	{
-		void Init();
-	public:
-		explicit Context(ContextType eventType);
-		ContextType eventType;
+        friend class Socket;
+    public:
+		Context();
+    public:
+		ContextType contextType;
 		SocketError socketError;
 		std::function<void(Context*)> completed;
-	};
-
-    class AcceptContext : public Context
-    {
     public:
-        AcceptContext() : Context(ContextType::Accept), accept_socket(nullptr)
-        {
-            ZeroMemory(_buf, sizeof(_buf));
-        }
-        std::unique_ptr<class Socket> accept_socket;
-        char _buf[(sizeof(SOCKADDR_IN) + 16) * 2];
-    };
-
-    class ConnectContext : public Context
-    {
-    public:
-        ConnectContext() : Context(ContextType::Connect) { }
+        std::unique_ptr<Socket> acceptSocket;
+        void* token;
         Endpoint endpoint {};
-    };
-
-    class SendContext : public Context
-    {
-    public:
-        SendContext() : Context(ContextType::Send) { }
-        std::span<char> span {};
-        int length = 0;
-    };
-
-    class ReceiveContext : public Context
-    {
-    public:
-        ReceiveContext() : Context(ContextType::Receive) { }
-        std::span<char> span {};
-        int length = 0;
-    };
-
-    class DisconnectContext : public Context
-    {
-    public:
-        DisconnectContext() : Context(ContextType::Disconnect) { }
+        std::span<char> buffer {};
+        size_t length = 0;
     };
 }
 

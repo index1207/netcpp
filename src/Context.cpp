@@ -3,14 +3,8 @@
 
 using namespace net;
 
-void Context::Init()
+Context::Context()
 {
-	memset(this, 0, sizeof(WSAOVERLAPPED));
-	this->socketError = SocketError::Error;
-}
-
-Context::Context(ContextType eventType)
-{
-	Init();
-	this->eventType = eventType;
+    memset(this, 0, sizeof(WSAOVERLAPPED));
+    this->socketError = SocketError::Error;
 }

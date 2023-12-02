@@ -3,12 +3,12 @@
 
 using namespace net;
 
-IpAddress IpAddress::Any = Parse(INADDR_ANY);
-IpAddress IpAddress::None = Parse(INADDR_NONE);
-IpAddress IpAddress::Loopback = Parse("127.0.0.1");
-IpAddress IpAddress::Broadcast = Parse(INADDR_BROADCAST);
+IpAddress IpAddress::Any = parse(INADDR_ANY);
+IpAddress IpAddress::None = parse(INADDR_NONE);
+IpAddress IpAddress::Loopback = parse(INADDR_LOOPBACK);
+IpAddress IpAddress::Broadcast = parse(INADDR_BROADCAST);
 
-IpAddress IpAddress::Parse(std::string_view ipStr)
+IpAddress IpAddress::parse(std::string_view ipStr)
 {
 	IpAddress addr{};
 	ZeroMemory(&addr, sizeof(SOCKADDR_IN));
@@ -18,7 +18,7 @@ IpAddress IpAddress::Parse(std::string_view ipStr)
 	return addr;
 }
 
-IpAddress IpAddress::Parse(int ipNum)
+IpAddress IpAddress::parse(int ipNum)
 {
 	IpAddress addr{};
 	ZeroMemory(&addr, sizeof(SOCKADDR_IN));
@@ -42,7 +42,7 @@ IpAddress::IpAddress(const SOCKADDR_IN& adrs)
 	sin_port = adrs.sin_port;
 }
 
-std::string IpAddress::ToString() const
+std::string IpAddress::toString() const
 {
 	char ipStrBuf[16] = "";
 	inet_ntop(AF_INET, &sin_addr, ipStrBuf, 16);
