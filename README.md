@@ -8,7 +8,7 @@ this library is based on Windows Single-Platform based CMake.
 To build this library, you need upper VS2019 compiler version.
 1. Generate Visual Studio project. <br>
 `cmake .`
-2. isOpen .sln project and build.
+2. Open .sln project and build.
 
 ## Sample Code
 
