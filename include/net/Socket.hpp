@@ -6,6 +6,8 @@
 #include "IpAddress.hpp"
 #include "Endpoint.hpp"
 
+#include <mswsock.h>
+
 namespace net
 {
 	enum class AddressFamily
