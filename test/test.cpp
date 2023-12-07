@@ -5,6 +5,7 @@ using namespace std;
 using namespace net;
 
 Socket sock;
+Context ov;
 
 void static OnCompleted(Context* context) {
     cout << "Connected!\n";
@@ -17,9 +18,8 @@ int main() {
     sock.bind(Endpoint(IpAddress::Loopback, 9999));
     sock.listen();
 
-    auto context = new Context;
-    context->completed = OnCompleted;
-    sock.accept(context);
+    ov.completed = OnCompleted;
+    sock.accept(&ov);
 
     getchar();
 }

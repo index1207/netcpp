@@ -5,5 +5,16 @@ using namespace net;
 
 Context::Context()
 {
-    memset(static_cast<WSAOVERLAPPED*>(this), 0, sizeof(WSAOVERLAPPED));
+    init();
+}
+
+void Context::init()
+{
+    OVERLAPPED::hEvent = 0;
+    OVERLAPPED::Internal = 0;
+    OVERLAPPED::InternalHigh = 0;
+    OVERLAPPED::Offset = 0;
+    OVERLAPPED::OffsetHigh = 0;
+
+    contextType = ContextType::None;
 }

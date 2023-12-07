@@ -91,7 +91,7 @@ namespace net
 		bool disconnect(Context* context) const;
 
 		Socket accept() const;
-		bool accept(Context* context) const;
+		bool accept(Context *context) const;
 
 		bool connect(Endpoint ep);
 		bool connect(Context* context);

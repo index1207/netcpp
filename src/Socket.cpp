@@ -65,7 +65,7 @@ bool Socket::bind(Endpoint ep)
     setLocalEndpoint(ep);
 	IpAddress ipAdr = _localEndpoint->getAddress();
     const auto ret = ::bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN6));
-	g_dispatcher.push(*this);
+	ioCore.push(*this);
 	return SOCKET_ERROR != ret;
 }
 
@@ -107,6 +107,8 @@ void Socket::disconnect()
 
 bool net::Socket::disconnect(Context* context) const
 {
+    context->init();
+
     context->contextType = ContextType::Disconnect;
 	if (!Native::DisconnectEx(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
 	{
@@ -124,9 +126,11 @@ net::Socket Socket::accept() const
 	return clientSock;
 }	
 
-bool Socket::accept(Context* context) const {
+bool Socket::accept(Context *context) const {
+    context->init();
+
     context->contextType = ContextType::Accept;
-    context->token = (void *) this;
+    context->_listenSock = this;
 
     context->acceptSocket = std::make_unique<Socket>(Protocol::Tcp);
 
@@ -134,7 +138,7 @@ bool Socket::accept(Context* context) const {
     char _buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
     if (!Native::AcceptEx(_sock, context->acceptSocket->getHandle(), _buf, 0,
                           sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
-                          &dwByte, reinterpret_cast<LPOVERLAPPED>(context))) {
+                          &dwByte, context)) {
         const auto err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
@@ -143,6 +147,8 @@ bool Socket::accept(Context* context) const {
 
 bool Socket::connect(Context* context)
 {
+    context->init();
+
     context->contextType = ContextType::Connect;
 
     bind(Endpoint(IpAddress::Any, 0));
@@ -178,6 +184,7 @@ int Socket::send(std::span<char> s, Endpoint target) const
 
 bool Socket::send(Context* context) const
 {
+    context->init();
     context->contextType = ContextType::Send;
 
     WSABUF wsaBuf;
@@ -213,6 +220,7 @@ int Socket::receive(std::span<char> s, Endpoint target) const
 
 bool Socket::receive(Context* context) const
 {
+    context->init();
     context->contextType = ContextType::Receive;
 
 	WSABUF wsaBuf = {

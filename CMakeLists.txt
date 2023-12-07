@@ -2,7 +2,9 @@
 
 project(netcpp VERSION 1.0.0 DESCRIPTION "C++ Network library.")
 set(CMAKE_CXX_STANDARD 20)
+
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd /Zi /RTC1")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD /Zi")
 
 include_directories(include/net)
 
@@ -27,7 +29,7 @@ target_include_directories(netcpp
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-target_link_libraries(netcpp wsock32 ws2_32)
+target_link_libraries(netcpp ws2_32)
 
 target_precompile_headers(netcpp
         PRIVATE
@@ -43,4 +45,4 @@ project(test)
 
 add_executable(test test/test.cpp)
 
-target_link_libraries(test netcpp)
+target_link_libraries(test netcpp ws2_32)

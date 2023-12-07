@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <atomic>
 #include <functional>
 #include "Socket.hpp"
 
@@ -8,6 +9,7 @@ namespace net
 {
 	enum class ContextType
 	{
+        None,
 		Accept,
 		Connect,
 		Disconnect,
@@ -15,20 +17,24 @@ namespace net
 		Receive
 	};
 
-    class Context
-		: private OVERLAPPED
+    using Callback = std::function<void(Context*)>;
+
+    class Context : public OVERLAPPED
 	{
+        friend class Socket;
     public:
 		Context();
     public:
 		ContextType contextType;
-		std::function<void(Context*)> completed = nullptr;
+		Callback completed = nullptr;
     public:
         std::unique_ptr<Socket> acceptSocket = nullptr;
-        void* token = nullptr;
         Endpoint endpoint {};
         std::span<char> buffer {};
-        size_t length = 0;
+        std::atomic<u_long> length = 0;
+    private:
+        void init();
+        const Socket* _listenSock = nullptr;
     };
 }
 

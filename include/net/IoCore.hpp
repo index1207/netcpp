@@ -20,5 +20,5 @@ namespace net
 		std::thread _worker;
 	};
 
-	extern IoCore g_dispatcher;
+	extern IoCore ioCore;
 }
