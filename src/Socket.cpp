@@ -124,25 +124,22 @@ net::Socket Socket::accept() const
 	return clientSock;
 }	
 
-bool Socket::accept(Context* context) const
-{
+bool Socket::accept(Context* context) const {
     context->contextType = ContextType::Accept;
-    context->token = (void*)this;
+    context->token = (void *) this;
 
-    context->acceptSocket.reset(new Socket(Protocol::Tcp));
+    context->acceptSocket = std::make_unique<Socket>(Protocol::Tcp);
 
-	DWORD dwByte = 0;
-    char _buf[(sizeof(SOCKADDR_IN) + 16) * 2];
-    ZeroMemory(&_buf, (sizeof(SOCKADDR_IN) + 16) * 2);
-	if (!Native::AcceptEx(_sock, context->acceptSocket->getHandle(), _buf, 0,
-		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
-                          &dwByte, reinterpret_cast<LPOVERLAPPED>(context)))
-	{
-		const auto err = WSAGetLastError();
-		return err == WSA_IO_PENDING;
-	}
-	return false;
-}		
+    DWORD dwByte = 0;
+    char _buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
+    if (!Native::AcceptEx(_sock, context->acceptSocket->getHandle(), _buf, 0,
+                          sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
+                          &dwByte, reinterpret_cast<LPOVERLAPPED>(context))) {
+        const auto err = WSAGetLastError();
+        return err == WSA_IO_PENDING;
+    }
+    return false;
+}
 
 bool Socket::connect(Context* context)
 {

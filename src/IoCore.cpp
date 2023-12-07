@@ -48,35 +48,32 @@ unsigned CALLBACK net::worker(HANDLE hcp)
 		DWORD transferredBytes = 0;
 		ULONG_PTR agent = 0;
 		Context* context = nullptr;
-		if (!::GetQueuedCompletionStatus(hcp, &transferredBytes, &agent, reinterpret_cast<LPOVERLAPPED*>(&context), INFINITE))
-		{
-			continue;
-		}
-
-        context->socketError = SocketError::Success;
-		
-		switch (context->contextType)
-		{
-			case ContextType::Accept:
-            {
-                Socket& listenSock = *reinterpret_cast<Socket*>(context->token);
-                context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateAcceptContext, listenSock.getHandle());
-                context->acceptSocket->BindEndpoint(listenSock.getLocalEndpoint());
-                break;
+		if (::GetQueuedCompletionStatus(hcp, &transferredBytes, &agent, reinterpret_cast<LPOVERLAPPED*>(&context), INFINITE))
+        {
+            switch (context->contextType) {
+                case ContextType::Accept: {
+                    Socket &listenSock = *reinterpret_cast<Socket *>(context->token);
+                    context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateAcceptContext,
+                                                           listenSock.getHandle());
+                    context->acceptSocket->BindEndpoint(listenSock.getLocalEndpoint());
+                    break;
+                }
+                case ContextType::Connect:
+                    context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateConnectContext, NULL);
+                    break;
+                case ContextType::Disconnect:
+                    break;
+                case ContextType::Send:
+                case ContextType::Receive: {
+                    context->length = transferredBytes;
+                    break;
+                }
             }
-			case ContextType::Connect:
-                context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateConnectContext, NULL);
-                break;
-			case ContextType::Disconnect:
-                break;
-            case ContextType::Send:
-			case ContextType::Receive:
-			{
-                context->length = transferredBytes;
-				break;
-			}
-		}
-        context->completed(context);
-
+            context->completed(context);
+        }
+        else
+        {
+            printf("%d\n", WSAGetLastError());
+        }
     }
 }

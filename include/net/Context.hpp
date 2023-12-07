@@ -6,13 +6,6 @@
 
 namespace net
 {
-	enum class SocketError
-	{
-#undef ERROR
-		Error = -1,
-		Success = 1,
-	};
-
 	enum class ContextType
 	{
 		Accept,
@@ -25,16 +18,14 @@ namespace net
     class Context
 		: private OVERLAPPED
 	{
-        friend class Socket;
     public:
 		Context();
     public:
 		ContextType contextType;
-		SocketError socketError;
-		std::function<void(Context*)> completed;
+		std::function<void(Context*)> completed = nullptr;
     public:
-        std::unique_ptr<Socket> acceptSocket;
-        void* token;
+        std::unique_ptr<Socket> acceptSocket = nullptr;
+        void* token = nullptr;
         Endpoint endpoint {};
         std::span<char> buffer {};
         size_t length = 0;

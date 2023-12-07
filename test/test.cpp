@@ -1,20 +1,25 @@
-#include <net/netcpp.hpp>
 #include <iostream>
+#include <net/netcpp.hpp>
+
+using namespace std;
+using namespace net;
+
+Socket sock;
+
+void static OnCompleted(Context* context) {
+    cout << "Connected!\n";
+    sock.accept(context);
+}
 
 int main() {
-    net::Socket sock(net::Protocol::Tcp);
-    if (!sock.isOpen()) {
-        return -1;
-    }
-    if(!sock.bind(net::Endpoint(net::IpAddress::Loopback, 8085))) {
-        return -1;
-    }
-    if(!sock.listen()) {
-        return -1;
-    }
+    sock.create(Protocol::Tcp);
 
-    while(true) {
-        auto client = sock.accept();
-        std::cout << "Connected\n";
-    }
+    sock.bind(Endpoint(IpAddress::Loopback, 9999));
+    sock.listen();
+
+    auto context = new Context;
+    context->completed = OnCompleted;
+    sock.accept(context);
+
+    getchar();
 }
