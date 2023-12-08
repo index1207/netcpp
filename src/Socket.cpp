@@ -109,7 +109,7 @@ bool net::Socket::disconnect(Context* context) const
 {
     context->init();
 
-    context->contextType = ContextType::Disconnect;
+    context->_contextType = ContextType::Disconnect;
 	if (!Native::DisconnectEx(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
 	{
 		const int err = WSAGetLastError();
@@ -129,10 +129,11 @@ net::Socket Socket::accept() const
 bool Socket::accept(Context *context) const {
     context->init();
 
-    context->contextType = ContextType::Accept;
-    context->_listenSock = this;
+    context->_contextType = ContextType::Accept;
+    context->_sock = this;
 
     context->acceptSocket = std::make_unique<Socket>(Protocol::Tcp);
+    ioCore.push(context->acceptSocket->getHandle());
 
     DWORD dwByte = 0;
     char _buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
@@ -148,11 +149,11 @@ bool Socket::accept(Context *context) const {
 bool Socket::connect(Context* context)
 {
     context->init();
-
-    context->contextType = ContextType::Connect;
+    context->_contextType = ContextType::Connect;
+    context->_sock = this;
 
     bind(Endpoint(IpAddress::Any, 0));
-	IpAddress ipAdr = context->endpoint.getAddress();
+	IpAddress ipAdr = context->endpoint->getAddress();
 	DWORD dw;
 	if (!Native::ConnectEx(_sock,
                            reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN),
@@ -185,7 +186,7 @@ int Socket::send(std::span<char> s, Endpoint target) const
 bool Socket::send(Context* context) const
 {
     context->init();
-    context->contextType = ContextType::Send;
+    context->_contextType = ContextType::Send;
 
     WSABUF wsaBuf;
 	wsaBuf.buf = context->buffer.data();
@@ -221,7 +222,7 @@ int Socket::receive(std::span<char> s, Endpoint target) const
 bool Socket::receive(Context* context) const
 {
     context->init();
-    context->contextType = ContextType::Receive;
+    context->_contextType = ContextType::Receive;
 
 	WSABUF wsaBuf = {
 		.len = static_cast<ULONG>(context->buffer.size()),

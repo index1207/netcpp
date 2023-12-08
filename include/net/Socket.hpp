@@ -105,9 +105,9 @@ namespace net
 		bool receive(Context* context) const;
 	public:
 		template<class T>
-		void setSocketOption(OptionLevel level, OptionName name, T value) const
+		int setSocketOption(OptionLevel level, OptionName name, T value) const
 		{
-			setsockopt(_sock,
+            return setsockopt(_sock,
 				static_cast<int>(level),
 				static_cast<int>(name),
 				reinterpret_cast<const char*>(&value),

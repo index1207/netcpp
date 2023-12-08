@@ -16,5 +16,7 @@ void Context::init()
     OVERLAPPED::Offset = 0;
     OVERLAPPED::OffsetHigh = 0;
 
-    contextType = ContextType::None;
+    _contextType = ContextType::None;
+
+    isSuccess = false;
 }

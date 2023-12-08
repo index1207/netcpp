@@ -5,14 +5,14 @@
 
 namespace net
 {
-	unsigned CALLBACK worker(HANDLE hcp);
-
 	class IoCore
 	{
 	public:
 		IoCore();
 		~IoCore();
-	public:
+    public:
+        static unsigned CALLBACK worker(HANDLE hcp);
+    public:
 		void push(Socket& sock);
 		void push(SOCKET s);
 	private:

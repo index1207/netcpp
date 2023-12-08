@@ -12,6 +12,7 @@
 using namespace net;
 
 IoCore net::ioCore;
+std::mutex mtx;
 
 IoCore::IoCore()
 {
@@ -21,10 +22,10 @@ IoCore::IoCore()
 	GetSystemInfo(&info);
 	for (unsigned i = 0; i < info.dwNumberOfProcessors; ++i)
 	{
-		auto thread = reinterpret_cast<HANDLE>(::_beginthreadex(NULL, NULL, worker, _hcp, 0, NULL));
-		if(thread == nullptr)
-			throw std::runtime_error("Failed create thread.");
-	}
+        auto thread = reinterpret_cast<HANDLE>(::_beginthreadex(NULL, NULL, worker, _hcp, 0, NULL));
+        if(thread == nullptr)
+            throw std::runtime_error("Failed create thread.");
+    }
 }
 
 IoCore::~IoCore()
@@ -43,33 +44,36 @@ void IoCore::push(SOCKET s)
         throw network_error("CreateIoCompletionPort");
 }
 
-unsigned CALLBACK net::worker(HANDLE hcp)
+unsigned CALLBACK IoCore::worker(HANDLE hcp)
 {
     DWORD transferredBytes = 0;
     ULONG_PTR key = 0;
     Context* context = nullptr;
     auto dispatch = [&context, &transferredBytes]() {
-        switch (context->contextType) {
+        context->isSuccess.store(true);
+        switch (context->_contextType) {
             case ContextType::Accept: {
-                //Socket &listenSock = *reinterpret_cast<Socket *>(context->token);
-                //context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateAcceptContext, listenSock.getHandle());
+                context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateAcceptContext, context->_sock);
                 //context->acceptSocket->BindEndpoint(listenSock.getLocalEndpoint());
                 break;
             }
             case ContextType::Connect:
-                context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateConnectContext, NULL);
+                if(0 != context->_sock->setSocketOption(OptionLevel::Socket, OptionName::UpdateConnectContext, NULL))
+                    context->isSuccess.store(false);
                 break;
             case ContextType::Disconnect:
                 break;
             case ContextType::Send:
             case ContextType::Receive: {
-                context->length = transferredBytes;
+                context->length.store(transferredBytes);
                 break;
             default:
                 break;
             }
         }
-        std::async(std::launch::async, context->completed, context).wait();
+        if (context->completed)
+            context->completed(context);
+        //std::async(std::launch::async, context->completed, context).wait();
     };
 
 	while (true)
