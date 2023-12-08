@@ -6,6 +6,8 @@
 #include "IpAddress.hpp"
 #include "Endpoint.hpp"
 
+#include <mswsock.h>
+
 namespace net
 {
 	enum class AddressFamily
@@ -89,7 +91,7 @@ namespace net
 		bool disconnect(Context* context) const;
 
 		Socket accept() const;
-		bool accept(Context* context) const;
+		bool accept(Context *context) const;
 
 		bool connect(Endpoint ep);
 		bool connect(Context* context);

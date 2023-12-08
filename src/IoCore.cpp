@@ -1,6 +1,8 @@
 #include "PCH.h"
 #include "IoCore.hpp"
 
+#include <future>
+
 #include <cassert>
 #include <windef.h>
 
@@ -9,7 +11,7 @@
 
 using namespace net;
 
-IoCore net::g_dispatcher;
+IoCore net::ioCore;
 
 IoCore::IoCore()
 {
@@ -43,40 +45,48 @@ void IoCore::push(SOCKET s)
 
 unsigned CALLBACK net::worker(HANDLE hcp)
 {
-	while (true)
-	{
-		DWORD transferredBytes = 0;
-		ULONG_PTR agent = 0;
-		Context* context = nullptr;
-		if (!::GetQueuedCompletionStatus(hcp, &transferredBytes, &agent, reinterpret_cast<LPOVERLAPPED*>(&context), INFINITE))
-		{
-			continue;
-		}
-
-        context->socketError = SocketError::Success;
-		
-		switch (context->contextType)
-		{
-			case ContextType::Accept:
-            {
-                Socket& listenSock = *reinterpret_cast<Socket*>(context->token);
-                context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateAcceptContext, listenSock.getHandle());
-                context->acceptSocket->BindEndpoint(listenSock.getLocalEndpoint());
+    DWORD transferredBytes = 0;
+    ULONG_PTR key = 0;
+    Context* context = nullptr;
+    auto dispatch = [&context, &transferredBytes]() {
+        switch (context->contextType) {
+            case ContextType::Accept: {
+                //Socket &listenSock = *reinterpret_cast<Socket *>(context->token);
+                //context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateAcceptContext, listenSock.getHandle());
+                //context->acceptSocket->BindEndpoint(listenSock.getLocalEndpoint());
                 break;
             }
-			case ContextType::Connect:
+            case ContextType::Connect:
                 context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateConnectContext, NULL);
                 break;
-			case ContextType::Disconnect:
+            case ContextType::Disconnect:
                 break;
             case ContextType::Send:
-			case ContextType::Receive:
-			{
+            case ContextType::Receive: {
                 context->length = transferredBytes;
-				break;
-			}
-		}
-        context->completed(context);
+                break;
+            default:
+                break;
+            }
+        }
+        std::async(std::launch::async, context->completed, context).wait();
+    };
 
+	while (true)
+	{
+		if (::GetQueuedCompletionStatus(hcp, &transferredBytes, &key, reinterpret_cast<LPOVERLAPPED*>(&context), INFINITE))
+        {
+            dispatch();
+        }
+        else
+        {
+            switch(WSAGetLastError())
+            {
+                case WSAETIMEDOUT:
+                    break;
+                default:
+                    dispatch();
+            }
+        }
     }
 }

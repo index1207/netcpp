@@ -29,25 +29,10 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b046e7a1-a13d-474f-b63f-1ae06d8fe1aa" name="Changes" comment="">
+    <list default="true" id="b046e7a1-a13d-474f-b63f-1ae06d8fe1aa" name="Changes" comment="Update All">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/example/connect.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/example/connect.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/include/net/Context.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/Context.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/include/net/Dns.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/Dns.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/include/net/Endpoint.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/Endpoint.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/include/net/IpAddress.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/IpAddress.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/include/net/Socket.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/Socket.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/include/net/netcpp.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/netcpp.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Context.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Context.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Dns.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Dns.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Endpoint.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Endpoint.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Exception.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Exception.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/IoCore.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/IoCore.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/IpAddress.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/IpAddress.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Native.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Native.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Socket.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Socket.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/test.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/test/test.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PCH.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/PCH.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -123,7 +108,7 @@
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
     &quot;structure.view.defaults.are.configured&quot;: &quot;true&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
@@ -133,7 +118,7 @@
       <recent name="D:\Project\netcpp" />
     </key>
   </component>
-  <component name="RunManager" selected="CMake 애플리케이션.test">
+  <component name="RunManager" selected="C/C++ 파일.main.cpp">
     <configuration name="example" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="test" TARGET_NAME="example" CONFIG_NAME="Release-Visual Studio" RUN_TARGET_PROJECT_NAME="test" RUN_TARGET_NAME="example">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -182,7 +167,12 @@
       <workItem from="1701264570378" duration="3773000" />
       <workItem from="1701403269116" duration="632000" />
       <workItem from="1701497118986" duration="3250000" />
-      <workItem from="1701520580472" duration="9454000" />
+      <workItem from="1701520580472" duration="10088000" />
+      <workItem from="1701677551086" duration="1024000" />
+      <workItem from="1701683557184" duration="1405000" />
+      <workItem from="1701756853733" duration="39000" />
+      <workItem from="1701757104911" duration="12000" />
+      <workItem from="1701772909760" duration="43000" />
     </task>
     <task id="LOCAL-00001" summary="Fix bind error message">
       <option name="closed" value="true" />
@@ -224,7 +214,15 @@
       <option name="project" value="LOCAL" />
       <updated>1701079324568</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Update All">
+      <option name="closed" value="true" />
+      <created>1701530338177</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1701530338177</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -264,6 +262,7 @@
     <MESSAGE value="Remove directory" />
     <MESSAGE value="Add example code" />
     <MESSAGE value="Renamed Classes" />
-    <option name="LAST_COMMIT_MESSAGE" value="Renamed Classes" />
+    <MESSAGE value="Update All" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update All" />
   </component>
 </project>
