@@ -49,12 +49,12 @@ unsigned CALLBACK IoCore::worker(HANDLE hcp)
     DWORD transferredBytes = 0;
     ULONG_PTR key = 0;
     Context* context = nullptr;
-    auto dispatch = [&context, &transferredBytes]() {
+    auto dispatch = [&context, &transferredBytes]() mutable {
         context->isSuccess.store(true);
         switch (context->_contextType) {
             case ContextType::Accept: {
                 context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateAcceptContext, context->_sock);
-                //context->acceptSocket->BindEndpoint(listenSock.getLocalEndpoint());
+                //context->acceptSocket->BindEndpoint();
                 break;
             }
             case ContextType::Connect:
@@ -64,18 +64,16 @@ unsigned CALLBACK IoCore::worker(HANDLE hcp)
             case ContextType::Disconnect:
                 break;
             case ContextType::Send:
-            case ContextType::Receive: {
+            case ContextType::Receive:
                 context->length.store(transferredBytes);
                 break;
             default:
                 break;
             }
-        }
-        if (context->completed)
-            context->completed(context);
-        //std::async(std::launch::async, context->completed, context).wait();
+            if (context->completed)
+                std::async(std::launch::async, context->completed, context).wait();
+                //context->completed(context);
     };
-
 	while (true)
 	{
 		if (::GetQueuedCompletionStatus(hcp, &transferredBytes, &key, reinterpret_cast<LPOVERLAPPED*>(&context), INFINITE))

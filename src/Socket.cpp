@@ -153,6 +153,7 @@ bool Socket::connect(Context* context)
     context->_sock = this;
 
     bind(Endpoint(IpAddress::Any, 0));
+    _remoteEndpoint = std::move(_localEndpoint);
 	IpAddress ipAdr = context->endpoint->getAddress();
 	DWORD dw;
 	if (!Native::ConnectEx(_sock,
@@ -313,7 +314,7 @@ void Socket::create(Protocol pt) {
     _sock = ::socket(PF_INET, static_cast<int>(type), static_cast<int>(pt));
 }
 
-void Socket::BindEndpoint(Endpoint endpoint)
+void Socket::BindEndpoint()
 {
     SOCKADDR_IN addr;
     int namelen = sizeof(SOCKADDR_IN);
@@ -321,6 +322,4 @@ void Socket::BindEndpoint(Endpoint endpoint)
     {
         throw network_error("getsockname()");
     }
-    _remoteEndpoint.reset(new Endpoint(IpAddress(addr), addr.sin_port));
-    _localEndpoint.reset(new Endpoint(IpAddress(addr), endpoint.getPort()));
 }
