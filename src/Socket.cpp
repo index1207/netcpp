@@ -5,7 +5,7 @@
 
 #include "Native.hpp"
 #include "Context.hpp"
-#include "IoCore.hpp"
+#include "IoSystem.hpp"
 
 using namespace net;
 
@@ -30,8 +30,7 @@ Socket::Socket(Socket&& sock) noexcept
 
 net::Socket::~Socket()
 {
-    if(_sock == INVALID_SOCKET)
-        close();
+    close();
 }
 
 Socket::Socket()
@@ -65,7 +64,7 @@ bool Socket::bind(Endpoint ep)
     setLocalEndpoint(ep);
 	IpAddress ipAdr = _localEndpoint->getAddress();
     const auto ret = ::bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN6));
-	ioCore.push(*this);
+	ioSystem.push(*this);
 	return SOCKET_ERROR != ret;
 }
 
@@ -109,7 +108,7 @@ bool net::Socket::disconnect(Context* context) const
 {
     context->init();
 
-    context->contextType = ContextType::Disconnect;
+    context->_contextType = ContextType::Disconnect;
 	if (!Native::DisconnectEx(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
 	{
 		const int err = WSAGetLastError();
@@ -129,14 +128,17 @@ net::Socket Socket::accept() const
 bool Socket::accept(Context *context) const {
     context->init();
 
-    context->contextType = ContextType::Accept;
-    context->_listenSock = this;
+    context->_contextType = ContextType::Accept;
+    context->_sock = this;
 
-    context->acceptSocket = std::make_unique<Socket>(Protocol::Tcp);
+    if(context->acceptSocket)
+        delete context->acceptSocket;
+    context->acceptSocket = new Socket(Protocol::Tcp);
+    ioSystem.push(context->acceptSocket->getHandle());
 
     DWORD dwByte = 0;
-    char _buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
-    if (!Native::AcceptEx(_sock, context->acceptSocket->getHandle(), _buf, 0,
+    char buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
+    if (!Native::AcceptEx(_sock, context->acceptSocket->getHandle(), buf, 0,
                           sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
                           &dwByte, context)) {
         const auto err = WSAGetLastError();
@@ -148,11 +150,12 @@ bool Socket::accept(Context *context) const {
 bool Socket::connect(Context* context)
 {
     context->init();
-
-    context->contextType = ContextType::Connect;
+    context->_contextType = ContextType::Connect;
+    context->_sock = this;
 
     bind(Endpoint(IpAddress::Any, 0));
-	IpAddress ipAdr = context->endpoint.getAddress();
+    _remoteEndpoint = std::move(_localEndpoint);
+	IpAddress ipAdr = context->endpoint->getAddress();
 	DWORD dw;
 	if (!Native::ConnectEx(_sock,
                            reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN),
@@ -185,7 +188,7 @@ int Socket::send(std::span<char> s, Endpoint target) const
 bool Socket::send(Context* context) const
 {
     context->init();
-    context->contextType = ContextType::Send;
+    context->_contextType = ContextType::Send;
 
     WSABUF wsaBuf;
 	wsaBuf.buf = context->buffer.data();
@@ -221,7 +224,7 @@ int Socket::receive(std::span<char> s, Endpoint target) const
 bool Socket::receive(Context* context) const
 {
     context->init();
-    context->contextType = ContextType::Receive;
+    context->_contextType = ContextType::Receive;
 
 	WSABUF wsaBuf = {
 		.len = static_cast<ULONG>(context->buffer.size()),
@@ -312,7 +315,7 @@ void Socket::create(Protocol pt) {
     _sock = ::socket(PF_INET, static_cast<int>(type), static_cast<int>(pt));
 }
 
-void Socket::BindEndpoint(Endpoint endpoint)
+void Socket::BindEndpoint()
 {
     SOCKADDR_IN addr;
     int namelen = sizeof(SOCKADDR_IN);
@@ -320,6 +323,4 @@ void Socket::BindEndpoint(Endpoint endpoint)
     {
         throw network_error("getsockname()");
     }
-    _remoteEndpoint.reset(new Endpoint(IpAddress(addr), addr.sin_port));
-    _localEndpoint.reset(new Endpoint(IpAddress(addr), endpoint.getPort()));
 }

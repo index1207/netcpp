@@ -3,16 +3,13 @@
 project(netcpp VERSION 1.0.0 DESCRIPTION "C++ Network library.")
 set(CMAKE_CXX_STANDARD 20)
 
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd /Zi /RTC1")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD /Zi")
-
 include_directories(include/net)
 
 add_library(netcpp STATIC)
 
 target_sources(netcpp PRIVATE
         src/PCH.cpp
-        src/IoCore.cpp
+        src/IoSystem.cpp
         src/Dns.cpp
         src/Endpoint.cpp
         src/Exception.cpp

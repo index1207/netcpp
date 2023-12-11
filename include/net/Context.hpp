@@ -19,22 +19,26 @@ namespace net
 
     using Callback = std::function<void(Context*)>;
 
-    class Context : public OVERLAPPED
+    class Context : private OVERLAPPED
 	{
         friend class Socket;
+        friend class IoSystem;
     public:
 		Context();
+        ~Context();
     public:
-		ContextType contextType;
 		Callback completed = nullptr;
     public:
-        std::unique_ptr<Socket> acceptSocket = nullptr;
-        Endpoint endpoint {};
+        Socket* acceptSocket = nullptr;
+        Endpoint* endpoint = nullptr;
         std::span<char> buffer {};
-        std::atomic<u_long> length = 0;
+        u_long length = 0;
+        bool isSuccess;
     private:
         void init();
-        const Socket* _listenSock = nullptr;
+    private:
+        const Socket* _sock = nullptr;
+        ContextType _contextType;
     };
 }
 
