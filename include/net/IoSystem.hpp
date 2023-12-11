@@ -17,7 +17,6 @@ namespace net
     public:
 		void push(Socket& sock);
 		void push(SOCKET s);
-        void join();
 	private:
 		HANDLE _hcp;
         std::vector<std::thread*> _workers;

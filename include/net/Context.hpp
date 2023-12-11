@@ -32,8 +32,8 @@ namespace net
         Socket* acceptSocket = nullptr;
         Endpoint* endpoint = nullptr;
         std::span<char> buffer {};
-        std::atomic<u_long> length = 0;
-        std::atomic_bool isSuccess;
+        u_long length = 0;
+        bool isSuccess;
     private:
         void init();
     private:

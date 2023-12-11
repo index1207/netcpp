@@ -28,8 +28,6 @@ IoSystem::IoSystem()
 IoSystem::~IoSystem()
 {
 	CloseHandle(_hcp);
-    for(auto t : _workers)
-        delete t;
 }
 
 void IoSystem::push(Socket& sock)
@@ -45,54 +43,37 @@ void IoSystem::push(SOCKET s)
 
 unsigned CALLBACK IoSystem::worker(HANDLE hcp)
 {
-    DWORD transferredBytes = 0;
-    ULONG_PTR key = 0;
-    Context* context = nullptr;
-    auto dispatch = [&context, &transferredBytes]() mutable {
-        context->isSuccess.store(true);
-        switch (context->_contextType) {
+    auto dispatch = [](Context* context, DWORD transferredBytes) mutable {
+        if (context != nullptr) {
+            switch (context->_contextType) {
             case ContextType::Accept:
-            {
                 context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateAcceptContext, context->_sock);
-                //context->acceptSocket->BindEndpoint();
                 break;
-            }
             case ContextType::Connect:
-                if(0 != context->_sock->setSocketOption(OptionLevel::Socket, OptionName::UpdateConnectContext, NULL))
-                    context->isSuccess.store(false);
+                if (0 != context->_sock->setSocketOption(OptionLevel::Socket, OptionName::UpdateConnectContext, NULL));
                 break;
             case ContextType::Disconnect:
                 break;
             case ContextType::Send:
             case ContextType::Receive:
-                context->length.store(transferredBytes);
+                context->length = transferredBytes;
                 break;
             default:
                 break;
             }
             if (context->completed != nullptr)
                 context->completed(context);
-    };
-	while (true)
-	{
-		if (::GetQueuedCompletionStatus(hcp, &transferredBytes, &key, reinterpret_cast<LPOVERLAPPED*>(&context), INFINITE))
-        {
-            dispatch();
         }
-        else
+    };
+    while (true)
+    {
+        DWORD transferredBytes = 0;
+        ULONG_PTR key = 0;
+        Context* context = nullptr;
+        if (::GetQueuedCompletionStatus(hcp, &transferredBytes, &key, reinterpret_cast<LPOVERLAPPED*>(&context), INFINITE))
         {
-            switch(WSAGetLastError())
-            {
-                case WSAETIMEDOUT:
-                    break;
-                default:
-                    dispatch();
-            }
+            dispatch(context, transferredBytes);
+            //printf("Completed Work!");
         }
     }
-}
-
-void IoSystem::join() {
-    for(auto t : _workers)
-        t->join();
 }
