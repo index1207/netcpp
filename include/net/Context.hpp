@@ -22,14 +22,15 @@ namespace net
     class Context : private OVERLAPPED
 	{
         friend class Socket;
-        friend class IoCore;
+        friend class IoSystem;
     public:
 		Context();
+        ~Context();
     public:
 		Callback completed = nullptr;
     public:
-        std::unique_ptr<Socket> acceptSocket = nullptr;
-        std::unique_ptr<Endpoint> endpoint = nullptr;
+        Socket* acceptSocket = nullptr;
+        Endpoint* endpoint = nullptr;
         std::span<char> buffer {};
         std::atomic<u_long> length = 0;
         std::atomic_bool isSuccess;

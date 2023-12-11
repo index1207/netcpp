@@ -1,9 +1,8 @@
 #include "PCH.h"
-#include "IoCore.hpp"
+#include "IoSystem.hpp"
 
-#include <future>
+#include <thread>
 
-#include <cassert>
 #include <windef.h>
 
 #include "Context.hpp"
@@ -11,10 +10,9 @@
 
 using namespace net;
 
-IoCore net::ioCore;
-std::mutex mtx;
+IoSystem net::ioSystem;
 
-IoCore::IoCore()
+IoSystem::IoSystem()
 {
 	_hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, NULL);
 
@@ -22,29 +20,30 @@ IoCore::IoCore()
 	GetSystemInfo(&info);
 	for (unsigned i = 0; i < info.dwNumberOfProcessors; ++i)
 	{
-        auto thread = reinterpret_cast<HANDLE>(::_beginthreadex(NULL, NULL, worker, _hcp, 0, NULL));
-        if(thread == nullptr)
-            throw std::runtime_error("Failed create thread.");
+        auto t = new std::thread(worker, _hcp);
+        _workers.emplace_back(t);
     }
 }
 
-IoCore::~IoCore()
+IoSystem::~IoSystem()
 {
 	CloseHandle(_hcp);
+    for(auto t : _workers)
+        delete t;
 }
 
-void IoCore::push(Socket& sock)
+void IoSystem::push(Socket& sock)
 {
 	push(sock.getHandle());
 }
 
-void IoCore::push(SOCKET s)
+void IoSystem::push(SOCKET s)
 {
 	if(INVALID_HANDLE_VALUE == ::CreateIoCompletionPort(reinterpret_cast<HANDLE>(s), _hcp, NULL, NULL))
         throw network_error("CreateIoCompletionPort");
 }
 
-unsigned CALLBACK IoCore::worker(HANDLE hcp)
+unsigned CALLBACK IoSystem::worker(HANDLE hcp)
 {
     DWORD transferredBytes = 0;
     ULONG_PTR key = 0;
@@ -52,7 +51,8 @@ unsigned CALLBACK IoCore::worker(HANDLE hcp)
     auto dispatch = [&context, &transferredBytes]() mutable {
         context->isSuccess.store(true);
         switch (context->_contextType) {
-            case ContextType::Accept: {
+            case ContextType::Accept:
+            {
                 context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateAcceptContext, context->_sock);
                 //context->acceptSocket->BindEndpoint();
                 break;
@@ -70,9 +70,8 @@ unsigned CALLBACK IoCore::worker(HANDLE hcp)
             default:
                 break;
             }
-            if (context->completed)
-                std::async(std::launch::async, context->completed, context).wait();
-                //context->completed(context);
+            if (context->completed != nullptr)
+                context->completed(context);
     };
 	while (true)
 	{
@@ -91,4 +90,9 @@ unsigned CALLBACK IoCore::worker(HANDLE hcp)
             }
         }
     }
+}
+
+void IoSystem::join() {
+    for(auto t : _workers)
+        t->join();
 }

@@ -20,3 +20,7 @@ void Context::init()
 
     isSuccess = false;
 }
+
+Context::~Context() {
+    printf("~Context()\n");
+}

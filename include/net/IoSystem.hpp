@@ -1,24 +1,27 @@
 #pragma once
 
 #include "Socket.hpp"
+
+#include <vector>
 #include <thread>
 
 namespace net
 {
-	class IoCore
+	class IoSystem
 	{
 	public:
-		IoCore();
-		~IoCore();
+		IoSystem();
+		~IoSystem();
     public:
         static unsigned CALLBACK worker(HANDLE hcp);
     public:
 		void push(Socket& sock);
 		void push(SOCKET s);
+        void join();
 	private:
 		HANDLE _hcp;
-		std::thread _worker;
+        std::vector<std::thread*> _workers;
 	};
 
-	extern IoCore ioCore;
+    extern IoSystem ioSystem;
 }

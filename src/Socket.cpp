@@ -5,7 +5,7 @@
 
 #include "Native.hpp"
 #include "Context.hpp"
-#include "IoCore.hpp"
+#include "IoSystem.hpp"
 
 using namespace net;
 
@@ -30,8 +30,7 @@ Socket::Socket(Socket&& sock) noexcept
 
 net::Socket::~Socket()
 {
-    if(_sock == INVALID_SOCKET)
-        close();
+    close();
 }
 
 Socket::Socket()
@@ -65,7 +64,7 @@ bool Socket::bind(Endpoint ep)
     setLocalEndpoint(ep);
 	IpAddress ipAdr = _localEndpoint->getAddress();
     const auto ret = ::bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN6));
-	ioCore.push(*this);
+	ioSystem.push(*this);
 	return SOCKET_ERROR != ret;
 }
 
@@ -132,12 +131,14 @@ bool Socket::accept(Context *context) const {
     context->_contextType = ContextType::Accept;
     context->_sock = this;
 
-    context->acceptSocket = std::make_unique<Socket>(Protocol::Tcp);
-    ioCore.push(context->acceptSocket->getHandle());
+    if(context->acceptSocket)
+        delete context->acceptSocket;
+    context->acceptSocket = new Socket(Protocol::Tcp);
+    ioSystem.push(context->acceptSocket->getHandle());
 
     DWORD dwByte = 0;
-    char _buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
-    if (!Native::AcceptEx(_sock, context->acceptSocket->getHandle(), _buf, 0,
+    char buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
+    if (!Native::AcceptEx(_sock, context->acceptSocket->getHandle(), buf, 0,
                           sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
                           &dwByte, context)) {
         const auto err = WSAGetLastError();
