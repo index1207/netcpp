@@ -10,7 +10,8 @@ int main() {
         return -1;
 
     auto context = new net::Context();
-    context->endpoint = std::make_unique<net::Endpoint>(net::IpAddress::Loopback, 8081);
+    auto ep = net::Endpoint(net::IpAddress::Loopback, 8081);
+    context->endpoint = &ep;
     context->completed = [](net::Context *context) {
         if (context->isSuccess)
             std::cout << "Connected!\n";
