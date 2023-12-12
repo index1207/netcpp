@@ -52,6 +52,9 @@ _deps
 # External projects
 *-prefix/
 
+.vs/
+.idea/
+
 cmake-build-*/
 out/
 

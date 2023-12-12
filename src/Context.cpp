@@ -18,7 +18,7 @@ void Context::init()
 
     _contextType = ContextType::None;
 
-    isSuccess = false;
+    isSuccess = true;
 }
 
 Context::~Context()
