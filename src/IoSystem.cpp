@@ -43,34 +43,39 @@ void IoSystem::push(SOCKET s)
 
 unsigned CALLBACK IoSystem::worker(HANDLE hcp)
 {
+    DWORD transferredBytes = 0;
+    ULONG_PTR key = 0;
+    Context* context = nullptr;
+    auto dispatch = [&context, &transferredBytes](bool isSuccess)
+    {
+        context->isSuccess = isSuccess;
+        switch (context->_contextType) {
+            case ContextType::Accept:
+                context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateAcceptContext, context->_sock);
+                break;
+            case ContextType::Connect:
+                if (0 != context->_sock->setSocketOption(OptionLevel::Socket, OptionName::UpdateConnectContext, NULL))
+                    context->isSuccess = false;
+                break;
+            case ContextType::Disconnect:
+                break;
+            case ContextType::Send:
+            case ContextType::Receive:
+                context->length = transferredBytes;
+                break;
+            default:
+                break;
+        }
+        if (context->completed != nullptr)
+            context->completed(context);
+    };
+
     while (true)
     {
-        DWORD transferredBytes = 0;
-        ULONG_PTR key = 0;
-        Context* context = nullptr;
         if (::GetQueuedCompletionStatus(hcp, &transferredBytes, &key, reinterpret_cast<LPOVERLAPPED*>(&context), INFINITE))
         {
-            if (context != nullptr) {
-                switch (context->_contextType) {
-                    case ContextType::Accept:
-                        context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateAcceptContext, context->_sock);
-                        break;
-                    case ContextType::Connect:
-                        if (0 != context->_sock->setSocketOption(OptionLevel::Socket, OptionName::UpdateConnectContext, NULL))
-                            context->isSuccess = false;
-                        break;
-                    case ContextType::Disconnect:
-                        break;
-                    case ContextType::Send:
-                    case ContextType::Receive:
-                        context->length = transferredBytes;
-                        break;
-                    default:
-                        break;
-                }
-                if (context->completed != nullptr)
-                    context->completed(context);
-            }
+            dispatch(true);
         }
+        else dispatch(false);
     }
 }
