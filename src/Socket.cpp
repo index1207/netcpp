@@ -131,9 +131,10 @@ bool Socket::accept(Context *context) const {
     context->_contextType = ContextType::Accept;
     context->_sock = this;
 
-    if(context->acceptSocket)
-        delete context->acceptSocket;
-    context->acceptSocket = new Socket(Protocol::Tcp);
+    if (!context->acceptSocket->isOpen())
+    {
+        context->acceptSocket->create(Protocol::Tcp);
+    }
     ioSystem.push(context->acceptSocket->getHandle());
 
     DWORD dwByte = 0;

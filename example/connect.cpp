@@ -3,6 +3,7 @@
 #include <net/netcpp.hpp>
 #include <iostream>
 #include <future>
+#include "Exception.hpp"
 
 int main() {
     try {
@@ -11,8 +12,7 @@ int main() {
             return -1;
 
         auto context = new net::Context();
-        auto ep = net::Endpoint(net::IpAddress::Loopback, 8080);
-        context->endpoint = &ep;
+        context->endpoint = std::make_unique<net::Endpoint>(net::IpAddress::Loopback, 8080);
         context->completed = [](net::Context* context) {
             if (context->isSuccess)
                 std::cout << "Connected!\n";
@@ -21,7 +21,7 @@ int main() {
             exit(0);
         };
         if (!sock.connect(context))
-            return -1;
+            throw net::network_error("conn");
         getchar();
         delete context;
     }

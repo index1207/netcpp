@@ -29,8 +29,8 @@ namespace net
     public:
 		Callback completed = nullptr;
     public:
-        Socket* acceptSocket = nullptr;
-        Endpoint* endpoint = nullptr;
+        std::unique_ptr<Socket> acceptSocket;
+        std::unique_ptr<Endpoint> endpoint;
         std::span<char> buffer {};
         u_long length = 0;
         bool isSuccess;

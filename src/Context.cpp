@@ -18,6 +18,8 @@ void Context::init()
 
     _contextType = ContextType::None;
 
+    acceptSocket = std::make_unique<Socket>();
+
     isSuccess = true;
 }
 
