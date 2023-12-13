@@ -32,8 +32,8 @@ namespace net
         std::unique_ptr<Socket> acceptSocket;
         std::unique_ptr<Endpoint> endpoint;
         std::span<char> buffer {};
-        u_long length = 0;
-        bool isSuccess;
+        std::atomic<u_long> length = 0;
+        std::atomic_bool isSuccess;
     private:
         void init();
     private:
