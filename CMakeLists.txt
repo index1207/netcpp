@@ -2,6 +2,8 @@
 
 project(netcpp VERSION 1.0.0 DESCRIPTION "C++ Network library.")
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 
 include_directories(include/net)
 
