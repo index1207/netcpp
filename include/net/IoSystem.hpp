@@ -1,25 +1,27 @@
 #pragma once
 
-#include "Socket.hpp"
-
 #include <vector>
 #include <thread>
+
+#include <concurrent_vector.h>
 
 namespace net
 {
 	class IoSystem
 	{
+        friend class Socket;
 	public:
 		IoSystem();
 		~IoSystem();
     public:
-        static unsigned CALLBACK worker(HANDLE hcp);
-    public:
-		void push(Socket& sock);
 		void push(SOCKET s);
+    public:
+        void worker();
+        void dispatch(class Context* context, DWORD numOfBytes, bool isSuccess);
 	private:
 		HANDLE _hcp;
-        std::vector<std::thread*> _workers;
+        const Socket* _listeningSocket;
+        concurrency::concurrent_vector<std::thread*> _workers;
 	};
 
     extern IoSystem ioSystem;

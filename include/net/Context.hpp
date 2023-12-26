@@ -17,7 +17,7 @@ namespace net
 		Receive
 	};
 
-    using Callback = std::function<void(Context*)>;
+    using Callback = std::function<void(Context*, bool)>;
 
     class Context : private OVERLAPPED
 	{
@@ -33,11 +33,9 @@ namespace net
         std::unique_ptr<Endpoint> endpoint;
         std::span<char> buffer {};
         std::atomic<u_long> length = 0;
-        std::atomic_bool isSuccess;
     private:
         void init();
     private:
-        const Socket* _sock = nullptr;
         ContextType _contextType;
     };
 }

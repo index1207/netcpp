@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "Native.hpp"
+#include "Native.hpp"	
 #include "Context.hpp"
 #include "IoSystem.hpp"
 
@@ -68,12 +68,13 @@ bool Socket::bind(Endpoint ep)
     setLocalEndpoint(ep);
 	IpAddress ipAdr = _localEndpoint->getAddress();
     const auto ret = ::bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN6));
-	ioSystem.push(*this);
+	ioSystem.push(_sock);
 	return SOCKET_ERROR != ret;
 }
 
 bool Socket::listen(int backlog) const
 {
+    ioSystem._listeningSocket = this;
 	return SOCKET_ERROR != ::listen(_sock, backlog);
 }
 
@@ -133,7 +134,6 @@ bool Socket::accept(Context *context) const {
     context->init();
 
     context->_contextType = ContextType::Accept;
-    context->_sock = this;
 
     if (!context->acceptSocket->isOpen())
     {
@@ -156,7 +156,6 @@ bool Socket::connect(Context* context)
 {
     context->init();
     context->_contextType = ContextType::Connect;
-    context->_sock = this;
 
     bind(Endpoint(IpAddress::Any, 0));
     _remoteEndpoint = std::move(_localEndpoint);
