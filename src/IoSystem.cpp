@@ -11,25 +11,22 @@
 using namespace net;
 
 IoSystem net::ioSystem;
+const Socket* IoSystem::_listeningSocket;
 
 IoSystem::IoSystem()
 {
 	_hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, NULL);
 
-	SYSTEM_INFO info;
-	GetSystemInfo(&info);
-	for (unsigned i = 0; i < info.dwNumberOfProcessors; ++i)
+    std::lock_guard lock(mtx);
+	for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i)
     {
-        _workers.push_back(new std::thread([this] {
-            while(true)
-                worker();
-        }));
+        DWORD id;
+        CreateThread(nullptr, 0, worker, _hcp, 0, &id);
     }
 }
 
 IoSystem::~IoSystem()
 {
-	CloseHandle(_hcp);
 }
 
 void IoSystem::push(SOCKET s)
@@ -38,45 +35,52 @@ void IoSystem::push(SOCKET s)
         throw network_error("CreateIoCompletionPort");
 }
 
-void IoSystem::worker() {
-    Context *context = nullptr;
-    ULONG_PTR key = 0;
-    DWORD numOfBytes = 0;
-
-    if (GetQueuedCompletionStatus(_hcp,
-                                  &numOfBytes,
-                                  &key,
-                                  reinterpret_cast<LPOVERLAPPED *>(&context),
-                                  INFINITE))
-    {
-        dispatch(context, numOfBytes, true);
-    }
-    else
-    {
-        dispatch(context, numOfBytes, false);
-    }
-    return;
-}
-
 void IoSystem::dispatch(Context* context, DWORD numOfBytes, bool isSuccess) {
-    if(context == nullptr)
-        return;
     switch (context->_contextType) {
         case ContextType::Accept:
-            ioSystem.push(context->acceptSocket->getHandle());
-            context->acceptSocket->setSocketOption(OptionLevel::Socket, (OptionName)SO_UPDATE_ACCEPT_CONTEXT, _listeningSocket->getHandle());
+            if(isSuccess) {
+                ioSystem.push(context->acceptSocket->getHandle());
+                context->acceptSocket->setSocketOption(OptionLevel::Socket, (OptionName)SO_UPDATE_ACCEPT_CONTEXT, _listeningSocket->getHandle());
+            }
+            context->completed(context, isSuccess);
             break;
         case ContextType::Connect:
-            context->acceptSocket->setSocketOption(OptionLevel::Socket, (OptionName)SO_UPDATE_CONNECT_CONTEXT, nullptr);
+            if(isSuccess) {
+                context->acceptSocket->setSocketOption(OptionLevel::Socket, (OptionName) SO_UPDATE_CONNECT_CONTEXT,nullptr);
+            }
+            context->completed(context, isSuccess);
             break;
         case ContextType::Disconnect:
+            context->completed(context, isSuccess);
             break;
         case ContextType::Receive:
         case ContextType::Send:
-            context->length.store(numOfBytes);
+            if(isSuccess) {
+                context->length.store(numOfBytes);
+            }
+            context->completed(context, isSuccess);
             break;
         default:
             break;
     }
-    context->completed(context, isSuccess);
+}
+
+DWORD IoSystem::worker(HANDLE cp) {
+    Context *context = nullptr;
+    ULONG_PTR key = 0;
+    DWORD numOfBytes = 0;
+    while(true) {
+        if (GetQueuedCompletionStatus(cp,
+                                      &numOfBytes,
+                                      &key,
+                                      reinterpret_cast<LPOVERLAPPED *>(&context),
+                                      INFINITE)) {
+            dispatch(context, numOfBytes, true);
+        } else {
+            if (context == nullptr)
+                break;
+            dispatch(context, numOfBytes, false);
+        }
+    }
+    return 0;
 }

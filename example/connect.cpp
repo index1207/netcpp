@@ -12,7 +12,7 @@ int main() {
             return -1;
 
         auto context = new net::Context();
-        context->endpoint = std::make_unique<net::Endpoint>(net::IpAddress::Loopback, 8081);
+        context->endpoint = std::make_unique<net::Endpoint>(net::IpAddress::Loopback, 8080);
         context->completed = [](net::Context* context, bool isSuccess) {
             if (isSuccess)
                 std::cout << "Connected!\n";
@@ -23,7 +23,6 @@ int main() {
         if (!sock.connect(context))
             throw net::network_error("conn");
         getchar();
-        delete context;
     }
     catch (std::exception& e) {
         std::cout << e.what() << '\n';

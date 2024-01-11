@@ -107,6 +107,8 @@ namespace net
 		template<class T>
 		int setSocketOption(OptionLevel level, OptionName name, T value) const
 		{
+			if (_sock == INVALID_SOCKET)
+				return -1;
             return setsockopt(_sock,
 				static_cast<int>(level),
 				static_cast<int>(name),

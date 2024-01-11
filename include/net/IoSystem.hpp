@@ -1,9 +1,10 @@
 #pragma once
 
+#include <WinSock2.h>
+
 #include <vector>
 #include <thread>
-
-#include <concurrent_vector.h>
+#include <mutex>
 
 namespace net
 {
@@ -16,12 +17,13 @@ namespace net
     public:
 		void push(SOCKET s);
     public:
-        void worker();
-        void dispatch(class Context* context, DWORD numOfBytes, bool isSuccess);
+        static DWORD CALLBACK worker(HANDLE cp);
+        static void dispatch(class Context* context, DWORD numOfBytes, bool isSuccess);
 	private:
 		HANDLE _hcp;
-        const Socket* _listeningSocket;
-        concurrency::concurrent_vector<std::thread*> _workers;
+        const static Socket* _listeningSocket;
+        std::vector<std::thread*> _workers;
+        std::mutex mtx;
 	};
 
     extern IoSystem ioSystem;
