@@ -7,6 +7,7 @@
 #include "Endpoint.hpp"
 
 #include <mswsock.h>
+#include <mutex>
 
 namespace net
 {
@@ -50,7 +51,7 @@ namespace net
 
         // IP Level
 		TTL = 4,
-		
+
 		// Tcp Level
 		NoDelay = TCP_NODELAY
     };
@@ -76,7 +77,7 @@ namespace net
         void create(Protocol pt = Protocol::Ip);
 
 		void setHandle(SOCKET s);
-		
+
 		bool bind(Endpoint ep);
 		bool listen(int backlog = SOMAXCONN) const;
 	public:
@@ -116,7 +117,7 @@ namespace net
 				sizeof(T)
 			);
 		}
-		
+
 		void setBlocking(bool isBlocking) const;
 		void setLinger(Linger linger) const;
 		void setBroadcast(bool isBroadcast) const;

@@ -79,7 +79,15 @@ DWORD IoSystem::worker(HANDLE cp) {
         } else {
             if (context == nullptr)
                 break;
-            dispatch(context, numOfBytes, false);
+
+            auto err = WSAGetLastError();
+            switch (err) {
+                case ERROR_OPERATION_ABORTED:
+                    break;
+                default:
+                    dispatch(context, numOfBytes, false);
+                    break;
+            }
         }
     }
     return 0;

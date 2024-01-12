@@ -29,8 +29,8 @@ namespace net
     public:
         Callback completed;
     public:
-        std::unique_ptr<Socket> acceptSocket;
-        std::unique_ptr<Endpoint> endpoint;
+        Socket* acceptSocket;
+        Endpoint* endpoint;
         std::span<char> buffer {};
         std::atomic<u_long> length = 0;
     private:

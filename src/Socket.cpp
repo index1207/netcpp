@@ -134,16 +134,11 @@ bool Socket::accept(Context *context) const {
     context->init();
 
     context->_contextType = ContextType::Accept;
-
-    if (!context->acceptSocket->isOpen())
-    {
-        context->acceptSocket->create(Protocol::Tcp);
-    }
-    ioSystem.push(context->acceptSocket->getHandle());
+    ioSystem.push(context->acceptSocket->_sock);
 
     DWORD dwByte = 0;
     char buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
-    if (!Native::AcceptEx(_sock, context->acceptSocket->getHandle(), buf, 0,
+    if (!Native::AcceptEx(_sock, context->acceptSocket->_sock, buf, 0,
                           sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
                           &dwByte, context)) {
         const auto err = WSAGetLastError();
