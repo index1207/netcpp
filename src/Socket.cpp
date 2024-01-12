@@ -134,6 +134,9 @@ bool Socket::accept(Context *context) const {
     context->init();
 
     context->_contextType = ContextType::Accept;
+    if (context->acceptSocket == nullptr)
+        context->acceptSocket = std::make_unique<Socket>(Protocol::Tcp);
+
     ioSystem.push(context->acceptSocket->_sock);
 
     DWORD dwByte = 0;
