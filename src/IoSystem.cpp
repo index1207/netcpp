@@ -2,37 +2,31 @@
 #include "IoSystem.hpp"
 
 #include <thread>
-
 #include <windef.h>
 
 #include "Context.hpp"
 #include "Native.hpp"
+#include "Socket.hpp"
 
 using namespace net;
 
 IoSystem net::ioSystem;
+const Socket* IoSystem::_listeningSocket;
 
 IoSystem::IoSystem()
 {
 	_hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, NULL);
 
-	SYSTEM_INFO info;
-	GetSystemInfo(&info);
-	for (unsigned i = 0; i < info.dwNumberOfProcessors; ++i)
-	{
-        auto t = new std::thread(worker, _hcp);
-        _workers.emplace_back(t);
+    std::lock_guard lock(mtx);
+	for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i)
+    {
+        DWORD id;
+        CreateThread(nullptr, 0, worker, _hcp, 0, &id);
     }
 }
 
 IoSystem::~IoSystem()
 {
-	CloseHandle(_hcp);
-}
-
-void IoSystem::push(Socket& sock)
-{
-	push(sock.getHandle());
 }
 
 void IoSystem::push(SOCKET s)
@@ -41,41 +35,60 @@ void IoSystem::push(SOCKET s)
         throw network_error("CreateIoCompletionPort");
 }
 
-unsigned CALLBACK IoSystem::worker(HANDLE hcp)
-{
-    DWORD transferredBytes = 0;
-    ULONG_PTR key = 0;
-    Context* context = nullptr;
-    auto dispatch = [&context, &transferredBytes](bool isSuccess)
-    {
-        context->isSuccess = isSuccess;
-        switch (context->_contextType) {
-            case ContextType::Accept:
-                context->acceptSocket->setSocketOption(OptionLevel::Socket, OptionName::UpdateAcceptContext, context->_sock);
-                break;
-            case ContextType::Connect:
-                if (0 != context->_sock->setSocketOption(OptionLevel::Socket, OptionName::UpdateConnectContext, NULL))
-                    context->isSuccess = false;
-                break;
-            case ContextType::Disconnect:
-                break;
-            case ContextType::Send:
-            case ContextType::Receive:
-                context->length = transferredBytes;
-                break;
-            default:
-                break;
-        }
-        if (context->completed != nullptr)
-            context->completed(context);
-    };
-
-    while (true)
-    {
-        if (::GetQueuedCompletionStatus(hcp, &transferredBytes, &key, reinterpret_cast<LPOVERLAPPED*>(&context), INFINITE))
-        {
-            dispatch(true);
-        }
-        else dispatch(false);
+void IoSystem::dispatch(Context* context, DWORD numOfBytes, bool isSuccess) {
+    switch (context->_contextType) {
+        case ContextType::Accept:
+            if(isSuccess) {
+                ioSystem.push(context->acceptSocket->getHandle());
+                context->acceptSocket->setSocketOption(OptionLevel::Socket, (OptionName)SO_UPDATE_ACCEPT_CONTEXT, _listeningSocket->getHandle());
+            }
+            context->completed(context, isSuccess);
+            break;
+        case ContextType::Connect:
+            if(isSuccess) {
+                context->acceptSocket->setSocketOption(OptionLevel::Socket, (OptionName) SO_UPDATE_CONNECT_CONTEXT,nullptr);
+            }
+            context->completed(context, isSuccess);
+            break;
+        case ContextType::Disconnect:
+            context->completed(context, isSuccess);
+            break;
+        case ContextType::Receive:
+        case ContextType::Send:
+            if(isSuccess) {
+                context->length.store(numOfBytes);
+            }
+            context->completed(context, isSuccess);
+            break;
+        default:
+            break;
     }
+}
+
+DWORD IoSystem::worker(HANDLE cp) {
+    Context *context = nullptr;
+    ULONG_PTR key = 0;
+    DWORD numOfBytes = 0;
+    while(true) {
+        if (GetQueuedCompletionStatus(cp,
+                                      &numOfBytes,
+                                      &key,
+                                      reinterpret_cast<LPOVERLAPPED *>(&context),
+                                      INFINITE)) {
+            dispatch(context, numOfBytes, true);
+        } else {
+            if (context == nullptr)
+                break;
+
+            auto err = WSAGetLastError();
+            switch (err) {
+                case ERROR_OPERATION_ABORTED:
+                    break;
+                default:
+                    dispatch(context, numOfBytes, false);
+                    break;
+            }
+        }
+    }
+    return 0;
 }

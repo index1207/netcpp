@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "Native.hpp"
+#include "Native.hpp"	
 #include "Context.hpp"
 #include "IoSystem.hpp"
 
@@ -17,15 +17,19 @@ Socket::Socket(Protocol pt) : Socket()
 Socket::Socket(const Socket& sock)
 {
 	_sock = sock._sock;
-    setLocalEndpoint(sock.getLocalEndpoint());
-    setRemoteEndpoint(sock.getRemoteEndpoint());
+    if(sock._localEndpoint != nullptr)
+        setLocalEndpoint(*sock._localEndpoint);
+    if(sock._remoteEndpoint != nullptr)
+        setRemoteEndpoint(*sock._remoteEndpoint);
 }
 
 Socket::Socket(Socket&& sock) noexcept
 {
 	_sock = sock._sock;
-    setLocalEndpoint(sock.getLocalEndpoint());
-    setRemoteEndpoint(sock.getRemoteEndpoint());
+    if(sock._localEndpoint != nullptr)
+        setLocalEndpoint(*sock._localEndpoint);
+    if(sock._remoteEndpoint != nullptr)
+        setRemoteEndpoint(*sock._remoteEndpoint);
 }
 
 net::Socket::~Socket()
@@ -64,12 +68,13 @@ bool Socket::bind(Endpoint ep)
     setLocalEndpoint(ep);
 	IpAddress ipAdr = _localEndpoint->getAddress();
     const auto ret = ::bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN6));
-	ioSystem.push(*this);
+	ioSystem.push(_sock);
 	return SOCKET_ERROR != ret;
 }
 
 bool Socket::listen(int backlog) const
 {
+    ioSystem._listeningSocket = this;
 	return SOCKET_ERROR != ::listen(_sock, backlog);
 }
 
@@ -129,16 +134,11 @@ bool Socket::accept(Context *context) const {
     context->init();
 
     context->_contextType = ContextType::Accept;
-    context->_sock = this;
-
-    if(context->acceptSocket)
-        delete context->acceptSocket;
-    context->acceptSocket = new Socket(Protocol::Tcp);
-    ioSystem.push(context->acceptSocket->getHandle());
+    ioSystem.push(context->acceptSocket->_sock);
 
     DWORD dwByte = 0;
     char buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
-    if (!Native::AcceptEx(_sock, context->acceptSocket->getHandle(), buf, 0,
+    if (!Native::AcceptEx(_sock, context->acceptSocket->_sock, buf, 0,
                           sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
                           &dwByte, context)) {
         const auto err = WSAGetLastError();
@@ -151,7 +151,6 @@ bool Socket::connect(Context* context)
 {
     context->init();
     context->_contextType = ContextType::Connect;
-    context->_sock = this;
 
     bind(Endpoint(IpAddress::Any, 0));
     _remoteEndpoint = std::move(_localEndpoint);
@@ -295,16 +294,20 @@ bool Socket::isOpen() const
 
 Socket& Socket::operator=(Socket&& sock) noexcept {
     this->_sock = sock._sock;
-    this->_remoteEndpoint.reset(new Endpoint(sock.getRemoteEndpoint()));
-    this->_localEndpoint.reset(new Endpoint(sock.getLocalEndpoint()));
+    if(sock._remoteEndpoint != nullptr)
+	    this->_remoteEndpoint.reset(new Endpoint(*sock._remoteEndpoint));
+    if(sock._localEndpoint != nullptr)
+	    this->_localEndpoint.reset(new Endpoint(*sock._localEndpoint));
 
     return *this;
 }
 
 Socket &Socket::operator=(const Socket& sock) {
     this->_sock = sock._sock;
-    this->_remoteEndpoint.reset(new Endpoint(sock.getRemoteEndpoint()));
-    this->_localEndpoint.reset(new Endpoint(sock.getLocalEndpoint()));
+    if(sock._remoteEndpoint != nullptr)
+        this->_remoteEndpoint.reset(new Endpoint(*sock._remoteEndpoint));
+    if(sock._localEndpoint != nullptr)
+        this->_localEndpoint.reset(new Endpoint(*sock._localEndpoint));
 
     return *this;
 }

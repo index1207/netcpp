@@ -18,9 +18,14 @@ void Context::init()
 
     _contextType = ContextType::None;
 
-    isSuccess = true;
+    if (acceptSocket == nullptr)
+        acceptSocket = new Socket(Protocol::Tcp);
 }
 
 Context::~Context()
 {
+    if (acceptSocket != nullptr)
+        delete acceptSocket;
+    if (endpoint != nullptr)
+        delete endpoint;
 }
