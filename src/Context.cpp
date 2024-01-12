@@ -19,13 +19,9 @@ void Context::init()
     _contextType = ContextType::None;
 
     if (acceptSocket == nullptr)
-        acceptSocket = new Socket(Protocol::Tcp);
+        acceptSocket = std::make_unique<Socket>(Protocol::Tcp);
 }
 
 Context::~Context()
 {
-    if (acceptSocket != nullptr)
-        delete acceptSocket;
-    if (endpoint != nullptr)
-        delete endpoint;
 }
