@@ -11,20 +11,20 @@ namespace net
 	class IoSystem
 	{
         friend class Socket;
-	public:
+	private:
 		IoSystem();
 		~IoSystem();
     public:
-		void push(SOCKET s);
+        static IoSystem& instance() { static IoSystem ioSystem; return ioSystem; }
     public:
-        static DWORD CALLBACK worker(HANDLE cp);
-        static void dispatch(class Context* context, DWORD numOfBytes, bool isSuccess);
+		void push(SOCKET s);
+        HANDLE getHandle();
+    public:
+        DWORD CALLBACK worker();
+        void dispatch(class Context* context, DWORD numOfBytes, bool isSuccess);
 	private:
 		HANDLE _hcp;
-        const static Socket* _listeningSocket;
-        std::vector<std::thread*> _workers;
+        const Socket* _listeningSocket;
         std::mutex mtx;
 	};
-
-    extern IoSystem ioSystem;
 }
