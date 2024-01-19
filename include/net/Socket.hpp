@@ -97,8 +97,8 @@ namespace net
 		bool connect(Endpoint ep);
 		bool connect(Context* context);
 
-		int send(std::span<char> s) const;
-		int send(std::span<char> s, Endpoint target) const;
+		bool send(std::span<char> s) const;
+		bool send(std::span<char> s, Endpoint target) const;
 		bool send(Context* context) const;
 
 		int receive(std::span<char> s) const;

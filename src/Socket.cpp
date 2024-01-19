@@ -168,15 +168,15 @@ bool Socket::connect(Context* context)
 	return false;
 }
 
-int Socket::send(std::span<char> s) const
+bool Socket::send(std::span<char> s) const
 {
-	return ::send(_sock, s.data(), static_cast<int>(s.size()), NULL);
+	return SOCKET_ERROR == ::send(_sock, s.data(), static_cast<int>(s.size()), NULL);
 }
 
-int Socket::send(std::span<char> s, Endpoint target) const
+bool Socket::send(std::span<char> s, Endpoint target) const
 {
 	auto& addr = target.getAddress();
-	return sendto(_sock,
+	return SOCKET_ERROR == sendto(_sock,
 		s.data(),
         static_cast<int>(s.size()),
 		NULL,
