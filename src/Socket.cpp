@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "Native.hpp"	
+#include "Native.hpp"
 #include "Context.hpp"
 #include "IoSystem.hpp"
 
@@ -68,13 +68,13 @@ bool Socket::bind(Endpoint ep)
     setLocalEndpoint(ep);
 	IpAddress ipAdr = _localEndpoint->getAddress();
     const auto ret = ::bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN6));
-	ioSystem.push(_sock);
+	IoSystem::instance().push(_sock);
 	return SOCKET_ERROR != ret;
 }
 
 bool Socket::listen(int backlog) const
 {
-    ioSystem._listeningSocket = this;
+    IoSystem::instance()._listeningSocket = this;
 	return SOCKET_ERROR != ::listen(_sock, backlog);
 }
 
@@ -134,11 +134,14 @@ bool Socket::accept(Context *context) const {
     context->init();
 
     context->_contextType = ContextType::Accept;
-    ioSystem.push(context->acceptSocket->_sock);
+
+    if (context->acceptSocket == nullptr)
+        context->acceptSocket = std::make_unique<Socket>(Protocol::Tcp);
+    IoSystem::instance().push(context->acceptSocket->getHandle());
 
     DWORD dwByte = 0;
     char buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
-    if (!Native::AcceptEx(_sock, context->acceptSocket->_sock, buf, 0,
+    if (!Native::AcceptEx(_sock, context->acceptSocket->getHandle(), buf, 0,
                           sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
                           &dwByte, context)) {
         const auto err = WSAGetLastError();
