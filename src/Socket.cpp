@@ -67,7 +67,7 @@ bool Socket::bind(Endpoint ep)
 {
     setLocalEndpoint(ep);
 	IpAddress ipAdr = _localEndpoint->getAddress();
-    const auto ret = ::bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN6));
+    const auto ret = ::bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN));
 	IoSystem::instance().push(_sock);
 	return SOCKET_ERROR != ret;
 }
