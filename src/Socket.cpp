@@ -68,13 +68,17 @@ bool Socket::bind(Endpoint ep)
     setLocalEndpoint(ep);
 	IpAddress ipAdr = _localEndpoint->getAddress();
     const auto ret = ::bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN));
-	IoSystem::instance().push(_sock);
+#ifndef SINGLE_ONLY
+    IoSystem::instance().push(_sock);
+#endif
 	return SOCKET_ERROR != ret;
 }
 
 bool Socket::listen(int backlog) const
 {
+#ifndef SINGLE_ONLY
     IoSystem::instance()._listeningSocket = this;
+#endif
 	return SOCKET_ERROR != ::listen(_sock, backlog);
 }
 
@@ -109,19 +113,6 @@ void Socket::disconnect()
     close();
 }
 
-bool net::Socket::disconnect(Context* context) const
-{
-    context->init();
-
-    context->_contextType = ContextType::Disconnect;
-	if (!Native::DisconnectEx(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
-	{
-		const int err = WSAGetLastError();
-		return err == WSA_IO_PENDING;
-	}
-	return false;
-}
-
 net::Socket Socket::accept() const
 {
 	Socket clientSock;
@@ -129,6 +120,8 @@ net::Socket Socket::accept() const
 
 	return clientSock;
 }	
+
+#ifndef SINGLE_ONLY
 
 bool Socket::accept(Context *context) const {
     context->init();
@@ -171,9 +164,69 @@ bool Socket::connect(Context* context)
 	return false;
 }
 
+bool Socket::send(Context* context) const
+{
+    context->init();
+    context->_contextType = ContextType::Send;
+
+    WSABUF wsaBuf;
+    wsaBuf.buf = context->buffer.data();
+    wsaBuf.len = static_cast<int>(context->buffer.size());
+
+    DWORD sentBytes = 0, flags = 0;
+    if (SOCKET_ERROR == WSASend(_sock,
+                                &wsaBuf, 1,
+                                &sentBytes, flags,
+                                reinterpret_cast<LPOVERLAPPED>(context), nullptr)
+            )
+    {
+        const int err = WSAGetLastError();
+        return err == WSA_IO_PENDING;
+    }
+    return true;
+}
+
+bool Socket::receive(Context* context) const
+{
+    context->init();
+    context->_contextType = ContextType::Receive;
+
+    WSABUF wsaBuf = {
+            .len = static_cast<ULONG>(context->buffer.size()),
+            .buf = context->buffer.data()
+    };
+
+    DWORD recvBytes = 0, flags = 0;
+    if (SOCKET_ERROR == WSARecv(_sock,
+                                &wsaBuf, 1,
+                                &recvBytes, &flags,
+                                reinterpret_cast<LPOVERLAPPED>(context), nullptr)
+            )
+    {
+        const int err = WSAGetLastError();
+        return err == WSA_IO_PENDING;
+    }
+    return true;
+}
+
+bool net::Socket::disconnect(Context* context) const
+{
+    context->init();
+
+    context->_contextType = ContextType::Disconnect;
+    if (!Native::DisconnectEx(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
+    {
+        const int err = WSAGetLastError();
+        return err == WSA_IO_PENDING;
+    }
+    return false;
+}
+
+#endif
+
 bool Socket::send(std::span<char> s) const
 {
-	return SOCKET_ERROR == ::send(_sock, s.data(), static_cast<int>(s.size()), NULL);
+	return SOCKET_ERROR != ::send(_sock, s.data(), static_cast<int>(s.size()), NULL);
 }
 
 bool Socket::send(std::span<char> s, Endpoint target) const
@@ -185,28 +238,6 @@ bool Socket::send(std::span<char> s, Endpoint target) const
 		NULL,
 		reinterpret_cast<const sockaddr*>(&addr), sizeof(SOCKADDR_IN)
 		);
-}
-
-bool Socket::send(Context* context) const
-{
-    context->init();
-    context->_contextType = ContextType::Send;
-
-    WSABUF wsaBuf;
-	wsaBuf.buf = context->buffer.data();
-	wsaBuf.len = static_cast<int>(context->buffer.size());
-
-	DWORD sentBytes = 0, flags = 0;
-	if (SOCKET_ERROR == WSASend(_sock,
-		&wsaBuf, 1,
-		&sentBytes, flags,
-        reinterpret_cast<LPOVERLAPPED>(context), nullptr)
-		)
-	{
-		const int err = WSAGetLastError();
-		return err == WSA_IO_PENDING;
-	}
-	return true;
 }
 
 int Socket::receive(std::span<char> s) const
@@ -221,29 +252,6 @@ int Socket::receive(std::span<char> s, Endpoint target) const
 	return recvfrom(_sock,
 		s.data(), static_cast<int>(s.size()),
 		NULL, reinterpret_cast<sockaddr*>(&addr), &len);
-}
-
-bool Socket::receive(Context* context) const
-{
-    context->init();
-    context->_contextType = ContextType::Receive;
-
-	WSABUF wsaBuf = {
-		.len = static_cast<ULONG>(context->buffer.size()),
-		.buf = context->buffer.data()
-	};
-	
-	DWORD recvBytes = 0, flags = 0;
-	if (SOCKET_ERROR == WSARecv(_sock,
-		&wsaBuf, 1,
-		&recvBytes, &flags,
-        reinterpret_cast<LPOVERLAPPED>(context), nullptr)
-		)
-	{
-		const int err = WSAGetLastError();
-		return err == WSA_IO_PENDING;
-	}
-	return true;
 }
 
 void Socket::setBlocking(bool isBlocking) const

@@ -15,6 +15,7 @@ IoSystem::IoSystem()
 {
 	_hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, NULL);
 
+#ifndef SINGLE_ONLY
     std::lock_guard lock(mtx);
 	for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i)
     {
@@ -22,6 +23,7 @@ IoSystem::IoSystem()
             while(true) worker();
         });
     }
+#endif
 }
 
 IoSystem::~IoSystem()

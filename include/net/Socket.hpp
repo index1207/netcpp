@@ -89,22 +89,23 @@ namespace net
 		void setLocalEndpoint(Endpoint ep);
 	public:
 		void disconnect();
-		bool disconnect(Context* context) const;
-
 		Socket accept() const;
-		bool accept(Context *context) const;
-
 		bool connect(Endpoint ep);
-		bool connect(Context* context);
 
 		bool send(std::span<char> s) const;
 		bool send(std::span<char> s, Endpoint target) const;
-		bool send(Context* context) const;
 
 		int receive(std::span<char> s) const;
 		int receive(std::span<char> s, Endpoint target) const;
-		bool receive(Context* context) const;
-	public:
+    public:
+#ifndef SINGLE_ONLY
+        bool disconnect(Context* context) const;
+        bool accept(Context *context) const;
+        bool connect(Context* context);
+        bool send(Context* context) const;
+        bool receive(Context* context) const;
+#endif
+    public:
 		template<class T>
 		int setSocketOption(OptionLevel level, OptionName name, T value) const
 		{
