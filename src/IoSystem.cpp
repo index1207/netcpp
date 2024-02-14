@@ -11,6 +11,7 @@
 
 using namespace net;
 
+bool Option::Autorun = true;
 unsigned long long Option::Timeout = INFINITE;
 unsigned Option::ThreadCount = std::thread::hardware_concurrency();
 
@@ -19,12 +20,14 @@ IoSystem::IoSystem()
 	_hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, NULL);
 
 #ifndef SINGLE_ONLY
-    std::lock_guard lock(mtx);
-	for (unsigned i = 0; i < Option::ThreadCount; ++i)
+    if (Option::Autorun)
     {
-        new std::thread([this]{
-            while(true) worker();
-        });
+        std::lock_guard lock(mtx);
+        for (unsigned i = 0; i < Option::ThreadCount; ++i) {
+            new std::thread([this] {
+                while (true) worker();
+            });
+        }
     }
 #endif
 }
