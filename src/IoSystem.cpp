@@ -11,13 +11,16 @@
 
 using namespace net;
 
+unsigned long long Option::Timeout = INFINITE;
+unsigned Option::ThreadCount = std::thread::hardware_concurrency();
+
 IoSystem::IoSystem()
 {
 	_hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, NULL);
 
 #ifndef SINGLE_ONLY
     std::lock_guard lock(mtx);
-	for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i)
+	for (unsigned i = 0; i < Option::ThreadCount; ++i)
     {
         new std::thread([this]{
             while(true) worker();
@@ -75,7 +78,7 @@ DWORD IoSystem::worker() {
                                   &numOfBytes,
                                   &key,
                                   reinterpret_cast<LPOVERLAPPED *>(&context),
-                                  INFINITE)) {
+                                  Option::Timeout)) {
         dispatch(context, numOfBytes, true);
     }
     else

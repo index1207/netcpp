@@ -8,6 +8,12 @@
 
 namespace net
 {
+    struct Option final
+    {
+        static unsigned long long Timeout;
+        static unsigned ThreadCount;
+    };
+
 	class IoSystem
 	{
         friend class Socket;

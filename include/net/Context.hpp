@@ -17,12 +17,12 @@ namespace net
 		Receive
 	};
 
-    using Callback = std::function<void(Context*, bool)>;
-
     class Context : private OVERLAPPED
 	{
         friend class Socket;
         friend class IoSystem;
+
+        using Callback = std::function<void(Context*, bool)>;
     public:
 		Context();
         ~Context();
