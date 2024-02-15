@@ -12,7 +12,7 @@
 using namespace net;
 
 bool Option::Autorun = true;
-unsigned long long Option::Timeout = INFINITE;
+unsigned long Option::Timeout = INFINITE;
 unsigned Option::ThreadCount = std::thread::hardware_concurrency();
 
 IoSystem::IoSystem()

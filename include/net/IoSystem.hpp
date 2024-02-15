@@ -11,7 +11,7 @@ namespace net
     struct Option final
     {
         static bool Autorun;
-        static unsigned long long Timeout;
+        static unsigned long Timeout;
         static unsigned ThreadCount;
     };
 
