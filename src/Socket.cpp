@@ -16,20 +16,16 @@ Socket::Socket(Protocol pt) : Socket()
 
 Socket::Socket(const Socket& sock)
 {
-	_sock = sock._sock;
-    if(sock._localEndpoint != nullptr)
-        setLocalEndpoint(*sock._localEndpoint);
-    if(sock._remoteEndpoint != nullptr)
-        setRemoteEndpoint(*sock._remoteEndpoint);
+    _sock = sock._sock;
+    _localEndpoint = sock._localEndpoint;
+    _remoteEndpoint = sock._remoteEndpoint;
 }
 
 Socket::Socket(Socket&& sock) noexcept
 {
-	_sock = sock._sock;
-    if(sock._localEndpoint != nullptr)
-        setLocalEndpoint(*sock._localEndpoint);
-    if(sock._remoteEndpoint != nullptr)
-        setRemoteEndpoint(*sock._remoteEndpoint);
+    _sock = sock._sock;
+    std::swap(_localEndpoint, sock._localEndpoint);
+    std::swap(_remoteEndpoint, sock._remoteEndpoint);
 }
 
 net::Socket::~Socket()
@@ -87,24 +83,24 @@ SOCKET Socket::getHandle() const
 	return _sock;
 }
 
-Endpoint Socket::getRemoteEndpoint() const
+std::optional<Endpoint> Socket::getRemoteEndpoint() const
 {
-    return *_remoteEndpoint;
+    return _remoteEndpoint;
 }
 
-Endpoint Socket::getLocalEndpoint() const
+std::optional<Endpoint> Socket::getLocalEndpoint() const
 {
-    return *_localEndpoint;
+    return _localEndpoint;
 }
 
 void Socket::setRemoteEndpoint(Endpoint ep)
 {
-	_remoteEndpoint.reset(new Endpoint(ep));
+	_remoteEndpoint = ep;
 }
 
 void Socket::setLocalEndpoint(Endpoint ep)
 {
-    _localEndpoint.reset(new Endpoint(ep));
+    _localEndpoint = ep;
 }
 
 void Socket::disconnect()
@@ -305,20 +301,15 @@ bool Socket::isOpen() const
 
 Socket& Socket::operator=(Socket&& sock) noexcept {
     this->_sock = sock._sock;
-    if(sock._remoteEndpoint != nullptr)
-	    this->_remoteEndpoint.reset(new Endpoint(*sock._remoteEndpoint));
-    if(sock._localEndpoint != nullptr)
-	    this->_localEndpoint.reset(new Endpoint(*sock._localEndpoint));
-
+    std::swap(_localEndpoint, sock._localEndpoint);
+    std::swap(_remoteEndpoint, sock._remoteEndpoint);
     return *this;
 }
 
 Socket &Socket::operator=(const Socket& sock) {
     this->_sock = sock._sock;
-    if(sock._remoteEndpoint != nullptr)
-        this->_remoteEndpoint.reset(new Endpoint(*sock._remoteEndpoint));
-    if(sock._localEndpoint != nullptr)
-        this->_localEndpoint.reset(new Endpoint(*sock._localEndpoint));
+    this->_localEndpoint = sock._localEndpoint;
+    this->_remoteEndpoint = sock._remoteEndpoint;
 
     return *this;
 }

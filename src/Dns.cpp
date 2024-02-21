@@ -23,12 +23,12 @@ HostEntry Dns::getHostEntry(std::string hostname)
 	{
 		SOCKADDR_IN addr_in;
 		addr_in.sin_addr.s_addr = *reinterpret_cast<long*>(entry->h_addr_list[i]);
-		hostentry.addressList.emplace_back(addr_in);
+		hostentry.address_list.emplace_back(addr_in);
 	}
 
 	for (int i = 0; entry->h_aliases[i] != nullptr; ++i)
 	{
-		hostentry.aliases.emplace_back(entry->h_aliases[i]);
+		hostentry.alias_list.emplace_back(entry->h_aliases[i]);
 	}
 
 	return hostentry;
@@ -44,11 +44,11 @@ HostEntry Dns::getHostEntry(IpAddress ipAddress)
 	{
 		SOCKADDR_IN addr_in;
 		addr_in.sin_addr.s_addr = *reinterpret_cast<long*>(entry->h_addr_list[i]);
-		hostentry.addressList.emplace_back(addr_in);
+		hostentry.address_list.emplace_back(addr_in);
 	}
 	for (int i = 0; entry->h_aliases[i] != nullptr; ++i)
 	{
-		hostentry.aliases.emplace_back(entry->h_aliases[i]);
+		hostentry.alias_list.emplace_back(entry->h_aliases[i]);
 	}
 
 	return hostentry;

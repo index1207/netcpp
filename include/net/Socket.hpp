@@ -6,8 +6,8 @@
 #include "IpAddress.hpp"
 #include "Endpoint.hpp"
 
-#include <mswsock.h>
 #include <mutex>
+#include <optional>
 
 namespace net
 {
@@ -82,8 +82,8 @@ namespace net
 		bool listen(int backlog = SOMAXCONN) const;
 	public:
 		SOCKET getHandle() const;
-		Endpoint getRemoteEndpoint() const;
-		Endpoint getLocalEndpoint() const;
+        std::optional<Endpoint> getRemoteEndpoint() const;
+        std::optional<Endpoint> getLocalEndpoint() const;
 	public:
 		void setRemoteEndpoint(Endpoint ep);
 		void setLocalEndpoint(Endpoint ep);
@@ -134,8 +134,8 @@ namespace net
 		Socket& operator=(const Socket& sock);
 		Socket& operator=(Socket&& sock) noexcept;
     private:
-		std::unique_ptr<Endpoint> _remoteEndpoint;
-        std::unique_ptr<Endpoint> _localEndpoint;
+		std::optional<Endpoint> _remoteEndpoint;
+        std::optional<Endpoint> _localEndpoint;
 		SOCKET _sock;
 	};
 }
