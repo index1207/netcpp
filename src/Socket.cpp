@@ -16,20 +16,16 @@ Socket::Socket(Protocol pt) : Socket()
 
 Socket::Socket(const Socket& sock)
 {
-	_sock = sock._sock;
-    if(sock._localEndpoint != nullptr)
-        setLocalEndpoint(*sock._localEndpoint);
-    if(sock._remoteEndpoint != nullptr)
-        setRemoteEndpoint(*sock._remoteEndpoint);
+    _sock = sock._sock;
+    _localEndpoint = sock._localEndpoint;
+    _remoteEndpoint = sock._remoteEndpoint;
 }
 
 Socket::Socket(Socket&& sock) noexcept
 {
-	_sock = sock._sock;
-    if(sock._localEndpoint != nullptr)
-        setLocalEndpoint(*sock._localEndpoint);
-    if(sock._remoteEndpoint != nullptr)
-        setRemoteEndpoint(*sock._remoteEndpoint);
+    _sock = sock._sock;
+    std::swap(_localEndpoint, sock._localEndpoint);
+    std::swap(_remoteEndpoint, sock._remoteEndpoint);
 }
 
 net::Socket::~Socket()
@@ -67,14 +63,18 @@ bool Socket::bind(Endpoint ep)
 {
     setLocalEndpoint(ep);
 	IpAddress ipAdr = _localEndpoint->getAddress();
-    const auto ret = ::bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN6));
-	IoSystem::instance().push(_sock);
+    const auto ret = ::bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN));
+#ifndef SINGLE_ONLY
+    IoSystem::instance().push(_sock);
+#endif
 	return SOCKET_ERROR != ret;
 }
 
 bool Socket::listen(int backlog) const
 {
+#ifndef SINGLE_ONLY
     IoSystem::instance()._listeningSocket = this;
+#endif
 	return SOCKET_ERROR != ::listen(_sock, backlog);
 }
 
@@ -83,43 +83,30 @@ SOCKET Socket::getHandle() const
 	return _sock;
 }
 
-Endpoint Socket::getRemoteEndpoint() const
+std::optional<Endpoint> Socket::getRemoteEndpoint() const
 {
-    return *_remoteEndpoint;
+    return _remoteEndpoint;
 }
 
-Endpoint Socket::getLocalEndpoint() const
+std::optional<Endpoint> Socket::getLocalEndpoint() const
 {
-    return *_localEndpoint;
+    return _localEndpoint;
 }
 
 void Socket::setRemoteEndpoint(Endpoint ep)
 {
-	_remoteEndpoint.reset(new Endpoint(ep));
+	_remoteEndpoint = ep;
 }
 
 void Socket::setLocalEndpoint(Endpoint ep)
 {
-    _localEndpoint.reset(new Endpoint(ep));
+    _localEndpoint = ep;
 }
 
 void Socket::disconnect()
 {
 	shutdown(_sock, SD_BOTH);
     close();
-}
-
-bool net::Socket::disconnect(Context* context) const
-{
-    context->init();
-
-    context->_contextType = ContextType::Disconnect;
-	if (!Native::DisconnectEx(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
-	{
-		const int err = WSAGetLastError();
-		return err == WSA_IO_PENDING;
-	}
-	return false;
 }
 
 net::Socket Socket::accept() const
@@ -129,6 +116,8 @@ net::Socket Socket::accept() const
 
 	return clientSock;
 }	
+
+#ifndef SINGLE_ONLY
 
 bool Socket::accept(Context *context) const {
     context->init();
@@ -156,7 +145,7 @@ bool Socket::connect(Context* context)
     context->_contextType = ContextType::Connect;
 
     bind(Endpoint(IpAddress::Any, 0));
-    _remoteEndpoint = std::move(_localEndpoint);
+    _remoteEndpoint = _localEndpoint;
 	IpAddress ipAdr = context->endpoint->getAddress();
 	DWORD dw;
 	if (!Native::ConnectEx(_sock,
@@ -171,42 +160,80 @@ bool Socket::connect(Context* context)
 	return false;
 }
 
-int Socket::send(std::span<char> s) const
-{
-	return ::send(_sock, s.data(), static_cast<int>(s.size()), NULL);
-}
-
-int Socket::send(std::span<char> s, Endpoint target) const
-{
-	auto& addr = target.getAddress();
-	return sendto(_sock,
-		s.data(),
-        static_cast<int>(s.size()),
-		NULL,
-		reinterpret_cast<const sockaddr*>(&addr), sizeof(SOCKADDR_IN)
-		);
-}
-
 bool Socket::send(Context* context) const
 {
     context->init();
     context->_contextType = ContextType::Send;
 
     WSABUF wsaBuf;
-	wsaBuf.buf = context->buffer.data();
-	wsaBuf.len = static_cast<int>(context->buffer.size());
+    wsaBuf.buf = context->buffer.data();
+    wsaBuf.len = static_cast<int>(context->buffer.size());
 
-	DWORD sentBytes = 0, flags = 0;
-	if (SOCKET_ERROR == WSASend(_sock,
-		&wsaBuf, 1,
-		&sentBytes, flags,
-        reinterpret_cast<LPOVERLAPPED>(context), nullptr)
-		)
-	{
-		const int err = WSAGetLastError();
-		return err == WSA_IO_PENDING;
-	}
-	return true;
+    DWORD sentBytes = 0, flags = 0;
+    if (SOCKET_ERROR == WSASend(_sock,
+                                &wsaBuf, 1,
+                                &sentBytes, flags,
+                                reinterpret_cast<LPOVERLAPPED>(context), nullptr)
+            )
+    {
+        const int err = WSAGetLastError();
+        return err == WSA_IO_PENDING;
+    }
+    return true;
+}
+
+bool Socket::receive(Context* context) const
+{
+    context->init();
+    context->_contextType = ContextType::Receive;
+
+    WSABUF wsaBuf = {
+            .len = static_cast<ULONG>(context->buffer.size()),
+            .buf = context->buffer.data()
+    };
+
+    DWORD recvBytes = 0, flags = 0;
+    if (SOCKET_ERROR == WSARecv(_sock,
+                                &wsaBuf, 1,
+                                &recvBytes, &flags,
+                                reinterpret_cast<LPOVERLAPPED>(context), nullptr)
+            )
+    {
+        const int err = WSAGetLastError();
+        return err == WSA_IO_PENDING;
+    }
+    return true;
+}
+
+bool net::Socket::disconnect(Context* context) const
+{
+    context->init();
+
+    context->_contextType = ContextType::Disconnect;
+    if (!Native::DisconnectEx(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
+    {
+        const int err = WSAGetLastError();
+        return err == WSA_IO_PENDING;
+    }
+    return false;
+}
+
+#endif
+
+bool Socket::send(std::span<char> s) const
+{
+	return SOCKET_ERROR != ::send(_sock, s.data(), static_cast<int>(s.size()), NULL);
+}
+
+bool Socket::send(std::span<char> s, Endpoint target) const
+{
+	auto& addr = target.getAddress();
+	return SOCKET_ERROR == sendto(_sock,
+		s.data(),
+        static_cast<int>(s.size()),
+		NULL,
+		reinterpret_cast<const sockaddr*>(&addr), sizeof(SOCKADDR_IN)
+		);
 }
 
 int Socket::receive(std::span<char> s) const
@@ -221,29 +248,6 @@ int Socket::receive(std::span<char> s, Endpoint target) const
 	return recvfrom(_sock,
 		s.data(), static_cast<int>(s.size()),
 		NULL, reinterpret_cast<sockaddr*>(&addr), &len);
-}
-
-bool Socket::receive(Context* context) const
-{
-    context->init();
-    context->_contextType = ContextType::Receive;
-
-	WSABUF wsaBuf = {
-		.len = static_cast<ULONG>(context->buffer.size()),
-		.buf = context->buffer.data()
-	};
-	
-	DWORD recvBytes = 0, flags = 0;
-	if (SOCKET_ERROR == WSARecv(_sock,
-		&wsaBuf, 1,
-		&recvBytes, &flags,
-        reinterpret_cast<LPOVERLAPPED>(context), nullptr)
-		)
-	{
-		const int err = WSAGetLastError();
-		return err == WSA_IO_PENDING;
-	}
-	return true;
 }
 
 void Socket::setBlocking(bool isBlocking) const
@@ -297,20 +301,15 @@ bool Socket::isOpen() const
 
 Socket& Socket::operator=(Socket&& sock) noexcept {
     this->_sock = sock._sock;
-    if(sock._remoteEndpoint != nullptr)
-	    this->_remoteEndpoint.reset(new Endpoint(*sock._remoteEndpoint));
-    if(sock._localEndpoint != nullptr)
-	    this->_localEndpoint.reset(new Endpoint(*sock._localEndpoint));
-
+    std::swap(_localEndpoint, sock._localEndpoint);
+    std::swap(_remoteEndpoint, sock._remoteEndpoint);
     return *this;
 }
 
 Socket &Socket::operator=(const Socket& sock) {
     this->_sock = sock._sock;
-    if(sock._remoteEndpoint != nullptr)
-        this->_remoteEndpoint.reset(new Endpoint(*sock._remoteEndpoint));
-    if(sock._localEndpoint != nullptr)
-        this->_localEndpoint.reset(new Endpoint(*sock._localEndpoint));
+    this->_localEndpoint = sock._localEndpoint;
+    this->_remoteEndpoint = sock._remoteEndpoint;
 
     return *this;
 }

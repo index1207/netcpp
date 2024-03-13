@@ -6,8 +6,8 @@
 #include "IpAddress.hpp"
 #include "Endpoint.hpp"
 
-#include <mswsock.h>
 #include <mutex>
+#include <optional>
 
 namespace net
 {
@@ -82,29 +82,30 @@ namespace net
 		bool listen(int backlog = SOMAXCONN) const;
 	public:
 		SOCKET getHandle() const;
-		Endpoint getRemoteEndpoint() const;
-		Endpoint getLocalEndpoint() const;
+        std::optional<Endpoint> getRemoteEndpoint() const;
+        std::optional<Endpoint> getLocalEndpoint() const;
 	public:
 		void setRemoteEndpoint(Endpoint ep);
 		void setLocalEndpoint(Endpoint ep);
 	public:
 		void disconnect();
-		bool disconnect(Context* context) const;
-
 		Socket accept() const;
-		bool accept(Context *context) const;
-
 		bool connect(Endpoint ep);
-		bool connect(Context* context);
 
-		int send(std::span<char> s) const;
-		int send(std::span<char> s, Endpoint target) const;
-		bool send(Context* context) const;
+		bool send(std::span<char> s) const;
+		bool send(std::span<char> s, Endpoint target) const;
 
 		int receive(std::span<char> s) const;
 		int receive(std::span<char> s, Endpoint target) const;
-		bool receive(Context* context) const;
-	public:
+    public:
+#ifndef SINGLE_ONLY
+        bool disconnect(Context* context) const;
+        bool accept(Context *context) const;
+        bool connect(Context* context);
+        bool send(Context* context) const;
+        bool receive(Context* context) const;
+#endif
+    public:
 		template<class T>
 		int setSocketOption(OptionLevel level, OptionName name, T value) const
 		{
@@ -133,8 +134,8 @@ namespace net
 		Socket& operator=(const Socket& sock);
 		Socket& operator=(Socket&& sock) noexcept;
     private:
-		std::unique_ptr<Endpoint> _remoteEndpoint;
-        std::unique_ptr<Endpoint> _localEndpoint;
+		std::optional<Endpoint> _remoteEndpoint;
+        std::optional<Endpoint> _localEndpoint;
 		SOCKET _sock;
 	};
 }

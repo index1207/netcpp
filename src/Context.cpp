@@ -17,6 +17,8 @@ void Context::init()
     OVERLAPPED::OffsetHigh = 0;
 
     _contextType = ContextType::None;
+
+    acceptSocket = std::make_unique<Socket>(Protocol::Tcp);
 }
 
 Context::~Context()

@@ -9,7 +9,7 @@ namespace net
     public:
         network_error(std::string_view msg);
 
-        virtual char const* what() const;
+        virtual char const* what() const override;
         int get_code() const;
     private:
         std::string _msg;
