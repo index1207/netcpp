@@ -145,7 +145,7 @@ bool Socket::connect(Context* context)
     context->_contextType = ContextType::Connect;
 
     bind(Endpoint(IpAddress::Any, 0));
-    _remoteEndpoint = std::move(_localEndpoint);
+    _remoteEndpoint = _localEndpoint;
 	IpAddress ipAdr = context->endpoint->getAddress();
 	DWORD dw;
 	if (!Native::ConnectEx(_sock,
