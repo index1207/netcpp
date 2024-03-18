@@ -7,6 +7,7 @@ namespace net
 {
 	class Endpoint
 	{
+        friend class IoSystem;
 	public:
 		Endpoint() = default;
 		Endpoint(IpAddress ipAddress, u_short port);

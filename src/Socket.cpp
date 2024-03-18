@@ -146,6 +146,9 @@ bool Socket::connect(Context* context)
 
     bind(Endpoint(IpAddress::Any, 0));
     _remoteEndpoint = _localEndpoint;
+
+    context->token = static_cast<void*>(this);
+
 	IpAddress ipAdr = context->endpoint->getAddress();
 	DWORD dw;
 	if (!Native::ConnectEx(_sock,

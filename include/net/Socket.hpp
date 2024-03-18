@@ -107,16 +107,16 @@ namespace net
 #endif
     public:
 		template<class T>
-		int setSocketOption(OptionLevel level, OptionName name, T value) const
+		bool setSocketOption(OptionLevel level, OptionName name, T value) const
 		{
 			if (_sock == INVALID_SOCKET)
-				return -1;
+				return false;
             return setsockopt(_sock,
 				static_cast<int>(level),
 				static_cast<int>(name),
 				reinterpret_cast<const char*>(&value),
 				sizeof(T)
-			);
+			) == 0;
 		}
 
 		void setBlocking(bool isBlocking) const;

@@ -33,6 +33,7 @@ namespace net
         std::optional<Endpoint> endpoint;
         std::span<char> buffer {};
         std::atomic<u_long> length = 0;
+        void* token;
     private:
         void init();
     private:

@@ -46,15 +46,17 @@ void IoSystem::push(SOCKET s)
 void IoSystem::dispatch(Context* context, DWORD numOfBytes, bool isSuccess) {
     switch (context->_contextType) {
         case ContextType::Accept:
-            if(isSuccess) {
+            if (isSuccess) {
                 this->push(context->acceptSocket->getHandle());
-                context->acceptSocket->setSocketOption(OptionLevel::Socket, (OptionName)SO_UPDATE_ACCEPT_CONTEXT, _listeningSocket->getHandle());
+                if (!context->acceptSocket->setSocketOption(OptionLevel::Socket, (OptionName)SO_UPDATE_ACCEPT_CONTEXT, _listeningSocket->getHandle()))
+                    throw net::network_error("setSocketOption()");
             }
             context->completed(context, isSuccess);
             break;
         case ContextType::Connect:
-            if(isSuccess) {
-                context->acceptSocket->setSocketOption(OptionLevel::Socket, (OptionName) SO_UPDATE_CONNECT_CONTEXT,nullptr);
+            if (isSuccess) {
+                if (!static_cast<Socket*>(context->token)->setSocketOption(OptionLevel::Socket, (OptionName) SO_UPDATE_CONNECT_CONTEXT,nullptr))
+                    throw net::network_error("setSocketOption()");
             }
             context->completed(context, isSuccess);
             break;
