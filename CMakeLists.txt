@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.9)
 
-project(netcpp VERSION 1.0.0 DESCRIPTION "C++ Network library.")
+project(netcpp VERSION 0.3 DESCRIPTION "C++ Network library.")
 set(CMAKE_CXX_STANDARD 20)
 
 include_directories(include/net)
