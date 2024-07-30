@@ -38,6 +38,3 @@ install(EXPORT netcpp_targets
         FILE netcpp-targets.cmake
         NAMESPACE netcpp::
         DESTINATION share/netcpp)
-
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/netcpp-config.cmake"
-        DESTINATION share/netcpp)
