@@ -1,13 +1,11 @@
-﻿cmake_minimum_required(VERSION 3.9)
+﻿cmake_minimum_required(VERSION 3.10)
 
-project(netcpp VERSION 1.0.0 DESCRIPTION "C++ Network library.")
+project(netcpp VERSION 0.3 DESCRIPTION "C++ Network library.")
 set(CMAKE_CXX_STANDARD 20)
 
 include_directories(include/net)
 
-add_library(netcpp STATIC)
-
-target_sources(netcpp PRIVATE
+add_library(netcpp SHARED
         src/PCH.cpp
         src/IoSystem.cpp
         src/Dns.cpp
@@ -17,11 +15,9 @@ target_sources(netcpp PRIVATE
         src/IpAddress.cpp
         src/netcpp.cpp
         src/Socket.cpp
-        src/Native.cpp
-)
+        src/Native.cpp)
 
-target_include_directories(netcpp
-        PRIVATE
+target_include_directories(netcpp PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -32,14 +28,16 @@ target_precompile_headers(netcpp
         PRIVATE
         src/PCH.h)
 
-project(example)
+install(TARGETS netcpp
+        EXPORT netcpp_targets
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
-add_executable(example example/connect.cpp)
+install(EXPORT netcpp_targets
+        FILE netcpp-targets.cmake
+        NAMESPACE netcpp::
+        DESTINATION share/netcpp)
 
-target_link_libraries(example netcpp)
-
-project(test)
-
-add_executable(test test/test.cpp)
-
-target_link_libraries(test netcpp ws2_32)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/netcpp-config.cmake"
+        DESTINATION share/netcpp)
