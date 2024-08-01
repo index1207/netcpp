@@ -1,7 +1,5 @@
-#include "PCH.h"
-#include "Native.hpp"
-
-#include "Socket.hpp"
+#include "net/Native.hpp"
+#include "net/Socket.hpp"
 
 using namespace net;
 

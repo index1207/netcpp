@@ -1,16 +1,11 @@
 #pragma once
 
-// Socket Utility
-#include "Native.hpp"
-#include "IpAddress.hpp"
-#include "Endpoint.hpp"
-
-// IO
-#include "IoSystem.hpp"
-#include "Socket.hpp"
-#include "Context.hpp"
-
-// Network Utility
-#include "Dns.hpp"
-
+// Standard
 #include <stdexcept>
+#include <string>
+#include <format>
+
+// WinSock2
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#include <MSWSock.h>

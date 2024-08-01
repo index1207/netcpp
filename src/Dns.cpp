@@ -1,6 +1,5 @@
-#include "PCH.h"
-#include "Dns.hpp"
-#include "IpAddress.hpp"
+#include "net/Dns.hpp"
+#include "net/IpAddress.hpp"
 
 using namespace net;
 

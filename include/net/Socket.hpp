@@ -2,12 +2,10 @@
 
 #include <span>
 #include <memory>
+#include <optional>
 
 #include "IpAddress.hpp"
 #include "Endpoint.hpp"
-
-#include <mutex>
-#include <optional>
 
 namespace net
 {
