@@ -1,5 +1,4 @@
-#include "PCH.h"
-#include "..\net\Endpoint.hpp"
+#include "net\Endpoint.hpp"
 
 using namespace net;
 

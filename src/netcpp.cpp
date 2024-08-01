@@ -1,6 +1,25 @@
-#include "PCH.h"
-#include "netcpp.hpp"
+#include "net/netcpp.hpp"
+#include "net/Native.hpp"
 
-#include "iostream"
+#ifdef _WIN32
 
-using namespace net;
+class netcpp final
+{
+public:
+    netcpp()
+    {
+        WSADATA wsaData{};
+        if(WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+            throw std::runtime_error("Not compatible with this platform.");
+
+        net::Native::initialize();
+    }
+    ~netcpp()
+    {
+        WSACleanup();
+    }
+};
+
+static netcpp _netcpp;
+
+#endif
