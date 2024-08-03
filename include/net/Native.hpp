@@ -1,5 +1,7 @@
 #pragma once
 
+#include "winsock.hpp"
+
 namespace net
 {
 	class Native

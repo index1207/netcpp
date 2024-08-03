@@ -1,9 +1,9 @@
 #pragma once
 
 #include <span>
-#include <memory>
 #include <optional>
 
+#include "winsock.hpp"
 #include "IpAddress.hpp"
 #include "Endpoint.hpp"
 
