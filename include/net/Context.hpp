@@ -4,6 +4,7 @@
 #include <atomic>
 #include <functional>
 
+#include "winsock.hpp"
 #include "Socket.hpp"
 
 namespace net

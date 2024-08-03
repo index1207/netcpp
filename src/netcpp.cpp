@@ -1,6 +1,8 @@
 #include "net/netcpp.hpp"
 #include "net/Native.hpp"
 
+#include <stdexcept>
+
 #ifdef _WIN32
 
 class netcpp final
