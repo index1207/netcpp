@@ -63,7 +63,7 @@ void IoSystem::dispatch(Context* context, DWORD numOfBytes, bool isSuccess) {
         case ContextType::Receive:
         case ContextType::Send:
             if(isSuccess) {
-                context->length.store(numOfBytes);
+                context->length = numOfBytes;
             }
             context->completed(context, isSuccess);
             break;

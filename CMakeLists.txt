@@ -19,7 +19,7 @@ set(SOURCE_FILES
         src/IpAddress.cpp
         src/Socket.cpp
         src/Native.cpp
-        src/winsock.cpp)
+)
 
 string(REPLACE "/${CMAKE_LIBRARY_ARCHITECTURE}" "" CMAKE_INSTALL_LIBDIR_ARCHIND "${CMAKE_INSTALL_LIBDIR}")
 

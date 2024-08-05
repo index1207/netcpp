@@ -3,9 +3,9 @@
 #include <span>
 #include <optional>
 
-#include "winsock.hpp"
-#include "IpAddress.hpp"
-#include "Endpoint.hpp"
+#include "net/Native.hpp"
+#include "net/IpAddress.hpp"
+#include "net/Endpoint.hpp"
 
 namespace net
 {
