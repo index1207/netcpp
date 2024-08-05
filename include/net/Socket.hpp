@@ -44,9 +44,10 @@ namespace net
 		RecvBuffer = SO_RCVBUF,
 		Broadcast = SO_BROADCAST,
 
+#ifdef _WIN32
         UpdateAcceptContext = SO_UPDATE_ACCEPT_CONTEXT,
         UpdateConnectContext = SO_UPDATE_CONNECT_CONTEXT,
-
+#endif
         // IP Level
 		TTL = 4,
 

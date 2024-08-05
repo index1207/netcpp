@@ -1,11 +1,10 @@
 #pragma once
 
 #include <memory>
-#include <atomic>
 #include <functional>
 
-#include "winsock.hpp"
-#include "Socket.hpp"
+#include "net/Native.hpp"
+#include "net/Socket.hpp"
 
 namespace net
 {
@@ -19,8 +18,12 @@ namespace net
 		Receive
 	};
 
+#ifdef _WIN32 /* WinSock */
     class Context : private OVERLAPPED
-	{
+#else /* POSIX */
+    class Context
+#endif
+    {
         friend class Socket;
         friend class IoSystem;
 
@@ -34,7 +37,7 @@ namespace net
         std::unique_ptr<Socket> acceptSocket;
         std::optional<Endpoint> endpoint;
         std::span<char> buffer {};
-        std::atomic<u_long> length = 0;
+        u_long length = 0;
         void* token;
     private:
         void init();

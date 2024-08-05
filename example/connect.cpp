@@ -1,9 +1,7 @@
 // Web server connection example
 
-#include <net/netcpp.hpp>
 #include <iostream>
 #include <future>
-#include "Exception.hpp"
 
 int main() {
     try {

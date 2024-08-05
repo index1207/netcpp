@@ -1,8 +1,11 @@
 #include "net/Native.hpp"
 #include "net/Socket.hpp"
 
+#include <stdexcept>
+
 using namespace net;
 
+#ifdef _WIN32
 LPFN_ACCEPTEX Native::AcceptEx = nullptr;
 LPFN_CONNECTEX Native::ConnectEx = nullptr;
 LPFN_DISCONNECTEX Native::DisconnectEx = nullptr;
@@ -17,10 +20,16 @@ bool bindExtensionFunction(SOCKET s, GUID guid, PVOID* func)
 		func, sizeof(*func),
 		&dwBytes, NULL, NULL);
 }
+#endif
 
 void Native::initialize()
 {
-	Socket dummy(Protocol::Tcp);
+#ifdef _WIN32
+    WSADATA wsaData{};
+    if(WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+        throw std::runtime_error("Not compatible with this platform.");
+
+    Socket dummy(Protocol::Tcp);
 	if(!bindExtensionFunction(dummy.getHandle(), WSAID_ACCEPTEX, reinterpret_cast<PVOID *>(&AcceptEx)))
 		throw std::runtime_error("Can't bind `AcceptEx` function.");
 	if(!bindExtensionFunction(dummy.getHandle(), WSAID_CONNECTEX, reinterpret_cast<PVOID *>(&ConnectEx)))
@@ -30,4 +39,5 @@ void Native::initialize()
 	if(!bindExtensionFunction(dummy.getHandle(), WSAID_GETACCEPTEXSOCKADDRS,
                               reinterpret_cast<PVOID *>(&Native::GetAcceptExSockaddrs)))
 		throw std::runtime_error("Can't bind `GetAcceptExSockaddrs` function.");
+#endif
 }

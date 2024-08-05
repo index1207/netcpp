@@ -4,6 +4,8 @@
 #include <thread>
 #include <mutex>
 
+#include "net/Native.hpp"
+
 namespace net
 {
     struct Option final

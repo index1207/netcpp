@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "net/Native.hpp"
+
 namespace net
 {
 	class IpAddress : private SOCKADDR_IN

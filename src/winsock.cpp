@@ -1,14 +1,11 @@
-#include "net/netcpp.hpp"
+#include "net/winsock.hpp"
+#include "net/Exception.hpp"
 #include "net/Native.hpp"
 
-#include <stdexcept>
-
-#ifdef _WIN32
-
-class netcpp final
+class Winsock final
 {
 public:
-    netcpp()
+    Winsock()
     {
         WSADATA wsaData{};
         if(WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
@@ -16,12 +13,10 @@ public:
 
         net::Native::initialize();
     }
-    ~netcpp()
+    ~Winsock()
     {
         WSACleanup();
     }
 };
 
-static netcpp _netcpp;
-
-#endif
+static Winsock _winsock;

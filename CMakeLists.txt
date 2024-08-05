@@ -10,7 +10,6 @@ set(EXPORT_NAMESPACE "${PROJECT_NAME}::")
 set(CMAKE_CONFIG_FILE_BASENAME "${PROJECT_NAME}Config.cmake")
 set(CMAKE_EXPORT_FILE_BASENAME "${PROJECT_NAME}Export.cmake")
 
-set(HEADER_FILES ${INCLUDES}/net/netcpp.hpp)
 set(SOURCE_FILES
         src/IoSystem.cpp
         src/Dns.cpp
@@ -18,10 +17,9 @@ set(SOURCE_FILES
         src/Exception.cpp
         src/Context.cpp
         src/IpAddress.cpp
-        src/netcpp.cpp
         src/Socket.cpp
         src/Native.cpp
-        ${HEADER_FILES})
+        src/winsock.cpp)
 
 string(REPLACE "/${CMAKE_LIBRARY_ARCHITECTURE}" "" CMAKE_INSTALL_LIBDIR_ARCHIND "${CMAKE_INSTALL_LIBDIR}")
 
@@ -35,10 +33,6 @@ target_include_directories(netcpp PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-target_link_libraries(netcpp ws2_32)
-
-target_precompile_headers(netcpp PRIVATE ${HEADER_FILES})
 
 target_include_directories(netcpp PUBLIC
         $<BUILD_INTERFACE:${INCLUDES}>
@@ -68,3 +62,4 @@ install(EXPORT "${PROJECT_NAME}"
         FILE "${CMAKE_CONFIG_FILE_BASENAME}"
         NAMESPACE "${EXPORT_NAMESPACE}"
         DESTINATION "${CMAKE_INSTALL_LIBDIR_ARCHIND}/cmake/${PROJECT_NAME}")
+
