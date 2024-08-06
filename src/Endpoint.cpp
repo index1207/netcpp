@@ -1,4 +1,4 @@
-#include "net\Endpoint.hpp"
+#include "net/Endpoint.hpp"
 
 using namespace net;
 
@@ -34,7 +34,7 @@ std::string Endpoint::toString() const
 	return _ipAdr.toString() + ":" + std::to_string(_port);
 }
 
-Endpoint Endpoint::parse(SOCKADDR_IN addr)
+Endpoint Endpoint::parse(sockaddr_in addr)
 {
 	Endpoint ep;
     ep.setPort(ntohs(addr.sin_port));

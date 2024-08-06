@@ -1,7 +1,7 @@
 ﻿cmake_minimum_required(VERSION 3.10)
 
-project(netcpp VERSION 0.3 DESCRIPTION "C++ Network library.")
 set(CMAKE_CXX_STANDARD 20)
+project(netcpp VERSION 0.3 DESCRIPTION "C++ Network library.")
 
 include(GNUInstallDirs)
 
@@ -23,6 +23,11 @@ set(SOURCE_FILES
 
 string(REPLACE "/${CMAKE_LIBRARY_ARCHITECTURE}" "" CMAKE_INSTALL_LIBDIR_ARCHIND "${CMAKE_INSTALL_LIBDIR}")
 
+if (MSVC)
+else()
+    add_compile_options(-stdlib=libc++)
+    add_compile_definitions(_LIBCPP_ENABLE_EXPERIMENTAL)
+endif(MSVC)
 add_compile_definitions(NETCPP_BUILD)
 
 add_library(netcpp STATIC ${SOURCE_FILES})

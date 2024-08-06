@@ -21,7 +21,7 @@ namespace net
 		
 		std::string toString() const;
 	public:
-		static Endpoint parse(SOCKADDR_IN addr);
+		static Endpoint parse(sockaddr_in addr);
 		static bool tryParse(std::string_view s, Endpoint* ep);
 	private:
 		int _port;

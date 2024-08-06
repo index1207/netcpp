@@ -126,7 +126,7 @@ namespace net
 		void setReceiveBuffer(int size) const;
 		bool isOpen() const;
 
-        void BindEndpoint();
+        void BindEndpoint() const;
 	public:
 		Socket& operator=(const Socket& sock);
 		Socket& operator=(Socket&& sock) noexcept;

@@ -45,7 +45,11 @@ void Socket::close()
 {
 	if (_sock != INVALID_SOCKET)
 	{
+#ifdef _WIN32
 		closesocket(_sock);
+#else
+        ::close(_sock);
+#endif
 		_sock = INVALID_SOCKET;
 	}
 }
@@ -54,21 +58,25 @@ bool Socket::connect(Endpoint ep)
 {
     setLocalEndpoint(ep);
 	IpAddress ipAdr = _localEndpoint->getAddress();
-	return SOCKET_ERROR != ::connect(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN));
+	return SOCKET_ERROR != ::connect(_sock, reinterpret_cast<sockaddr*>(&ipAdr), sizeof(sockaddr_in));
 }
 
 bool Socket::bind(Endpoint ep)
 {
     setLocalEndpoint(ep);
 	IpAddress ipAdr = _localEndpoint->getAddress();
-    const auto ret = ::bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN));
+    const auto ret = ::bind(_sock, reinterpret_cast<sockaddr*>(&ipAdr), sizeof(sockaddr_in));
+#ifdef _WIN32
     IoSystem::instance().push(_sock);
+#endif
 	return SOCKET_ERROR != ret;
 }
 
 bool Socket::listen(int backlog) const
 {
+#ifdef _WIN32
     IoSystem::instance()._listeningSocket = this;
+#endif
 	return SOCKET_ERROR != ::listen(_sock, backlog);
 }
 
@@ -99,7 +107,7 @@ void Socket::setLocalEndpoint(Endpoint ep)
 
 void Socket::disconnect()
 {
-	shutdown(_sock, SD_BOTH);
+	shutdown(_sock, NET_SOCK_SHUTDOWN);
     close();
 }
 
@@ -115,6 +123,7 @@ bool Socket::accept(Context *context) const {
     context->init();
 
     context->_contextType = ContextType::Accept;
+#ifdef _WIN32
     IoSystem::instance().push(context->acceptSocket->getHandle());
 
     DWORD dwByte = 0;
@@ -125,6 +134,7 @@ bool Socket::accept(Context *context) const {
         const auto err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
+#endif
     return false;
 }
 
@@ -132,7 +142,7 @@ bool Socket::connect(Context* context)
 {
     context->init();
     context->_contextType = ContextType::Connect;
-
+#ifdef _WIN32
     bind(Endpoint(IpAddress::Any, 0));
     _remoteEndpoint = _localEndpoint;
 
@@ -149,6 +159,7 @@ bool Socket::connect(Context* context)
 		const auto err = WSAGetLastError();
 		return WSA_IO_PENDING == err;
 	}
+#endif
 	return false;
 }
 
@@ -156,7 +167,7 @@ bool Socket::send(Context* context) const
 {
     context->init();
     context->_contextType = ContextType::Send;
-
+#ifdef _WIN32
     WSABUF wsaBuf;
     wsaBuf.buf = context->buffer.data();
     wsaBuf.len = context->buffer.size();
@@ -170,6 +181,7 @@ bool Socket::send(Context* context) const
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
+#endif
     return true;
 }
 
@@ -177,7 +189,7 @@ bool Socket::receive(Context* context) const
 {
     context->init();
     context->_contextType = ContextType::Receive;
-
+#ifdef _WIN32
     WSABUF wsaBuf = {
             .len = static_cast<ULONG>(context->buffer.size()),
             .buf = context->buffer.data()
@@ -193,6 +205,7 @@ bool Socket::receive(Context* context) const
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
+#endif
     return true;
 }
 
@@ -201,11 +214,13 @@ bool net::Socket::disconnect(Context* context) const
     context->init();
 
     context->_contextType = ContextType::Disconnect;
+#ifdef _WIN32
     if (!Native::DisconnectEx(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
     {
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
+#endif
     return false;
 }
 
@@ -221,7 +236,7 @@ bool Socket::send(std::span<char> s, Endpoint target) const
 		s.data(),
         static_cast<int>(s.size()),
 		NULL,
-		reinterpret_cast<const sockaddr*>(&addr), sizeof(SOCKADDR_IN)
+		reinterpret_cast<const sockaddr*>(&addr), sizeof(sockaddr_in)
 		);
 }
 
@@ -233,7 +248,7 @@ int Socket::receive(std::span<char> s) const
 int Socket::receive(std::span<char> s, Endpoint target) const
 {
 	auto& addr = const_cast<IpAddress&>(target.getAddress());
-	int len = sizeof(SOCKADDR_IN);
+    SOCKLEN len = sizeof(sockaddr_in);
 	return recvfrom(_sock,
 		s.data(), static_cast<int>(s.size()),
 		NULL, reinterpret_cast<sockaddr*>(&addr), &len);
@@ -242,7 +257,10 @@ int Socket::receive(std::span<char> s, Endpoint target) const
 void Socket::setBlocking(bool isBlocking) const
 {
 	u_long opt = !isBlocking;
+#ifdef _WIN32
 	ioctlsocket(_sock, FIONBIO, &opt);
+#endif
+    ioctl(_sock, F_SETFL, opt | O_NONBLOCK);
 }
 
 void Socket::setLinger(Linger linger) const
@@ -252,20 +270,25 @@ void Socket::setLinger(Linger linger) const
 
 void Socket::setBroadcast(bool isBroadcast) const
 {
-	BOOL val = isBroadcast;
-    setSocketOption(OptionLevel::Socket, OptionName::Broadcast, val);
+    setSocketOption(OptionLevel::Socket, OptionName::Broadcast, isBroadcast);
 }
 
 void Socket::setReuseAddress(bool isReuseAddr) const
 {
-	BOOL val = isReuseAddr;
-    setSocketOption(OptionLevel::Socket, OptionName::ReuseAddress, val);
+#ifdef _WIN32
+    setSocketOption(OptionLevel::Socket, OptionName::ReuseAddress, static_cast<BOOL>(isReuseAddr));
+#else
+    setSocketOption(OptionLevel::Socket, OptionName::ReuseAddress, static_cast<int>(isReuseAddr));
+#endif
 }
 
 void Socket::setNoDelay(bool isNoDelay) const
 {
-	DWORD val = isNoDelay;
-    setSocketOption(static_cast<OptionLevel>(Protocol::Tcp), OptionName::NoDelay, val);
+#ifdef _WIN32
+    setSocketOption(static_cast<OptionLevel>(Protocol::Tcp), OptionName::NoDelay, static_cast<DWORD>(isNoDelay));
+#else
+    setSocketOption(static_cast<OptionLevel>(Protocol::Tcp), OptionName::NoDelay, static_cast<int>(isNoDelay));
+#endif
 }
 
 void Socket::setTTL(int ttl) const
@@ -309,11 +332,11 @@ void Socket::create(Protocol pt) {
     _sock = socket(PF_INET, static_cast<int>(type), static_cast<int>(pt));
 }
 
-void Socket::BindEndpoint()
+void Socket::BindEndpoint() const
 {
-    SOCKADDR_IN addr;
-    int namelen = sizeof(SOCKADDR_IN);
-    if(SOCKET_ERROR == getsockname(_sock, reinterpret_cast<SOCKADDR*>(&addr), &namelen))
+    sockaddr_in addr = {0,};
+    SOCKLEN nameLen = sizeof(sockaddr_in);
+    if(SOCKET_ERROR == getsockname(_sock, reinterpret_cast<sockaddr*>(&addr), &nameLen))
     {
         throw network_error("getsockname()");
     }

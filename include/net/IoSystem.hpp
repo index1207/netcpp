@@ -8,13 +8,13 @@
 
 namespace net
 {
+#ifdef _WIN32
     struct Option final
     {
         static bool Autorun;
         static unsigned long Timeout;
         static unsigned ThreadCount;
     };
-
 	class IoSystem
 	{
         friend class Socket;
@@ -34,4 +34,5 @@ namespace net
         const Socket* _listeningSocket;
         std::mutex mtx;
 	};
+#endif
 }
