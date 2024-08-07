@@ -1,49 +1,47 @@
 ﻿cmake_minimum_required(VERSION 3.10)
 
-project(netcpp VERSION 0.3 DESCRIPTION "C++ Network library.")
-set(CMAKE_CXX_STANDARD 20)
+project(netcpp VERSION 0.3 DESCRIPTION "C++ Network library." LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
-set(INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/include")
+# Platforms
+if (MSVC)
+else()
+    add_compile_definitions(_LIBCPP_ENABLE_EXPERIMENTAL)
+endif(MSVC)
+add_compile_definitions(NETCPP_BUILD)
+
+# googletest
+include(FetchContent)
+FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest
+        GIT_TAG        v1.15.2
+)
+FetchContent_GetProperties(googletest)
+if(NOT googletest_POPULATED)
+    FetchContent_Populate(googletest)
+    add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+    include_directories(${gtest_SOURCE_DIR}/include ${gmock_SOURCE_DIR}/include)
+endif()
+
+FetchContent_MakeAvailable(googletest)
+
+# Initialize
+set(CMAKE_CXX_STANDARD 20)
 set(EXPORT_NAMESPACE "${PROJECT_NAME}::")
 set(CMAKE_CONFIG_FILE_BASENAME "${PROJECT_NAME}Config.cmake")
 set(CMAKE_EXPORT_FILE_BASENAME "${PROJECT_NAME}Export.cmake")
 
-set(HEADER_FILES ${INCLUDES}/net/netcpp.hpp)
-set(SOURCE_FILES
-        src/IoSystem.cpp
-        src/Dns.cpp
-        src/Endpoint.cpp
-        src/Exception.cpp
-        src/Context.cpp
-        src/IpAddress.cpp
-        src/netcpp.cpp
-        src/Socket.cpp
-        src/Native.cpp
-        ${HEADER_FILES})
+file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
+set(INCLUDES "${PROJECT_SOURCE_DIR}/include")
+
+add_subdirectory(src)
+add_subdirectory(test)
 
 string(REPLACE "/${CMAKE_LIBRARY_ARCHITECTURE}" "" CMAKE_INSTALL_LIBDIR_ARCHIND "${CMAKE_INSTALL_LIBDIR}")
 
-add_compile_definitions(NETCPP_BUILD)
-
-add_library(netcpp STATIC ${SOURCE_FILES})
-
-add_library(${EXPORT_NAMESPACE}${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-
-target_include_directories(netcpp PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src)
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-target_link_libraries(netcpp ws2_32)
-
-target_precompile_headers(netcpp PRIVATE ${HEADER_FILES})
-
-target_include_directories(netcpp PUBLIC
-        $<BUILD_INTERFACE:${INCLUDES}>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-
+# INSTALL
 file(GLOB_RECURSE HEADERS "${INCLUDES}/*.h" "${INCLUDES}/*.hxx" "${INCLUDES}/*.hpp")
 string(REPLACE "/${CMAKE_LIBRARY_ARCHITECTURE}" "" CMAKE_INSTALL_LIBDIR_ARCHIND "${CMAKE_INSTALL_LIBDIR}")
 foreach(headerFile ${HEADERS})
@@ -55,8 +53,8 @@ foreach(headerFile ${HEADERS})
     )
 endforeach()
 
-install(TARGETS netcpp
-        EXPORT netcpp
+install(TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}
         INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 export(TARGETS "${PROJECT_NAME}"
@@ -68,3 +66,4 @@ install(EXPORT "${PROJECT_NAME}"
         FILE "${CMAKE_CONFIG_FILE_BASENAME}"
         NAMESPACE "${EXPORT_NAMESPACE}"
         DESTINATION "${CMAKE_INSTALL_LIBDIR_ARCHIND}/cmake/${PROJECT_NAME}")
+

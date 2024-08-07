@@ -2,7 +2,8 @@
 
 #include <string>
 
-#include "IpAddress.hpp"
+#include "net/Native.hpp"
+#include "net/IpAddress.hpp"
 
 namespace net
 {
@@ -11,16 +12,16 @@ namespace net
         friend class IoSystem;
 	public:
 		Endpoint() = default;
-		Endpoint(IpAddress ipAddress, u_short port);
+		Endpoint(IpAddress ipAddress, unsigned short port);
 	public:
 		const IpAddress& getAddress() const;
 		void set_address(IpAddress ipAddress);
 		int getPort() const;
-		void setPort(u_short port);
+		void setPort(unsigned short port);
 		
 		std::string toString() const;
 	public:
-		static Endpoint parse(SOCKADDR_IN addr);
+		static Endpoint parse(sockaddr_in addr);
 		static bool tryParse(std::string_view s, Endpoint* ep);
 	private:
 		int _port;

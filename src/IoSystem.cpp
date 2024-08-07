@@ -10,6 +10,7 @@
 
 using namespace net;
 
+#ifdef _WIN32
 bool Option::Autorun = true;
 unsigned long Option::Timeout = INFINITE;
 unsigned Option::ThreadCount = std::thread::hardware_concurrency();
@@ -63,7 +64,7 @@ void IoSystem::dispatch(Context* context, DWORD numOfBytes, bool isSuccess) {
         case ContextType::Receive:
         case ContextType::Send:
             if(isSuccess) {
-                context->length.store(numOfBytes);
+                context->length = numOfBytes;
             }
             context->completed(context, isSuccess);
             break;
@@ -101,3 +102,4 @@ DWORD IoSystem::worker() {
 HANDLE IoSystem::getHandle() {
     return _hcp;
 }
+#endif

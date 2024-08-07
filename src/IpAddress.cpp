@@ -10,7 +10,7 @@ IpAddress IpAddress::Broadcast = parse(INADDR_BROADCAST);
 IpAddress IpAddress::parse(std::string_view ipStr)
 {
 	IpAddress addr{};
-	ZeroMemory(&addr, sizeof(SOCKADDR_IN));
+	ZeroMemory(&addr, sizeof(sockaddr_in));
 
 	inet_pton(AF_INET, ipStr.data(), &addr.sin_addr);
 
@@ -20,7 +20,7 @@ IpAddress IpAddress::parse(std::string_view ipStr)
 IpAddress IpAddress::parse(int ipNum)
 {
 	IpAddress addr{};
-	ZeroMemory(&addr, sizeof(SOCKADDR_IN));
+	ZeroMemory(&addr, sizeof(sockaddr_in));
 
 	addr.sin_addr.s_addr = htonl(ipNum);
 
@@ -29,12 +29,12 @@ IpAddress IpAddress::parse(int ipNum)
 
 IpAddress::IpAddress()
 {
-	ZeroMemory(this, sizeof(SOCKADDR_IN));
+	ZeroMemory(this, sizeof(sockaddr_in));
 	sin_family = AF_INET;
 }
 
 
-IpAddress::IpAddress(const SOCKADDR_IN& adrs)
+IpAddress::IpAddress(const sockaddr_in& adrs)
 {
 	sin_addr = adrs.sin_addr;
 	sin_family = AF_INET;

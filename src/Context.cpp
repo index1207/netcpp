@@ -9,8 +9,9 @@ Context::Context() : acceptSocket(std::make_unique<Socket>())
 
 void Context::init()
 {
+#ifdef _WIN32
     ZeroMemory(this, sizeof(OVERLAPPED));
-
+#endif
     _contextType = ContextType::None;
 }
 

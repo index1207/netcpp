@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <stdexcept>
 
 namespace net
@@ -9,8 +10,8 @@ namespace net
     public:
         network_error(std::string_view msg);
 
-        virtual char const* what() const override;
-        int get_code() const;
+        virtual const char* what() const noexcept override;
+        int     get_code() const;
     private:
         std::string _msg;
         int _error;

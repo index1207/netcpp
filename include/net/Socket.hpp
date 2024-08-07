@@ -3,9 +3,9 @@
 #include <span>
 #include <optional>
 
-#include "winsock.hpp"
-#include "IpAddress.hpp"
-#include "Endpoint.hpp"
+#include "net/Native.hpp"
+#include "net/IpAddress.hpp"
+#include "net/Endpoint.hpp"
 
 namespace net
 {
@@ -44,9 +44,10 @@ namespace net
 		RecvBuffer = SO_RCVBUF,
 		Broadcast = SO_BROADCAST,
 
+#ifdef _WIN32
         UpdateAcceptContext = SO_UPDATE_ACCEPT_CONTEXT,
         UpdateConnectContext = SO_UPDATE_CONNECT_CONTEXT,
-
+#endif
         // IP Level
 		TTL = 4,
 
@@ -79,9 +80,9 @@ namespace net
 		bool bind(Endpoint ep);
 		bool listen(int backlog = SOMAXCONN) const;
 	public:
-		SOCKET getHandle() const;
-        std::optional<Endpoint> getRemoteEndpoint() const;
-        std::optional<Endpoint> getLocalEndpoint() const;
+		[[nodiscard]] SOCKET getHandle() const;
+        [[nodiscard]] std::optional<Endpoint> getRemoteEndpoint() const;
+        [[nodiscard]] std::optional<Endpoint> getLocalEndpoint() const;
 	public:
 		void setRemoteEndpoint(Endpoint ep);
 		void setLocalEndpoint(Endpoint ep);
@@ -125,7 +126,7 @@ namespace net
 		void setReceiveBuffer(int size) const;
 		bool isOpen() const;
 
-        void BindEndpoint();
+        void BindEndpoint() const;
 	public:
 		Socket& operator=(const Socket& sock);
 		Socket& operator=(Socket&& sock) noexcept;
