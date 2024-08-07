@@ -28,6 +28,8 @@ using SOCKLEN = int;
 #include <net/if.h>
 #include <unistd.h>
 
+#include <cstring>
+
 #define SOCKET_ERROR (-1)
 #define INVALID_SOCKET SOCKET_ERROR
 
