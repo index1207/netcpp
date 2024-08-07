@@ -80,9 +80,9 @@ namespace net
 		bool bind(Endpoint ep);
 		bool listen(int backlog = SOMAXCONN) const;
 	public:
-		SOCKET getHandle() const;
-        std::optional<Endpoint> getRemoteEndpoint() const;
-        std::optional<Endpoint> getLocalEndpoint() const;
+		[[nodiscard]] SOCKET getHandle() const;
+        [[nodiscard]] std::optional<Endpoint> getRemoteEndpoint() const;
+        [[nodiscard]] std::optional<Endpoint> getLocalEndpoint() const;
 	public:
 		void setRemoteEndpoint(Endpoint ep);
 		void setLocalEndpoint(Endpoint ep);

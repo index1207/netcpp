@@ -226,7 +226,7 @@ bool net::Socket::disconnect(Context* context) const
 
 bool Socket::send(std::span<char> s) const
 {
-	return SOCKET_ERROR != ::send(_sock, s.data(), static_cast<int>(s.size()), NULL);
+	return SOCKET_ERROR != ::send(_sock, s.data(), static_cast<int>(s.size()), 0);
 }
 
 bool Socket::send(std::span<char> s, Endpoint target) const
@@ -235,14 +235,14 @@ bool Socket::send(std::span<char> s, Endpoint target) const
 	return SOCKET_ERROR == sendto(_sock,
 		s.data(),
         static_cast<int>(s.size()),
-		NULL,
+		0,
 		reinterpret_cast<const sockaddr*>(&addr), sizeof(sockaddr_in)
 		);
 }
 
 int Socket::receive(std::span<char> s) const
 {
-	return recv(_sock, s.data(), static_cast<int>(s.size()), NULL);
+	return recv(_sock, s.data(), static_cast<int>(s.size()), 0);
 }
 
 int Socket::receive(std::span<char> s, Endpoint target) const
@@ -251,7 +251,7 @@ int Socket::receive(std::span<char> s, Endpoint target) const
     SOCKLEN len = sizeof(sockaddr_in);
 	return recvfrom(_sock,
 		s.data(), static_cast<int>(s.size()),
-		NULL, reinterpret_cast<sockaddr*>(&addr), &len);
+		0, reinterpret_cast<sockaddr*>(&addr), &len);
 }
 
 void Socket::setBlocking(bool isBlocking) const

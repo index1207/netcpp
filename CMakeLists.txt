@@ -1,48 +1,47 @@
 ﻿cmake_minimum_required(VERSION 3.10)
 
-set(CMAKE_CXX_STANDARD 20)
-project(netcpp VERSION 0.3 DESCRIPTION "C++ Network library.")
+project(netcpp VERSION 0.3 DESCRIPTION "C++ Network library." LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
-set(INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/include")
-set(EXPORT_NAMESPACE "${PROJECT_NAME}::")
-set(CMAKE_CONFIG_FILE_BASENAME "${PROJECT_NAME}Config.cmake")
-set(CMAKE_EXPORT_FILE_BASENAME "${PROJECT_NAME}Export.cmake")
-
-set(SOURCE_FILES
-        src/IoSystem.cpp
-        src/Dns.cpp
-        src/Endpoint.cpp
-        src/Exception.cpp
-        src/Context.cpp
-        src/IpAddress.cpp
-        src/Socket.cpp
-        src/Native.cpp
-)
-
-string(REPLACE "/${CMAKE_LIBRARY_ARCHITECTURE}" "" CMAKE_INSTALL_LIBDIR_ARCHIND "${CMAKE_INSTALL_LIBDIR}")
-
+# Platforms
 if (MSVC)
 else()
-    add_compile_options(-stdlib=libc++)
     add_compile_definitions(_LIBCPP_ENABLE_EXPERIMENTAL)
 endif(MSVC)
 add_compile_definitions(NETCPP_BUILD)
 
-add_library(netcpp STATIC ${SOURCE_FILES})
+# googletest
+include(FetchContent)
+FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest
+        GIT_TAG        v1.15.2
+)
+FetchContent_GetProperties(googletest)
+if(NOT googletest_POPULATED)
+    FetchContent_Populate(googletest)
+    add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+    include_directories(${gtest_SOURCE_DIR}/include ${gmock_SOURCE_DIR}/include)
+endif()
 
-add_library(${EXPORT_NAMESPACE}${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+FetchContent_MakeAvailable(googletest)
 
-target_include_directories(netcpp PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src)
+# Initialize
+set(CMAKE_CXX_STANDARD 20)
+set(EXPORT_NAMESPACE "${PROJECT_NAME}::")
+set(CMAKE_CONFIG_FILE_BASENAME "${PROJECT_NAME}Config.cmake")
+set(CMAKE_EXPORT_FILE_BASENAME "${PROJECT_NAME}Export.cmake")
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
+set(INCLUDES "${PROJECT_SOURCE_DIR}/include")
 
-target_include_directories(netcpp PUBLIC
-        $<BUILD_INTERFACE:${INCLUDES}>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+add_subdirectory(src)
+add_subdirectory(test)
 
+string(REPLACE "/${CMAKE_LIBRARY_ARCHITECTURE}" "" CMAKE_INSTALL_LIBDIR_ARCHIND "${CMAKE_INSTALL_LIBDIR}")
+
+# INSTALL
 file(GLOB_RECURSE HEADERS "${INCLUDES}/*.h" "${INCLUDES}/*.hxx" "${INCLUDES}/*.hpp")
 string(REPLACE "/${CMAKE_LIBRARY_ARCHITECTURE}" "" CMAKE_INSTALL_LIBDIR_ARCHIND "${CMAKE_INSTALL_LIBDIR}")
 foreach(headerFile ${HEADERS})
@@ -54,8 +53,8 @@ foreach(headerFile ${HEADERS})
     )
 endforeach()
 
-install(TARGETS netcpp
-        EXPORT netcpp
+install(TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}
         INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 export(TARGETS "${PROJECT_NAME}"
