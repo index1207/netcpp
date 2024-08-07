@@ -29,18 +29,9 @@ jobs:
           - os: windows-latest
             cpp_compiler: cl
           - os: ubuntu-latest
-            cpp_compiler: g++
-          - os: ubuntu-latest
-            cpp_compiler: clang++
+            cpp_compiler: g++-13
           - os: macos-latest
             cpp_compiler: clang++
-        exclude:
-          - os: windows-latest
-            c_compiler: gcc
-          - os: windows-latest
-            c_compiler: clang
-          - os: ubuntu-latest
-            c_compiler: cl
 
     steps:
       - uses: actions/checkout@v4
