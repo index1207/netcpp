@@ -259,8 +259,9 @@ void Socket::setBlocking(bool isBlocking) const
 	u_long opt = !isBlocking;
 #ifdef _WIN32
 	ioctlsocket(_sock, FIONBIO, &opt);
-#endif
+#else
     ioctl(_sock, F_SETFL, opt | O_NONBLOCK);
+#endif
 }
 
 void Socket::setLinger(Linger linger) const
