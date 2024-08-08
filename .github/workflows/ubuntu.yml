@@ -1,0 +1,34 @@
+name: ubuntu
+
+on:
+  push:
+    branches: [ "release" ]
+  pull_request:
+    branches: [ "release" ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  ubuntu:
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          - { cc: "gcc-13",   cxx: "g++-13",     os: "ubuntu-2404" }
+          - { cc: "clang-16", cxx: "clang++-16", os: "ubuntu-2404" }
+
+    name: ${{ matrix.compiler.cc }}
+    runs-on: ${{ matrix.compiler.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cxx }}
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+      - name: Google Test
+        working-directory: ${{github.workspace}}/build/test
+        run: ./unittest

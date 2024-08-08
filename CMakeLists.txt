@@ -6,6 +6,8 @@ include(GNUInstallDirs)
 
 # Platforms
 if (MSVC)
+    set(CMAKE_CXX_FLAGS_RELEASE "/MT")
+    set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
 else()
     add_compile_definitions(_LIBCPP_ENABLE_EXPERIMENTAL)
 endif(MSVC)
@@ -26,6 +28,7 @@ if(NOT googletest_POPULATED)
 endif()
 
 FetchContent_MakeAvailable(googletest)
+enable_testing()
 
 # Initialize
 set(CMAKE_CXX_STANDARD 20)
