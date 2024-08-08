@@ -18,7 +18,7 @@ jobs:
           - { cc: "gcc-13",   cxx: "g++-13",     os: "ubuntu-latest" }
           - { cc: "clang-16", cxx: "clang++-16", os: "ubuntu-latest" }
 
-    name: ${{ format('Ubuntu `{}`', matrix.compiler.cc) }}
+    name: ${{ matrix.compiler.cc }}
     runs-on: ${{ matrix.compiler.os }}
     steps:
       - uses: actions/checkout@v4
