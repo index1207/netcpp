@@ -32,3 +32,8 @@ jobs:
       - name: Google Test
         working-directory: ${{github.workspace}}/build/test
         run: ./unittest
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@v2.3.0
+        with:
+          github-token: ${{ github.token }}

@@ -24,3 +24,8 @@ jobs:
       - name: Google Test
         working-directory: ${{github.workspace}}/build/test/${{env.BUILD_TYPE}}
         run: ./unittest.exe
+
+      - name: Test Coverage
+        uses: coverallsapp/github-action@v2.3.0
+        with:
+          github-token: ${{ github.token }}
