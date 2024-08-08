@@ -4,6 +4,21 @@ project(netcpp VERSION 0.3 DESCRIPTION "C++ Network library." LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
+# Compiler version check
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13)
+        set(CMAKE_CXX_COMPILER g++-13)
+    endif ()
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 18)
+        set(CMAKE_CXX_COMPILER clang++-18)
+    endif ()
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    if(MSVC_VERSION VERSION_LESS 1920)
+        message(FATAL_ERROR "Insufficient msvc version")
+    endif ()
+endif ()
+
 # Platforms
 if (MSVC)
     set(CMAKE_CXX_FLAGS_RELEASE "/MT")
