@@ -1,53 +1,74 @@
-# netcpp ![Windows Build](https://github.com/index1207/netcpp/actions/workflows/cmake-windows-platform.yml/badge.svg?branch=release) ![](https://img.shields.io/badge/language-C++20-blue)
-<image src="https://github.com/index1207/netcpp/assets/63224377/5adcc63a-50e2-42a7-bcd5-d568ff1500a9" width="35%"> <br>
-`netcpp` is so simple c++ Netowrk Library. <br>
-this library is based on Windows Single-Platform based CMake.
 
-## Build
-To build this library, you need upper VS2019 compiler version.
-1. Generate Visual Studio project. <br>
-`cmake .`
-2. Open .sln project and build.
+# netcpp ![windows](https://github.com/index1207/netcpp/actions/workflows/windows.yml/badge.svg) ![windows](https://github.com/index1207/netcpp/actions/workflows/ubuntu.yml/badge.svg) ![](https://img.shields.io/badge/language-C++20-blue) [![Vcpkg package](https://img.shields.io/badge/vcpkg-netcpp-blue)](https://github.com/microsoft/vcpkg/tree/master/ports/netcpp) [![License](https://img.shields.io/github/license/index1207/netcpp.svg)](LICENSE)
+netcpp is open-source simple C++ network library. netcpp supports windows and linux(ubuntu) platform. asynchronous feature implement by each os's api. Windows implemented using IOCP and Ubuntu will implement using Epoll.
 
-## Sample Code
-
-### Client
-```cpp
-#include <net/netcpp.hpp>
-#include <iostream>
-
-int main() {
-    net::Socket sock(net::Protocol::Tcp);
-    if (!sock.isOpen()) {
-        return -1;
-    }
-    if (!sock.connect(net::Endpoint(net::IpAddress::Loopback, 8085))) {
-        return -1;
-    }
-    std::cout << "Connected!";
+## Installation
+To use netcpp, create new application by vcpkg or enable manifest mode at Visual Studio. <br>
+At commend line:
+```shell
+vcpkg install netcpp
+```
+At vcpkg.json:
+```json
+{
+  "dependencies": [
+    "netcpp"
+  ]
 }
 ```
-
-### Server
-```cpp
-#include <net/netcpp.hpp>
-#include <iostream>
-
-int main() {
-    net::Socket sock(net::Protocol::Tcp);
-    if (!sock.isOpen()) {
-        return -1;
-    }
-    if(!sock.bind(net::Endpoint(net::IpAddress::Loopback, 8085))) {
-      return -1;
-    }
-    if(!sock.listen()) {
-      return -1;
-    }
-
-    while(true) {
-        auto client = sock.accept();
-        std::cout << "Connected\n";
-    }
-}
+Or clone this repo and build.
+```shell
+git clone https://github.com/index1207/netcpp.git
+cmake -B build
+cmake --build build
 ```
+
+## Example and Features
+- Basic connection
+  - ```cpp
+    // Server
+    #include <net/Socket.hpp>
+    #include <iostream>
+        
+    int main()
+    {
+        net::Native::initialize(); // Initialize Native API
+    
+        net::Socket sock(net::Protocol::Tcp); // Create new TCP socket
+        if (!sock.isOpen()) // Invalidate socket
+            return -1;
+        if(!sock.bind(net::Endpoint(net::IpAddress::Loopback, 8085))) // Bind address
+            return -1;
+        if(!sock.listen()) // Ready to accept
+            return -1;
+            
+        while(true)
+        {
+            auto client = sock.accept(); // Accept other client. it returns new client socket.
+            std::cout << "Connected\n";
+        }
+    }
+    ```
+  - ```cpp
+    // Client
+    #include <net/Socket.hpp>
+    #include <iostream>
+    
+    int main()
+    {
+        net::Native::initialize(); // Initialize Native API
+    
+        net::Socket sock(net::Protocol::Tcp); // Create new TCP socket
+        if (!sock.isOpen()) // Invalidate socket
+            return -1;
+        if (!sock.connect(net::Endpoint(net::IpAddress::Loopback, 8085))) // Try to connect to server.
+            return -1;
+        std::cout << "Connected!";
+    }
+    ```
+## Minimum required compiler version
+- Windows
+  - Visual Studio 2019
+- Linux
+  - Clang 16
+  - GCC 13.2
