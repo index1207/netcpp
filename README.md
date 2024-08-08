@@ -18,7 +18,7 @@ At vcpkg.json:
 ```
 Or clone this repo and build.
 ```shell
-git clone https://github.com/index1207/netcpp.git
+git clone https://github.com/index1207/netcpp.git && cd netcpp
 cmake -B build
 cmake --build build
 ```
