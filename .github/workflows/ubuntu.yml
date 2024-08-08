@@ -1,6 +1,10 @@
 name: ubuntu
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ "release" ]
+  pull_request:
+    branches: [ "release" ]
 
 env:
   BUILD_TYPE: Release
