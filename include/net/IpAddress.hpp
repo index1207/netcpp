@@ -22,6 +22,9 @@ namespace net
 	public:
 		static IpAddress parse(std::string_view ipStr);
 		static IpAddress parse(int ipNum);
+    public:
+        bool operator==(const IpAddress& ipAdr) const;
+        bool operator==(IpAddress&& ipAdr) const;
 	public:
 		[[nodiscard]] std::string toString() const;
     };

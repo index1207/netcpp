@@ -105,10 +105,9 @@ void Socket::setLocalEndpoint(Endpoint ep)
     _localEndpoint = ep;
 }
 
-void Socket::disconnect()
+void Socket::disconnect() const
 {
 	shutdown(_sock, NET_SOCK_SHUTDOWN);
-    close();
 }
 
 net::Socket Socket::accept() const

@@ -32,3 +32,8 @@ jobs:
       - name: Google Test
         working-directory: ${{github.workspace}}/build/test
         run: ./unittest
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

@@ -87,7 +87,7 @@ namespace net
 		void setRemoteEndpoint(Endpoint ep);
 		void setLocalEndpoint(Endpoint ep);
 	public:
-		void disconnect();
+		void disconnect() const;
 		Socket accept() const;
 		bool connect(Endpoint ep);
 

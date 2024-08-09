@@ -56,3 +56,13 @@ bool Endpoint::tryParse(std::string_view s, Endpoint* ep)
 
 	return true;
 }
+
+bool Endpoint::operator==(const Endpoint& endpoint) const {
+    return (getAddress() == endpoint.getAddress()) &&
+           (getPort() == endpoint.getPort());
+}
+
+bool Endpoint::operator==(Endpoint &&endpoint) const {
+    return (getAddress() == endpoint.getAddress()) &&
+           (getPort() == endpoint.getPort());
+}
