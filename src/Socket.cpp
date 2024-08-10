@@ -56,16 +56,33 @@ void Socket::close()
 
 bool Socket::connect(Endpoint ep)
 {
-    setLocalEndpoint(ep);
-	IpAddress ipAdr = _localEndpoint->getAddress();
-	return SOCKET_ERROR != ::connect(_sock, reinterpret_cast<sockaddr*>(&ipAdr), sizeof(sockaddr_in));
+    _remoteEndpoint = ep;
+	IpAddress ipAdr = ep.getAddress();
+	auto ret =  SOCKET_ERROR != ::connect(_sock, reinterpret_cast<sockaddr*>(&ipAdr), sizeof(sockaddr_in));
+    if (ret)
+    {
+        sockaddr_in remoteAddrIn {};
+        SOCKLEN len = sizeof(remoteAddrIn);
+        ret &= SOCKET_ERROR != getpeername(_sock, reinterpret_cast<sockaddr*>(&remoteAddrIn), &len);
+        _remoteEndpoint = Endpoint::parse(remoteAddrIn);
+    }
+    return ret;
 }
 
 bool Socket::bind(Endpoint ep)
 {
-    setLocalEndpoint(ep);
+    _localEndpoint = ep;
 	IpAddress ipAdr = _localEndpoint->getAddress();
     const auto ret = ::bind(_sock, reinterpret_cast<sockaddr*>(&ipAdr), sizeof(sockaddr_in));
+    if (ret == SOCKET_ERROR)
+    {
+        try {
+            throw network_error("bind()");
+        }
+        catch (std::exception& e) {
+            auto reason = e.what();
+        }
+    }
 #ifdef _WIN32
     IoSystem::instance().push(_sock);
 #endif
@@ -95,19 +112,10 @@ std::optional<Endpoint> Socket::getLocalEndpoint() const
     return _localEndpoint;
 }
 
-void Socket::setRemoteEndpoint(Endpoint ep)
-{
-	_remoteEndpoint = ep;
-}
-
-void Socket::setLocalEndpoint(Endpoint ep)
-{
-    _localEndpoint = ep;
-}
-
-void Socket::disconnect() const
+void Socket::disconnect()
 {
 	shutdown(_sock, NET_SOCK_SHUTDOWN);
+    _remoteEndpoint = std::nullopt;
 }
 
 net::Socket Socket::accept() const
@@ -169,7 +177,7 @@ bool Socket::send(Context* context) const
 #ifdef _WIN32
     WSABUF wsaBuf;
     wsaBuf.buf = context->buffer.data();
-    wsaBuf.len = context->buffer.size();
+    wsaBuf.len = static_cast<ULONG>(context->buffer.size());
 
     if (SOCKET_ERROR == WSASend(_sock,
                                 &wsaBuf, 1,
@@ -241,16 +249,18 @@ bool Socket::send(std::span<char> s, Endpoint target) const
 
 int Socket::receive(std::span<char> s) const
 {
-	return recv(_sock, s.data(), static_cast<int>(s.size()), 0);
+	auto ret = recv(_sock, s.data(), static_cast<int>(s.size()), 0);
+    return static_cast<int>(ret);
 }
 
 int Socket::receive(std::span<char> s, Endpoint target) const
 {
 	auto& addr = const_cast<IpAddress&>(target.getAddress());
     SOCKLEN len = sizeof(sockaddr_in);
-	return recvfrom(_sock,
+	auto ret = recvfrom(_sock,
 		s.data(), static_cast<int>(s.size()),
 		0, reinterpret_cast<sockaddr*>(&addr), &len);
+    return static_cast<int>(ret);
 }
 
 void Socket::setBlocking(bool isBlocking) const
@@ -265,45 +275,45 @@ void Socket::setBlocking(bool isBlocking) const
 
 void Socket::setLinger(Linger linger) const
 {
-    setSocketOption(OptionLevel::Socket, OptionName::Linger, linger);
+    setOption(OptionLevel::Socket, OptionName::Linger, linger);
 }
 
 void Socket::setBroadcast(bool isBroadcast) const
 {
-    setSocketOption(OptionLevel::Socket, OptionName::Broadcast, isBroadcast);
+    setOption(OptionLevel::Socket, OptionName::Broadcast, isBroadcast);
 }
 
 void Socket::setReuseAddress(bool isReuseAddr) const
 {
 #ifdef _WIN32
-    setSocketOption(OptionLevel::Socket, OptionName::ReuseAddress, static_cast<BOOL>(isReuseAddr));
+    setOption(OptionLevel::Socket, OptionName::ReuseAddress, static_cast<BOOL>(isReuseAddr));
 #else
-    setSocketOption(OptionLevel::Socket, OptionName::ReuseAddress, static_cast<int>(isReuseAddr));
+    setOption(OptionLevel::Socket, OptionName::ReuseAddress, static_cast<int>(isReuseAddr));
 #endif
 }
 
 void Socket::setNoDelay(bool isNoDelay) const
 {
 #ifdef _WIN32
-    setSocketOption(static_cast<OptionLevel>(Protocol::Tcp), OptionName::NoDelay, static_cast<DWORD>(isNoDelay));
+    setOption(static_cast<OptionLevel>(Protocol::Tcp), OptionName::NoDelay, static_cast<DWORD>(isNoDelay));
 #else
-    setSocketOption(static_cast<OptionLevel>(Protocol::Tcp), OptionName::NoDelay, static_cast<int>(isNoDelay));
+    setOption(static_cast<OptionLevel>(Protocol::Tcp), OptionName::NoDelay, static_cast<int>(isNoDelay));
 #endif
 }
 
 void Socket::setTTL(int ttl) const
 {
-    setSocketOption(OptionLevel::IP, OptionName::TTL, ttl);
+    setOption(OptionLevel::IP, OptionName::TTL, ttl);
 }
 
 void Socket::setSendBuffer(int size) const
 {
-    setSocketOption(OptionLevel::Socket, OptionName::SendBuffer, size);
+    setOption(OptionLevel::Socket, OptionName::SendBuffer, size);
 }
 
 void Socket::setReceiveBuffer(int size) const
 {
-    setSocketOption(OptionLevel::Socket, OptionName::RecvBuffer, size);
+    setOption(OptionLevel::Socket, OptionName::RecvBuffer, size);
 }
 
 bool Socket::isOpen() const
@@ -340,4 +350,12 @@ void Socket::BindEndpoint() const
     {
         throw network_error("getsockname()");
     }
+}
+
+bool Socket::operator==(const Socket& sock) const {
+    return _sock == sock._sock;
+}
+
+bool Socket::operator==(Socket&& sock) const {
+    return _sock == sock._sock;
 }

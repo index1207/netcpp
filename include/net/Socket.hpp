@@ -84,11 +84,8 @@ namespace net
         [[nodiscard]] std::optional<Endpoint> getRemoteEndpoint() const;
         [[nodiscard]] std::optional<Endpoint> getLocalEndpoint() const;
 	public:
-		void setRemoteEndpoint(Endpoint ep);
-		void setLocalEndpoint(Endpoint ep);
-	public:
-		void disconnect() const;
-		Socket accept() const;
+		void disconnect();
+		[[nodiscard]] Socket accept() const;
 		bool connect(Endpoint ep);
 
 		bool send(std::span<char> s) const;
@@ -103,18 +100,26 @@ namespace net
         bool send(Context* context) const;
         bool receive(Context* context) const;
     public:
-		template<class T>
-		bool setSocketOption(OptionLevel level, OptionName name, T value) const
-		{
-			if (_sock == INVALID_SOCKET)
-				return false;
+        template<class T>
+        bool setOption(OptionLevel level, OptionName name, T value) const
+        {
+            if (_sock == INVALID_SOCKET)
+                return false;
             return SOCKET_ERROR != setsockopt(_sock,
-				static_cast<int>(level),
-				static_cast<int>(name),
-				reinterpret_cast<const char*>(&value),
-				sizeof(T)
-			);
-		}
+                                              static_cast<int>(level),
+                                              static_cast<int>(name),
+                                              reinterpret_cast<const char*>(&value),
+                                              sizeof(T)
+            );
+        }
+        template<class T>
+        bool getOption(OptionLevel level, OptionName name, T& value) const
+        {
+            if (_sock == INVALID_SOCKET)
+                return false;
+            SOCKLEN optLen = sizeof(T);
+            return SOCKET_ERROR != getsockopt(_sock, level, name, &value, &optLen);
+        }
 
 		void setBlocking(bool isBlocking) const;
 		void setLinger(Linger linger) const;
@@ -128,6 +133,9 @@ namespace net
 
         void BindEndpoint() const;
 	public:
+        bool operator==(const Socket& sock) const;
+        bool operator==(Socket&& sock) const;
+
 		Socket& operator=(const Socket& sock);
 		Socket& operator=(Socket&& sock) noexcept;
     private:

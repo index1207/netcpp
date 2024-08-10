@@ -21,8 +21,8 @@ endif ()
 
 # Platforms
 if (MSVC)
-    set(CMAKE_CXX_FLAGS_RELEASE "/MT")
-    set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
+    set(CMAKE_CXX_FLAGS_RELEASE /MT)
+    set(CMAKE_CXX_FLAGS_DEBUG /MTd)
 else()
     add_compile_definitions(_LIBCPP_ENABLE_EXPERIMENTAL)
 endif(MSVC)

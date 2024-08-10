@@ -2,7 +2,8 @@
 #include "gtest/gtest.h"
 
 int main(int argc, char **argv) {
-    EXPECT_EQ(net::Native::initialize(), true);
+    if (!net::Native::initialize())
+        exit(EXIT_FAILURE);
 
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
