@@ -8,7 +8,7 @@
 #include <future>
 #include <format>
 
-#define TEST_ENDPOINT net::Endpoint(net::IpAddress::Loopback, 8080)
+#define TEST_ENDPOINT net::Endpoint(net::IpAddress::Loopback, 5500)
 
 TEST(Socket, open)
 {
@@ -142,6 +142,7 @@ TEST(Socket, sync_disconnect)
 
 TEST(Socket, sync_accept)
 {
+    using namespace std::chrono_literals;
     std::thread server([] {
         net::Socket sock(net::Protocol::Tcp);
         EXPECT_EQ(sock.isOpen(), true);
@@ -150,10 +151,15 @@ TEST(Socket, sync_accept)
         EXPECT_EQ(sock.listen(), true);
         EXPECT_EQ(sock.accept().isOpen(), true);
     });
-    net::Socket sock(net::Protocol::Tcp);
-    EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
+    std::this_thread::sleep_for(1s);
+    std::thread client([] {
+        net::Socket sock(net::Protocol::Tcp);
+        EXPECT_EQ(sock.isOpen(), true);
+        EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
+    });
 
     server.join();
+    client.join();
 }
 
 TEST(Socket, sync_send)
@@ -191,24 +197,32 @@ TEST(Socket, sync_sendto)
 
 TEST(Socket, sync_receive)
 {
+    using namespace std::chrono_literals;
     std::thread server([] {
         net::Socket sock(net::Protocol::Tcp);
         EXPECT_EQ(sock.isOpen(), true);
         EXPECT_EQ(sock.setReuseAddress(true), true);
         EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
         EXPECT_EQ(sock.listen(), true);
-        EXPECT_EQ(sock.accept().isOpen(), true);
 
-        std::string data = "hello";
-        EXPECT_GE(sock.send(data), 0);
+        auto client = sock.accept();
+        EXPECT_EQ(client.isOpen(), true);
+
+        char buffer[] = "hello";
+        EXPECT_GE(client.send(buffer), 0);
     });
-    net::Socket sock(net::Protocol::Tcp);
-    EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
+    std::this_thread::sleep_for(1s);
+    std::thread client([] {
+        net::Socket sock(net::Protocol::Tcp);
+        EXPECT_EQ(sock.isOpen(), true);
+        EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
 
-    char buffer[16] { 0, };
-    EXPECT_GE(sock.receive(buffer), 0);
+        char buffer[16] = { 0, };
+        EXPECT_GE(sock.receive(buffer), 0);
+    });
 
     server.join();
+    client.join();
 }
 
 TEST(Socket, constructor_lvalue)
