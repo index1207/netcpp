@@ -79,6 +79,7 @@ TEST(Socket, bind)
 {
     net::Socket sock(net::Protocol::Tcp);
     EXPECT_EQ(sock.isOpen(), true);
+    EXPECT_EQ(sock.setReuseAddress(true), true);
     EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
 
     auto localEndpoint = sock.getLocalEndpoint();
@@ -92,6 +93,7 @@ TEST(Socket, listen)
 {
     net::Socket sock(net::Protocol::Tcp);
     EXPECT_EQ(sock.isOpen(), true);
+    EXPECT_EQ(sock.setReuseAddress(true), true);
     EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
     EXPECT_EQ(sock.listen(), true);
 }
@@ -100,6 +102,7 @@ TEST(Socket, server_getLocalEndpoint)
 {
     net::Socket sock(net::Protocol::Tcp);
     EXPECT_EQ(sock.isOpen(), true);
+    EXPECT_EQ(sock.setReuseAddress(true), true);
     EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
 
     auto localEndpoint = sock.getLocalEndpoint();
@@ -111,6 +114,7 @@ TEST(Socket, server_getRemoteEndpoint)
 {
     net::Socket sock(net::Protocol::Tcp);
     EXPECT_EQ(sock.isOpen(), true);
+    EXPECT_EQ(sock.setReuseAddress(true), true);
     EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
 
     auto remoteEndpoint = sock.getRemoteEndpoint();
@@ -141,6 +145,7 @@ TEST(Socket, sync_accept)
     std::thread server([] {
         net::Socket sock(net::Protocol::Tcp);
         EXPECT_EQ(sock.isOpen(), true);
+        EXPECT_EQ(sock.setReuseAddress(true), true);
         EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
         EXPECT_EQ(sock.listen(), true);
         EXPECT_EQ(sock.accept().isOpen(), true);
@@ -174,6 +179,7 @@ TEST(Socket, sync_sendto)
 {
     net::Socket server(net::Protocol::Udp);
     EXPECT_EQ(server.isOpen(), true);
+    EXPECT_EQ(server.setReuseAddress(true), true);
     EXPECT_EQ(server.bind(TEST_ENDPOINT), true);
 
     net::Socket client(net::Protocol::Udp);
@@ -188,6 +194,7 @@ TEST(Socket, sync_receive)
     std::thread server([] {
         net::Socket sock(net::Protocol::Tcp);
         EXPECT_EQ(sock.isOpen(), true);
+        EXPECT_EQ(sock.setReuseAddress(true), true);
         EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
         EXPECT_EQ(sock.listen(), true);
         EXPECT_EQ(sock.accept().isOpen(), true);

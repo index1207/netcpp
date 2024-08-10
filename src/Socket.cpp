@@ -263,57 +263,57 @@ int Socket::receive(std::span<char> s, Endpoint target) const
     return static_cast<int>(ret);
 }
 
-void Socket::setBlocking(bool isBlocking) const
+bool Socket::setBlocking(bool isBlocking) const
 {
 	u_long opt = !isBlocking;
 #ifdef _WIN32
-	ioctlsocket(_sock, FIONBIO, &opt);
+	return SOCKET_ERROR != ioctlsocket(_sock, FIONBIO, &opt);
 #else
-    ioctl(_sock, F_SETFL, opt | O_NONBLOCK);
+    return 0 == ioctl(_sock, F_SETFL, opt | O_NONBLOCK);
 #endif
 }
 
-void Socket::setLinger(Linger linger) const
+bool Socket::setLinger(Linger linger) const
 {
-    setOption(OptionLevel::Socket, OptionName::Linger, linger);
+    return setOption(OptionLevel::Socket, OptionName::Linger, linger);
 }
 
-void Socket::setBroadcast(bool isBroadcast) const
+bool Socket::setBroadcast(bool isBroadcast) const
 {
-    setOption(OptionLevel::Socket, OptionName::Broadcast, isBroadcast);
+    return setOption(OptionLevel::Socket, OptionName::Broadcast, isBroadcast);
 }
 
-void Socket::setReuseAddress(bool isReuseAddr) const
+bool Socket::setReuseAddress(bool isReuseAddr) const
 {
 #ifdef _WIN32
-    setOption(OptionLevel::Socket, OptionName::ReuseAddress, static_cast<BOOL>(isReuseAddr));
+    return setOption(OptionLevel::Socket, OptionName::ReuseAddress, static_cast<BOOL>(isReuseAddr));
 #else
-    setOption(OptionLevel::Socket, OptionName::ReuseAddress, static_cast<int>(isReuseAddr));
+    return setOption(OptionLevel::Socket, OptionName::ReuseAddress, static_cast<int>(isReuseAddr));
 #endif
 }
 
-void Socket::setNoDelay(bool isNoDelay) const
+bool Socket::setNoDelay(bool isNoDelay) const
 {
 #ifdef _WIN32
-    setOption(static_cast<OptionLevel>(Protocol::Tcp), OptionName::NoDelay, static_cast<DWORD>(isNoDelay));
+    return setOption(static_cast<OptionLevel>(Protocol::Tcp), OptionName::NoDelay, static_cast<DWORD>(isNoDelay));
 #else
-    setOption(static_cast<OptionLevel>(Protocol::Tcp), OptionName::NoDelay, static_cast<int>(isNoDelay));
+    return setOption(static_cast<OptionLevel>(Protocol::Tcp), OptionName::NoDelay, static_cast<int>(isNoDelay));
 #endif
 }
 
-void Socket::setTTL(int ttl) const
+bool Socket::setTTL(int ttl) const
 {
-    setOption(OptionLevel::IP, OptionName::TTL, ttl);
+    return setOption(OptionLevel::IP, OptionName::TTL, ttl);
 }
 
-void Socket::setSendBuffer(int size) const
+bool Socket::setSendBuffer(int size) const
 {
-    setOption(OptionLevel::Socket, OptionName::SendBuffer, size);
+    return setOption(OptionLevel::Socket, OptionName::SendBuffer, size);
 }
 
-void Socket::setReceiveBuffer(int size) const
+bool Socket::setReceiveBuffer(int size) const
 {
-    setOption(OptionLevel::Socket, OptionName::RecvBuffer, size);
+    return setOption(OptionLevel::Socket, OptionName::RecvBuffer, size);
 }
 
 bool Socket::isOpen() const

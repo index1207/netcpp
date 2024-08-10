@@ -121,15 +121,16 @@ namespace net
             return SOCKET_ERROR != getsockopt(_sock, level, name, &value, &optLen);
         }
 
-		void setBlocking(bool isBlocking) const;
-		void setLinger(Linger linger) const;
-		void setBroadcast(bool isBroadcast) const;
-		void setReuseAddress(bool isReuseAddr) const;
-		void setNoDelay(bool isNoDelay) const;
-		void setTTL(int ttl) const;
-		void setSendBuffer(int size) const;
-		void setReceiveBuffer(int size) const;
-		bool isOpen() const;
+        bool setBlocking(bool isBlocking) const;
+        bool setLinger(Linger linger) const;
+        bool setBroadcast(bool isBroadcast) const;
+        bool setReuseAddress(bool isReuseAddr) const;
+        bool setNoDelay(bool isNoDelay) const;
+        bool setTTL(int ttl) const;
+        bool setSendBuffer(int size) const;
+        bool setReceiveBuffer(int size) const;
+
+		[[nodiscard]] bool isOpen() const;
 
         void BindEndpoint() const;
 	public:
