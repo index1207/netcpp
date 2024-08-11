@@ -1,5 +1,5 @@
 
-# netcpp ![windows](https://github.com/index1207/netcpp/actions/workflows/windows.yml/badge.svg) ![windows](https://github.com/index1207/netcpp/actions/workflows/ubuntu.yml/badge.svg) ![](https://img.shields.io/badge/language-C++20-blue) [![Vcpkg package](https://img.shields.io/badge/vcpkg-netcpp-blue)](https://github.com/microsoft/vcpkg/tree/master/ports/netcpp) [![License](https://img.shields.io/github/license/index1207/netcpp.svg)](LICENSE)
+# netcpp ![windows](https://github.com/index1207/netcpp/actions/workflows/windows.yml/badge.svg) ![linux](https://github.com/index1207/netcpp/actions/workflows/linux.yml/badge.svg) ![](https://img.shields.io/badge/language-C++20-blue) [![Vcpkg package](https://img.shields.io/badge/vcpkg-netcpp-blue)](https://github.com/microsoft/vcpkg/tree/master/ports/netcpp) [![License](https://img.shields.io/github/license/index1207/netcpp.svg)](LICENSE)
 netcpp is open-source simple C++ network library. netcpp supports windows and linux(ubuntu) platform. asynchronous feature implement by each os's api. Windows implemented using IOCP and Ubuntu will implement using Epoll.
 
 ## Installation
