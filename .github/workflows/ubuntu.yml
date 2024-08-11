@@ -28,7 +28,7 @@ jobs:
           cmake -B ${{github.workspace}}/build \
                 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
                 -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cxx }} \
-                -DINCLUDE_TEST
+                -DINCLUDE_TEST=ON
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
