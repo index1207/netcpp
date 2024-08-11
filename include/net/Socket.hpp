@@ -67,7 +67,7 @@ namespace net
     {
 	public:
 		Socket();
-		Socket(Protocol pt);
+		explicit Socket(Protocol pt);
 		Socket(const Socket& sock);
 		Socket(Socket&& sock) noexcept;
 		~Socket();

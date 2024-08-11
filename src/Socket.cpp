@@ -74,15 +74,6 @@ bool Socket::bind(Endpoint ep)
     _localEndpoint = ep;
 	IpAddress ipAdr = _localEndpoint->getAddress();
     const auto ret = ::bind(_sock, reinterpret_cast<sockaddr*>(&ipAdr), sizeof(sockaddr_in));
-    if (ret == SOCKET_ERROR)
-    {
-        try {
-            throw network_error("bind()");
-        }
-        catch (std::exception& e) {
-            auto reason = e.what();
-        }
-    }
 #ifdef _WIN32
     IoSystem::instance().push(_sock);
 #endif
@@ -265,17 +256,30 @@ int Socket::receive(std::span<char> s, Endpoint target) const
 
 bool Socket::setBlocking(bool isBlocking) const
 {
-	u_long opt = !isBlocking;
 #ifdef _WIN32
+    u_long opt = !isBlocking;
 	return SOCKET_ERROR != ioctlsocket(_sock, FIONBIO, &opt);
 #else
-    return 0 == ioctl(_sock, F_SETFL, opt | O_NONBLOCK);
+    int flags = fcntl(_sock, F_GETFL, 0);
+    if (flags == SOCKET_ERROR)
+        return false;
+    flags = isBlocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
+    return 0 == fcntl(_sock, F_SETFL, flags);
 #endif
 }
 
 bool Socket::setLinger(Linger linger) const
 {
-    return setOption(OptionLevel::Socket, OptionName::Linger, linger);
+    ::linger lingerData {
+#ifdef _WIN32
+        .l_onoff = static_cast<u_short>(linger.enabled),
+        .l_linger = static_cast<u_short>(linger.time)
+#else
+        .l_onoff = static_cast<int>(linger.enabled),
+        .l_linger = linger.time
+#endif
+    };
+    return setOption(OptionLevel::Socket, OptionName::Linger, &lingerData);
 }
 
 bool Socket::setBroadcast(bool isBroadcast) const
@@ -328,13 +332,7 @@ Socket& Socket::operator=(Socket&& sock) noexcept {
     return *this;
 }
 
-Socket &Socket::operator=(const Socket& sock) {
-    this->_sock = sock._sock;
-    this->_localEndpoint = sock._localEndpoint;
-    this->_remoteEndpoint = sock._remoteEndpoint;
-   
-    return *this;
-}
+Socket &Socket::operator=(const Socket& sock) = default;
 
 void Socket::create(Protocol pt) {
     auto type = SocketType::Stream;

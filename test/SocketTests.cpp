@@ -10,6 +10,13 @@
 
 #define TEST_ENDPOINT net::Endpoint(net::IpAddress::Loopback, 5500)
 
+using namespace std::chrono_literals;
+
+TEST(Native, initialize)
+{
+    EXPECT_EQ(net::Native::initialize(), true);
+}
+
 TEST(Socket, open)
 {
     net::Socket s1(net::Protocol::Tcp);
@@ -57,6 +64,13 @@ TEST(Socket, setHandle)
 
     s2.setHandle(handle);
     EXPECT_EQ(s2.getHandle(), handle);
+}
+
+TEST(Socket, setOption_failure)
+{
+    net::Socket sock;
+    EXPECT_EQ(sock.isOpen(), false);
+    EXPECT_EQ(sock.setOption(net::OptionLevel::Socket, net::OptionName::Broadcast, false), false);
 }
 
 TEST(Socket, sync_connect)
@@ -142,8 +156,7 @@ TEST(Socket, sync_disconnect)
 
 TEST(Socket, sync_accept)
 {
-    using namespace std::chrono_literals;
-    std::thread server([] {
+    auto server = std::async(std::launch::async, [] {
         net::Socket sock(net::Protocol::Tcp);
         EXPECT_EQ(sock.isOpen(), true);
         EXPECT_EQ(sock.setReuseAddress(true), true);
@@ -152,14 +165,11 @@ TEST(Socket, sync_accept)
         EXPECT_EQ(sock.accept().isOpen(), true);
     });
     std::this_thread::sleep_for(1s);
-    std::thread client([] {
+    auto client = std::async(std::launch::async, [] {
         net::Socket sock(net::Protocol::Tcp);
         EXPECT_EQ(sock.isOpen(), true);
         EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
     });
-
-    server.join();
-    client.join();
 }
 
 TEST(Socket, sync_send)
@@ -197,8 +207,7 @@ TEST(Socket, sync_sendto)
 
 TEST(Socket, sync_receive)
 {
-    using namespace std::chrono_literals;
-    std::thread server([] {
+    auto server = std::async(std::launch::async, [] {
         net::Socket sock(net::Protocol::Tcp);
         EXPECT_EQ(sock.isOpen(), true);
         EXPECT_EQ(sock.setReuseAddress(true), true);
@@ -212,7 +221,7 @@ TEST(Socket, sync_receive)
         EXPECT_GE(client.send(buffer), 0);
     });
     std::this_thread::sleep_for(1s);
-    std::thread client([] {
+    auto client = std::async(std::launch::async, [] {
         net::Socket sock(net::Protocol::Tcp);
         EXPECT_EQ(sock.isOpen(), true);
         EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
@@ -220,9 +229,70 @@ TEST(Socket, sync_receive)
         char buffer[16] = { 0, };
         EXPECT_GE(sock.receive(buffer), 0);
     });
+}
 
-    server.join();
-    client.join();
+TEST(Socket, sync_receive_from)
+{
+    auto server = std::async(std::launch::async, [] {
+        net::Socket server(net::Protocol::Udp);
+        EXPECT_EQ(server.isOpen(), true);
+        EXPECT_EQ(server.setReuseAddress(true), true);
+        EXPECT_EQ(server.bind(TEST_ENDPOINT), true);
+
+        net::Endpoint clientEndpoint;
+        char buffer[16] { 0, };
+        EXPECT_GE(server.receive(buffer, clientEndpoint), 0);
+    });
+    std::this_thread::sleep_for(1s);
+    auto client = std::async(std::launch::async, [] {
+        net::Socket client(net::Protocol::Udp);
+        EXPECT_EQ(client.isOpen(), true);
+
+        char buffer[] = "Hello";
+        EXPECT_GE(client.send(buffer, TEST_ENDPOINT), 0);
+    });
+}
+
+TEST(Socket, disableBlocking)
+{
+    net::Socket sock(net::Protocol::Tcp);
+    EXPECT_EQ(sock.isOpen(), true);
+    EXPECT_EQ(sock.setBlocking(false), true);
+
+    char buffer[16] { 0, };
+    EXPECT_EQ(sock.receive(buffer), SOCKET_ERROR);
+}
+
+TEST(Socket, disableBlocking_invalid)
+{
+    net::Socket sock;
+    EXPECT_EQ(sock.isOpen(), false);
+    EXPECT_EQ(so    ck.setBlocking(false), false);
+}
+
+TEST(Socket, setLinger)
+{
+    auto server = std::async(std::launch::async, [] {
+        net::Socket sock(net::Protocol::Tcp);
+        EXPECT_EQ(sock.isOpen(), true);
+        EXPECT_EQ(sock.setReuseAddress(true), true);
+        EXPECT_EQ(sock.setLinger({.enabled = true, .time = 0}), true);
+        EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
+        EXPECT_EQ(sock.listen(), true);
+
+        auto client = sock.accept();
+        EXPECT_EQ(client.isOpen(), true);
+        sock.close();
+    });
+    std::this_thread::sleep_for(1s);
+    auto client = std::async(std::launch::async, [] {
+        net::Socket sock(net::Protocol::Tcp);
+        EXPECT_EQ(sock.isOpen(), true);
+        EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
+
+        char buffer[16] = { 0, };
+        EXPECT_EQ(sock.receive(buffer), 0);
+    });
 }
 
 TEST(Socket, constructor_lvalue)
