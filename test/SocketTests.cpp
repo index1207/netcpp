@@ -267,7 +267,7 @@ TEST(Socket, disableBlocking_invalid)
 {
     net::Socket sock;
     EXPECT_EQ(sock.isOpen(), false);
-    EXPECT_EQ(so    ck.setBlocking(false), false);
+    EXPECT_EQ(sock.setBlocking(false), false);
 }
 
 TEST(Socket, setLinger)
