@@ -121,7 +121,7 @@ namespace net
             return SOCKET_ERROR != getsockopt(_sock,
                                               static_cast<int>(level),
                                               static_cast<int>(name),
-                                              &value,
+                                              reinterpret_cast<char*>(&value),
                                               &optLen);
         }
 
