@@ -26,4 +26,4 @@ jobs:
 
       - name: Google Test
         working-directory: ${{github.workspace}}/build/test/${{env.BUILD_TYPE}}
-        run: ./googletest.exe
+        run: ./unitTest.exe
