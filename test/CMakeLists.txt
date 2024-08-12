@@ -1,6 +1,6 @@
 file(GLOB_RECURSE TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
-set(BINARY_NAME "googletest")
+set(BINARY_NAME "unitTest")
 
 option(gtest_disable_pthreads ON)
 
@@ -8,9 +8,9 @@ add_executable(${BINARY_NAME} ${TEST_FILES} ${SOURCE_FILES})
 
 target_include_directories(${BINARY_NAME} PRIVATE ${INCLUDES})
 
-target_link_libraries(${BINARY_NAME} gtest gtest_main)
+target_link_libraries(${BINARY_NAME} PUBLIC gtest netcpp::netcpp)
 if (MSVC)
-    target_link_libraries(${BINARY_NAME} ws2_32)
+    target_link_libraries(${BINARY_NAME} PUBLIC ws2_32)
 else ()
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set(CMAKE_CXX_FLAGS "--coverage")

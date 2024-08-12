@@ -3,6 +3,8 @@ name: linux
 on:
   pull_request:
     branches: [ "release" ]
+  push:
+    branches: [ "release" ]
 
 env:
   BUILD_TYPE: Release
@@ -26,11 +28,12 @@ jobs:
           cmake -B ${{github.workspace}}/build \
                 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
                 -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cxx }} \
-                -DINCLUDE_TEST=ON
+                -DINCLUDE_TEST=ON \
+                -j 16
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
       - name: Google Test
         working-directory: ${{github.workspace}}/build/test
-        run: ./googletest
+        run: ./unitTest
