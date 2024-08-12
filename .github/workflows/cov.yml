@@ -1,23 +1,14 @@
-name: linux
-
+name: Update coverage
 on:
-  pull_request:
+  push:
     branches: [ "release" ]
 
 env:
   BUILD_TYPE: Release
 
 jobs:
-  linux:
-    strategy:
-      fail-fast: false
-      matrix:
-        compiler:
-          - { cc: "gcc-13",   cxx: "g++-13",     os: "ubuntu-2404" }
-          - { cc: "clang-16", cxx: "clang++-16", os: "ubuntu-2404" }
-
-    name: ${{ matrix.compiler.cc }}
-    runs-on: ${{ matrix.compiler.os }}
+  codecov:
+    runs-on: ubuntu-2404
     steps:
       - uses: actions/checkout@v4
 
@@ -25,7 +16,7 @@ jobs:
         run: |
           cmake -B ${{github.workspace}}/build \
                 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-                -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cxx }} \
+                -DCMAKE_CXX_COMPILER=gcc-13 \
                 -DINCLUDE_TEST=ON
 
       - name: Build
@@ -34,3 +25,8 @@ jobs:
       - name: Google Test
         working-directory: ${{github.workspace}}/build/test
         run: ./googletest
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
