@@ -3,7 +3,6 @@
 
 #include "net/Native.hpp"
 #include "net/Context.hpp"
-#include "net/IoSystem.hpp"
 
 using namespace net;
 
@@ -75,16 +74,13 @@ bool Socket::bind(Endpoint ep)
 	IpAddress ipAdr = _localEndpoint->getAddress();
     const auto ret = ::bind(_sock, reinterpret_cast<sockaddr*>(&ipAdr), sizeof(sockaddr_in));
 #ifdef _WIN32
-    IoSystem::instance().push(_sock);
+    Native::addToCompletionPort(getHandle());
 #endif
 	return SOCKET_ERROR != ret;
 }
 
 bool Socket::listen(int backlog) const
 {
-#ifdef _WIN32
-    IoSystem::instance()._listeningSocket = this;
-#endif
 	return SOCKET_ERROR != ::listen(_sock, backlog);
 }
 
@@ -117,16 +113,17 @@ net::Socket Socket::accept() const
 	return clientSock;
 }	
 
-bool Socket::accept(Context *context) const {
+bool Socket::accept(Context* context) {
     context->init();
 
     context->_contextType = ContextType::Accept;
 #ifdef _WIN32
-    IoSystem::instance().push(context->acceptSocket->getHandle());
+    Native::addToCompletionPort(context->acceptSocket->getHandle());
+    context->token = this;
 
     DWORD dwByte = 0;
     char buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
-    if (!Native::AcceptEx(_sock, context->acceptSocket->getHandle(), buf, 0,
+    if (!Native::acceptEx(_sock, context->acceptSocket->getHandle(), buf, 0,
                           sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
                           &dwByte, context)) {
         const auto err = WSAGetLastError();
@@ -148,7 +145,7 @@ bool Socket::connect(Context* context)
 
 	IpAddress ipAdr = context->endpoint->getAddress();
 	DWORD dw;
-	if (!Native::ConnectEx(_sock,
+	if (!Native::connectEx(_sock,
                            reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN),
                            nullptr, NULL,
                            &dw, reinterpret_cast<LPOVERLAPPED>(context))
@@ -213,7 +210,7 @@ bool net::Socket::disconnect(Context* context) const
 
     context->_contextType = ContextType::Disconnect;
 #ifdef _WIN32
-    if (!Native::DisconnectEx(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
+    if (!Native::disconnectEx(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
     {
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;

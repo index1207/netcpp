@@ -3,7 +3,6 @@
 #include <span>
 #include <optional>
 
-#include "net/Native.hpp"
 #include "net/IpAddress.hpp"
 #include "net/Endpoint.hpp"
 
@@ -66,6 +65,8 @@ namespace net
 
 	class Socket
     {
+    public:
+        constexpr static int InvalidSocket = INVALID_SOCKET;
 	public:
 		Socket();
 		explicit Socket(Protocol pt);
@@ -96,7 +97,7 @@ namespace net
 		int receive(std::span<char> s, Endpoint target) const;
     public:
         bool disconnect(Context* context) const;
-        bool accept(Context *context) const;
+        bool accept(Context *context);
         bool connect(Context* context);
         bool send(Context* context) const;
         bool receive(Context* context) const;

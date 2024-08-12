@@ -42,18 +42,47 @@ using SOCKLEN = socklen_t;
 
 #endif
 
+#include <functional>
+
+
 namespace net
 {
+    class Context;
+
 	class Native
 	{
-	public:
 #ifdef _WIN32
-        static LPFN_ACCEPTEX AcceptEx;
-		static LPFN_CONNECTEX ConnectEx;
-		static LPFN_DISCONNECTEX DisconnectEx;
-		static LPFN_GETACCEPTEXSOCKADDRS GetAcceptExSockaddrs;
+    public:
+        // Worker options
+        struct Option final
+        {
+            static bool Autorun;
+            static unsigned long Timeout;
+            static unsigned ThreadCount;
+        };
+
+        // IOCP Extension
+        static LPFN_ACCEPTEX acceptEx;
+		static LPFN_CONNECTEX connectEx;
+		static LPFN_DISCONNECTEX disconnectEx;
+		static LPFN_GETACCEPTEXSOCKADDRS getAcceptExSockAddr;
+
+        // RIO Extension
+        static RIO_EXTENSION_FUNCTION_TABLE rioTable;
+        static thread_local RIO_CQ completionQue;
+
+        static std::function<void(bool)> onExitIo;
+    public:
+        static bool addToCompletionPort(SOCKET sock);
 #endif
 	public:
 		static bool initialize();
+#ifdef _WIN32
+    private:
+        static bool handleEvent(Context* context, DWORD bytes, bool success);
+        static void ioWorker();
+    private:
+        static HANDLE _hcp;
+#endif
 	};
 }

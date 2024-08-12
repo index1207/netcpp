@@ -3,7 +3,6 @@
 #include <memory>
 #include <functional>
 
-#include "net/Native.hpp"
 #include "net/Socket.hpp"
 
 namespace net
@@ -25,7 +24,7 @@ namespace net
 #endif
     {
         friend class Socket;
-        friend class IoSystem;
+        friend class Native;
 
         using Callback = std::function<void(Context*, bool)>;
     public:
