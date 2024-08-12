@@ -18,10 +18,13 @@ namespace net
 		static IpAddress Broadcast;
 	public:
 		IpAddress();
-		explicit IpAddress(const sockaddr_in& adrs);
+		explicit IpAddress(const sockaddr_in& addr);
 	public:
-		static IpAddress parse(std::string_view ipStr);
+		static bool tryParse(std::string_view ipStr, IpAddress* addr);
 		static IpAddress parse(int ipNum);
+    public:
+        bool operator==(const IpAddress& ipAdr) const;
+        bool operator==(IpAddress&& ipAdr) const;
 	public:
 		[[nodiscard]] std::string toString() const;
     };

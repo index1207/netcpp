@@ -11,7 +11,7 @@ namespace net
         network_error(std::string_view msg);
 
         virtual const char* what() const noexcept override;
-        int     get_code() const;
+        int     getCode() const;
     private:
         std::string _msg;
         int _error;

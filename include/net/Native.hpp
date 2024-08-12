@@ -54,6 +54,6 @@ namespace net
 		static LPFN_GETACCEPTEXSOCKADDRS GetAcceptExSockaddrs;
 #endif
 	public:
-		static void initialize();
+		static bool initialize();
 	};
 }
