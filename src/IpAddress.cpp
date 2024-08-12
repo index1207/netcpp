@@ -7,14 +7,11 @@ IpAddress IpAddress::None = parse(INADDR_NONE);
 IpAddress IpAddress::Loopback = parse(INADDR_LOOPBACK);
 IpAddress IpAddress::Broadcast = parse(INADDR_BROADCAST);
 
-IpAddress IpAddress::parse(std::string_view ipStr)
+bool IpAddress::tryParse(std::string_view ipStr, IpAddress* addr)
 {
-	IpAddress addr{};
-	ZeroMemory(&addr, sizeof(sockaddr_in));
-
-	inet_pton(AF_INET, ipStr.data(), &addr.sin_addr);
-
-	return addr;
+    if (!addr)
+        return false;
+	return SOCKET_ERROR != inet_pton(AF_INET, ipStr.data(), &addr->sin_addr);
 }
 
 IpAddress IpAddress::parse(int ipNum)
@@ -38,7 +35,7 @@ IpAddress::IpAddress(const sockaddr_in& adrs) : sockaddr_in()
 {
 	sin_addr = adrs.sin_addr;
 	sin_family = AF_INET;
-	sin_port = adrs.sin_port;
+	sin_port = htons(adrs.sin_port);
 }
 
 std::string IpAddress::toString() const

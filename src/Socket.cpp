@@ -218,6 +218,8 @@ bool net::Socket::disconnect(Context* context) const
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
+#else
+
 #endif
     return false;
 }
@@ -284,7 +286,8 @@ bool Socket::setLinger(Linger linger) const
 
 bool Socket::setBroadcast(bool isBroadcast) const
 {
-    return setOption(OptionLevel::Socket, OptionName::Broadcast, isBroadcast);
+    int value = isBroadcast;
+    return setOption(OptionLevel::Socket, OptionName::Broadcast, value);
 }
 
 bool Socket::setReuseAddress(bool isReuseAddr) const
@@ -338,16 +341,6 @@ void Socket::create(Protocol pt) {
     auto type = SocketType::Stream;
     if(pt == Protocol::Udp) type = SocketType::Dgram;
     _sock = socket(PF_INET, static_cast<int>(type), static_cast<int>(pt));
-}
-
-void Socket::BindEndpoint() const
-{
-    sockaddr_in addr = {0,};
-    SOCKLEN nameLen = sizeof(sockaddr_in);
-    if(SOCKET_ERROR == getsockname(_sock, reinterpret_cast<sockaddr*>(&addr), &nameLen))
-    {
-        throw network_error("getsockname()");
-    }
 }
 
 bool Socket::operator==(const Socket& sock) const {

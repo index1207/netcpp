@@ -30,8 +30,8 @@ namespace net
 
 	enum class OptionLevel
 	{
-		IP = SOL_IP,
-		IPv6 = SOL_IPV6,
+		IP = IPPROTO_IP,
+		IPv6 = IPPROTO_IPV6,
 		Socket = SOL_SOCKET,
 	};
 
@@ -49,7 +49,8 @@ namespace net
         UpdateConnectContext = SO_UPDATE_CONNECT_CONTEXT,
 #endif
         // IP Level
-		TTL = 4,
+		TTL = IP_TTL,
+        MULTICAST_TTL = IP_MULTICAST_TTL,
 
 		// Tcp Level
 		NoDelay = TCP_NODELAY
@@ -109,8 +110,7 @@ namespace net
                                               static_cast<int>(level),
                                               static_cast<int>(name),
                                               reinterpret_cast<const char*>(&value),
-                                              sizeof(T)
-            );
+                                              sizeof(T));
         }
         template<class T>
         bool getOption(OptionLevel level, OptionName name, T& value) const
@@ -118,17 +118,21 @@ namespace net
             if (_sock == INVALID_SOCKET)
                 return false;
             SOCKLEN optLen = sizeof(T);
-            return SOCKET_ERROR != getsockopt(_sock, level, name, &value, &optLen);
+            return SOCKET_ERROR != getsockopt(_sock,
+                                              static_cast<int>(level),
+                                              static_cast<int>(name),
+                                              &value,
+                                              &optLen);
         }
 
-        bool setBlocking(bool isBlocking) const;
-        bool setLinger(Linger linger) const;
-        bool setBroadcast(bool isBroadcast) const;
-        bool setReuseAddress(bool isReuseAddr) const;
-        bool setNoDelay(bool isNoDelay) const;
-        bool setTTL(int ttl) const;
-        bool setSendBuffer(int size) const;
-        bool setReceiveBuffer(int size) const;
+        [[nodiscard]] bool setBlocking(bool isBlocking) const;
+        [[nodiscard]] bool setLinger(Linger linger) const;
+        [[nodiscard]] bool setBroadcast(bool isBroadcast) const;
+        [[nodiscard]] bool setReuseAddress(bool isReuseAddr) const;
+        [[nodiscard]] bool setNoDelay(bool isNoDelay) const;
+        [[nodiscard]] bool setTTL(int ttl) const;
+        [[nodiscard]] bool setSendBuffer(int size) const;
+        [[nodiscard]] bool setReceiveBuffer(int size) const;
 
 		[[nodiscard]] bool isOpen() const;
 

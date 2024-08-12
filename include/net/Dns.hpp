@@ -16,8 +16,8 @@ namespace net
 	{
 	public:
 		static std::string getHostName();
-		static HostEntry getHostEntry(std::string hostname);
-		static HostEntry getHostEntry(IpAddress host);
+		static HostEntry getHostEntry(std::string_view hostname);
+		static HostEntry getHostEntry(net::IpAddress host);
 	};
 }
 

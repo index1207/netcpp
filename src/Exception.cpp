@@ -20,6 +20,6 @@ char const* network_error::what() const noexcept
 	return _msg.c_str();
 }
 
-int network_error::get_code() const {
+int network_error::getCode() const {
     return _error;
 }

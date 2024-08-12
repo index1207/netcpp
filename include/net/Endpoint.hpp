@@ -7,7 +7,7 @@
 
 namespace net
 {
-	class Endpoint
+    class Endpoint
 	{
         friend class IoSystem;
 	public:
@@ -15,7 +15,7 @@ namespace net
 		Endpoint(IpAddress ipAddress, unsigned short port);
 	public:
 		[[nodiscard]] const IpAddress& getAddress() const;
-		void set_address(IpAddress ipAddress);
+		void setAddress(IpAddress ipAddress);
 		[[nodiscard]] int getPort() const;
 		void setPort(unsigned short port);
 		
@@ -27,7 +27,6 @@ namespace net
         bool operator==(const Endpoint& endpoint) const;
         bool operator==(Endpoint&& endpoint) const;
 	private:
-		int _port;
 		IpAddress _ipAdr;
 	};
 }

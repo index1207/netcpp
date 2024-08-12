@@ -7,48 +7,47 @@ std::string Dns::getHostName()
 {
 	char buf[128] = "";
 	gethostname(buf, 128);
-
 	return buf;
 }
 
-HostEntry Dns::getHostEntry(std::string hostname)
+HostEntry Dns::getHostEntry(std::string_view host)
 {
-	auto entry = gethostbyname(hostname.c_str());
+	auto entry = gethostbyname(host.data());
 	if (entry == nullptr)
-		return HostEntry();
+		return {};
 
-	HostEntry hostentry { .host_name = entry->h_name };
+	HostEntry hostEntry { .host_name = entry->h_name };
 	for (int i = 0; entry->h_addr_list[i] != nullptr; ++i)
 	{
-		sockaddr_in addr_in;
+		sockaddr_in addr_in{};
 		addr_in.sin_addr.s_addr = *reinterpret_cast<long*>(entry->h_addr_list[i]);
-		hostentry.address_list.emplace_back(addr_in);
+		hostEntry.address_list.emplace_back(addr_in);
 	}
 
 	for (int i = 0; entry->h_aliases[i] != nullptr; ++i)
 	{
-		hostentry.alias_list.emplace_back(entry->h_aliases[i]);
+		hostEntry.alias_list.emplace_back(entry->h_aliases[i]);
 	}
 
-	return hostentry;
+	return hostEntry;
 }
-HostEntry Dns::getHostEntry(IpAddress ipAddress)
-{	
-	auto entry = gethostbyaddr(reinterpret_cast<const char*>(&ipAddress.sin_addr), sizeof(in_addr), AF_INET);
+HostEntry Dns::getHostEntry(net::IpAddress host)
+{
+	auto entry = gethostbyaddr(reinterpret_cast<const char*>(&host.sin_addr), sizeof(in_addr), AF_INET);
 	if (entry == nullptr)
-		return HostEntry();
+		return {};
 
-	HostEntry hostentry{ .host_name = entry->h_name };
+	HostEntry hostEntry { .host_name = entry->h_name };
 	for (int i = 0; entry->h_addr_list[i] != nullptr; ++i)
 	{
-		sockaddr_in addr_in;
+		sockaddr_in addr_in{};
 		addr_in.sin_addr.s_addr = *reinterpret_cast<long*>(entry->h_addr_list[i]);
-		hostentry.address_list.emplace_back(addr_in);
+		hostEntry.address_list.emplace_back(addr_in);
 	}
 	for (int i = 0; entry->h_aliases[i] != nullptr; ++i)
 	{
-		hostentry.alias_list.emplace_back(entry->h_aliases[i]);
+		hostEntry.alias_list.emplace_back(entry->h_aliases[i]);
 	}
 
-	return hostentry;
+	return hostEntry;
 }

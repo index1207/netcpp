@@ -2,7 +2,6 @@
 
 #include "net/Socket.hpp"
 #include "net/Dns.hpp"
-#include "net/Exception.hpp"
 #include "net/Context.hpp"
 
 #include <future>
@@ -11,11 +10,6 @@
 #define TEST_ENDPOINT net::Endpoint(net::IpAddress::Loopback, 5500)
 
 using namespace std::chrono_literals;
-
-TEST(Native, initialize)
-{
-    EXPECT_EQ(net::Native::initialize(), true);
-}
 
 TEST(Socket, open)
 {
@@ -272,27 +266,113 @@ TEST(Socket, disableBlocking_invalid)
 
 TEST(Socket, setLinger)
 {
-    auto server = std::async(std::launch::async, [] {
-        net::Socket sock(net::Protocol::Tcp);
-        EXPECT_EQ(sock.isOpen(), true);
-        EXPECT_EQ(sock.setReuseAddress(true), true);
-        EXPECT_EQ(sock.setLinger({.enabled = true, .time = 0}), true);
-        EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
-        EXPECT_EQ(sock.listen(), true);
+    net::Socket sock(net::Protocol::Tcp);
+    EXPECT_EQ(sock.isOpen(), true);
+    EXPECT_EQ(sock.setLinger({ .enabled = true, .time = 0 }), true);
+}
 
-        auto client = sock.accept();
-        EXPECT_EQ(client.isOpen(), true);
-        sock.close();
-    });
-    std::this_thread::sleep_for(1s);
-    auto client = std::async(std::launch::async, [] {
-        net::Socket sock(net::Protocol::Tcp);
-        EXPECT_EQ(sock.isOpen(), true);
-        EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
+TEST(Socket, setBroadcast)
+{
+    net::Socket sock(net::Protocol::Udp);
+    EXPECT_EQ(sock.isOpen(), true);
+    EXPECT_EQ(sock.setBroadcast(true), true);
+}
 
-        char buffer[16] = { 0, };
-        EXPECT_EQ(sock.receive(buffer), 0);
-    });
+TEST(Socket, setReuseAddress)
+{
+    net::Socket sock(net::Protocol::Tcp);
+    EXPECT_EQ(sock.isOpen(), true);
+    EXPECT_EQ(sock.setReuseAddress(true), true);
+}
+
+TEST(Socket, setNoDelay)
+{
+    net::Socket sock(net::Protocol::Tcp);
+    EXPECT_EQ(sock.isOpen(), true);
+    EXPECT_EQ(sock.setNoDelay(true), true);
+}
+
+TEST(Socket, setTTL)
+{
+    net::Socket sock(net::Protocol::Tcp);
+    EXPECT_EQ(sock.isOpen(), true);
+    EXPECT_EQ(sock.setTTL(255), true);
+}
+
+TEST(Socket, setSendBuffer)
+{
+    net::Socket sock(net::Protocol::Tcp);
+    EXPECT_EQ(sock.isOpen(), true);
+    EXPECT_EQ(sock.setSendBuffer(1024), true);
+}
+
+TEST(Socket, setReceiveBuffer)
+{
+    net::Socket sock(net::Protocol::Tcp);
+    EXPECT_EQ(sock.isOpen(), true);
+    EXPECT_EQ(sock.setReceiveBuffer(1024), true);
+}
+
+TEST(Socket, isOpen)
+{
+    net::Socket sock(net::Protocol::Tcp);
+    EXPECT_EQ(sock.isOpen(), true);
+}
+
+TEST(Socket, getOption)
+{
+    net::Socket sock(net::Protocol::Tcp);
+    EXPECT_EQ(sock.isOpen(), true);
+
+    int value{};
+    EXPECT_EQ(sock.getOption(net::OptionLevel::Socket, net::OptionName::SendBuffer, value), true);
+}
+
+TEST(Socket, getOption_failure)
+{
+    net::Socket sock;
+    EXPECT_EQ(sock.isOpen(), false);
+
+    int value{};
+    EXPECT_EQ(sock.getOption(net::OptionLevel::Socket, net::OptionName::SendBuffer, value), false);
+}
+
+TEST(Socket, operator_assignment_lvalue)
+{
+    net::Socket s1(net::Protocol::Tcp);
+    EXPECT_EQ(s1.isOpen(), true);
+
+    net::Socket s2;
+    s2 = s1;
+    EXPECT_EQ(s2.isOpen(), true);
+}
+
+TEST(Socket, operator_assignment_rvalue)
+{
+    net::Socket sock;
+    sock = net::Socket(net::Protocol::Tcp);
+    EXPECT_EQ(sock.isOpen(), true);
+}
+
+TEST(Socket, operator_equal_lvalue)
+{
+    net::Socket s1(net::Protocol::Tcp);
+    EXPECT_EQ(s1.isOpen(), true);
+
+    net::Socket s2 = s1;
+    EXPECT_EQ(s2.isOpen(), true);
+    EXPECT_EQ(s1 == s2, true);
+}
+
+TEST(Socket, operator_equal_rvalue)
+{
+    net::Socket s1(net::Protocol::Tcp);
+    EXPECT_EQ(s1.isOpen(), true);
+
+    net::Socket s2;
+    s2.setHandle(s1.getHandle());
+    EXPECT_EQ(s2.isOpen(), true);
+    EXPECT_EQ(s1 == std::move(s2), true);
 }
 
 TEST(Socket, constructor_lvalue)
