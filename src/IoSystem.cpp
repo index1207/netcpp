@@ -21,7 +21,6 @@ IoSystem::IoSystem()
 
     if (Option::Autorun)
     {
-        std::lock_guard lock(mtx);
         for (unsigned i = 0; i < Option::ThreadCount; ++i) {
             new std::thread([this] {
                 while (true) worker();
@@ -46,14 +45,14 @@ void IoSystem::dispatch(Context* context, DWORD numOfBytes, bool isSuccess) {
         case ContextType::Accept:
             if (isSuccess) {
                 this->push(context->acceptSocket->getHandle());
-                if (!context->acceptSocket->setSocketOption(OptionLevel::Socket, (OptionName)SO_UPDATE_ACCEPT_CONTEXT, _listeningSocket->getHandle()))
+                if (!context->acceptSocket->setOption(OptionLevel::Socket, (OptionName)SO_UPDATE_ACCEPT_CONTEXT, _listeningSocket->getHandle()))
                     throw net::network_error("setSocketOption()");
             }
             context->completed(context, isSuccess);
             break;
         case ContextType::Connect:
             if (isSuccess) {
-                if (!static_cast<Socket*>(context->token)->setSocketOption(OptionLevel::Socket, (OptionName)SO_UPDATE_CONNECT_CONTEXT, nullptr))
+                if (!static_cast<Socket*>(context->token)->setOption(OptionLevel::Socket, (OptionName)SO_UPDATE_CONNECT_CONTEXT, nullptr))
                     throw net::network_error("setSocketOption()");
             }
             context->completed(context, isSuccess);

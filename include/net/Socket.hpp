@@ -30,8 +30,8 @@ namespace net
 
 	enum class OptionLevel
 	{
-		IP = SOL_IP,
-		IPv6 = SOL_IPV6,
+		IP = IPPROTO_IP,
+		IPv6 = IPPROTO_IPV6,
 		Socket = SOL_SOCKET,
 	};
 
@@ -49,7 +49,8 @@ namespace net
         UpdateConnectContext = SO_UPDATE_CONNECT_CONTEXT,
 #endif
         // IP Level
-		TTL = 4,
+		TTL = IP_TTL,
+        MULTICAST_TTL = IP_MULTICAST_TTL,
 
 		// Tcp Level
 		NoDelay = TCP_NODELAY
@@ -67,7 +68,7 @@ namespace net
     {
 	public:
 		Socket();
-		Socket(Protocol pt);
+		explicit Socket(Protocol pt);
 		Socket(const Socket& sock);
 		Socket(Socket&& sock) noexcept;
 		~Socket();
@@ -84,11 +85,8 @@ namespace net
         [[nodiscard]] std::optional<Endpoint> getRemoteEndpoint() const;
         [[nodiscard]] std::optional<Endpoint> getLocalEndpoint() const;
 	public:
-		void setRemoteEndpoint(Endpoint ep);
-		void setLocalEndpoint(Endpoint ep);
-	public:
 		void disconnect();
-		Socket accept() const;
+		[[nodiscard]] Socket accept() const;
 		bool connect(Endpoint ep);
 
 		bool send(std::span<char> s) const;
@@ -103,31 +101,46 @@ namespace net
         bool send(Context* context) const;
         bool receive(Context* context) const;
     public:
-		template<class T>
-		bool setSocketOption(OptionLevel level, OptionName name, T value) const
-		{
-			if (_sock == INVALID_SOCKET)
-				return false;
+        template<class T>
+        bool setOption(OptionLevel level, OptionName name, T value) const
+        {
+            if (_sock == INVALID_SOCKET)
+                return false;
             return SOCKET_ERROR != setsockopt(_sock,
-				static_cast<int>(level),
-				static_cast<int>(name),
-				reinterpret_cast<const char*>(&value),
-				sizeof(T)
-			);
-		}
+                                              static_cast<int>(level),
+                                              static_cast<int>(name),
+                                              reinterpret_cast<const char*>(&value),
+                                              sizeof(T));
+        }
+        template<class T>
+        bool getOption(OptionLevel level, OptionName name, T& value) const
+        {
+            if (_sock == INVALID_SOCKET)
+                return false;
+            SOCKLEN optLen = sizeof(T);
+            return SOCKET_ERROR != getsockopt(_sock,
+                                              static_cast<int>(level),
+                                              static_cast<int>(name),
+                                              reinterpret_cast<char*>(&value),
+                                              &optLen);
+        }
 
-		void setBlocking(bool isBlocking) const;
-		void setLinger(Linger linger) const;
-		void setBroadcast(bool isBroadcast) const;
-		void setReuseAddress(bool isReuseAddr) const;
-		void setNoDelay(bool isNoDelay) const;
-		void setTTL(int ttl) const;
-		void setSendBuffer(int size) const;
-		void setReceiveBuffer(int size) const;
-		bool isOpen() const;
+        [[nodiscard]] bool setBlocking(bool isBlocking) const;
+        [[nodiscard]] bool setLinger(Linger linger) const;
+        [[nodiscard]] bool setBroadcast(bool isBroadcast) const;
+        [[nodiscard]] bool setReuseAddress(bool isReuseAddr) const;
+        [[nodiscard]] bool setNoDelay(bool isNoDelay) const;
+        [[nodiscard]] bool setTTL(int ttl) const;
+        [[nodiscard]] bool setSendBuffer(int size) const;
+        [[nodiscard]] bool setReceiveBuffer(int size) const;
+
+		[[nodiscard]] bool isOpen() const;
 
         void BindEndpoint() const;
 	public:
+        bool operator==(const Socket& sock) const;
+        bool operator==(Socket&& sock) const;
+
 		Socket& operator=(const Socket& sock);
 		Socket& operator=(Socket&& sock) noexcept;
     private:

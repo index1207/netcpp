@@ -1,16 +1,16 @@
-name: ubuntu
+name: linux
 
 on:
-  push:
-    branches: [ "release" ]
   pull_request:
+    branches: [ "release" ]
+  push:
     branches: [ "release" ]
 
 env:
   BUILD_TYPE: Release
 
 jobs:
-  ubuntu:
+  linux:
     strategy:
       fail-fast: false
       matrix:
@@ -24,11 +24,15 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cxx }}
+        run: |
+          cmake -B ${{github.workspace}}/build \
+                -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+                -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cxx }} \
+                -DINCLUDE_TEST=ON
 
       - name: Build
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 16
 
       - name: Google Test
         working-directory: ${{github.workspace}}/build/test
-        run: ./unittest
+        run: ./unitTest
