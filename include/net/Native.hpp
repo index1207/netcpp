@@ -49,17 +49,30 @@ namespace net
 {
     class Context;
 
-	class Native
+    class Native
 	{
 #ifdef _WIN32
     public:
         // Worker options
         struct Option final
         {
+            // IOCP Options
             static bool Autorun;
             static unsigned long Timeout;
             static unsigned ThreadCount;
+
+            // RIO Options
+            static ULONG ResultSize;
+            static ULONG SendRequestQueSize;
+            static ULONG ReceiveRequestQueSize;
+            static ULONG MaxClientCount;
+
+            static inline ULONG getCompletionQueSize()
+            {
+                return (SendRequestQueSize + ReceiveRequestQueSize) * MaxClientCount;
+            }
         };
+
 
         // IOCP Extension
         static LPFN_ACCEPTEX acceptEx;
@@ -67,7 +80,7 @@ namespace net
 		static LPFN_DISCONNECTEX disconnectEx;
 		static LPFN_GETACCEPTEXSOCKADDRS getAcceptExSockAddr;
 
-        // RIO Extension
+        // CK_READWRITE Extension
         static RIO_EXTENSION_FUNCTION_TABLE rioTable;
         static thread_local RIO_CQ completionQue;
 
@@ -79,7 +92,8 @@ namespace net
 		static bool initialize();
 #ifdef _WIN32
     private:
-        static bool handleEvent(Context* context, DWORD bytes, bool success);
+        static bool handleIocpEvent(Context* context, bool success);
+        static bool handleRioEvent(Context* context, ULONG transferred);
         static void ioWorker();
     private:
         static HANDLE _hcp;

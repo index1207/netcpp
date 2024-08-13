@@ -65,8 +65,7 @@ namespace net
 
 	class Socket
     {
-    public:
-        constexpr static int InvalidSocket = INVALID_SOCKET;
+        friend Native;
 	public:
 		Socket();
 		explicit Socket(Protocol pt);
@@ -136,8 +135,6 @@ namespace net
         [[nodiscard]] bool setReceiveBuffer(int size) const;
 
 		[[nodiscard]] bool isOpen() const;
-
-        void BindEndpoint() const;
 	public:
         bool operator==(const Socket& sock) const;
         bool operator==(Socket&& sock) const;
@@ -148,5 +145,8 @@ namespace net
 		std::optional<Endpoint> _remoteEndpoint;
         std::optional<Endpoint> _localEndpoint;
 		SOCKET _sock;
+#ifdef _WIN32
+        RIO_RQ _requestQue;
+#endif
 	};
 }

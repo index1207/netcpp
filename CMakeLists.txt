@@ -21,15 +21,16 @@ endif ()
 
 # Platforms
 if (MSVC)
-    set(CMAKE_CXX_FLAGS_RELEASE /MT)
-    set(CMAKE_CXX_FLAGS_DEBUG /MTd)
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd /Od /Zi")
+    set(CMAKE_CXX_FLAGS_RELEASE "/MT")
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG")
 else()
     add_compile_definitions(_LIBCPP_ENABLE_EXPERIMENTAL)
 endif(MSVC)
 add_compile_definitions(NETCPP_BUILD)
 
 # Initialize
-option(INCLUDE_TEST "Include with unitTest source" OFF)
+option(INCLUDE_TEST "Include with unitTest source" ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(EXPORT_NAMESPACE "${PROJECT_NAME}::")

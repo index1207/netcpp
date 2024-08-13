@@ -57,15 +57,7 @@ bool Socket::connect(Endpoint ep)
 {
     _remoteEndpoint = ep;
 	IpAddress ipAdr = ep.getAddress();
-	auto ret =  SOCKET_ERROR != ::connect(_sock, reinterpret_cast<sockaddr*>(&ipAdr), sizeof(sockaddr_in));
-    if (ret)
-    {
-        sockaddr_in remoteAddrIn {};
-        SOCKLEN len = sizeof(remoteAddrIn);
-        ret &= SOCKET_ERROR != getpeername(_sock, reinterpret_cast<sockaddr*>(&remoteAddrIn), &len);
-        _remoteEndpoint = Endpoint::parse(remoteAddrIn);
-    }
-    return ret;
+    return SOCKET_ERROR != ::connect(_sock, reinterpret_cast<sockaddr*>(&ipAdr), sizeof(sockaddr_in));
 }
 
 bool Socket::bind(Endpoint ep)
@@ -118,8 +110,8 @@ bool Socket::accept(Context* context) {
 
     context->_contextType = ContextType::Accept;
 #ifdef _WIN32
-    Native::addToCompletionPort(context->acceptSocket->getHandle());
-    context->token = this;
+    Native::addToCompletionPort(getHandle());
+    context->token = reinterpret_cast<void*>(this);
 
     DWORD dwByte = 0;
     char buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
@@ -163,15 +155,12 @@ bool Socket::send(Context* context) const
     context->init();
     context->_contextType = ContextType::Send;
 #ifdef _WIN32
-    WSABUF wsaBuf;
-    wsaBuf.buf = context->buffer.data();
-    wsaBuf.len = static_cast<ULONG>(context->buffer.size());
+    RIO_BUF buf;
+    buf.BufferId = context->_bufferId;
+    buf.Length = sizeof(context->buffer);
+    buf.Offset = 0;
 
-    if (SOCKET_ERROR == WSASend(_sock,
-                                &wsaBuf, 1,
-                                &wsaBuf.len, 0,
-                                reinterpret_cast<LPOVERLAPPED>(context), nullptr)
-            )
+    if (!Native::rioTable.RIOSend(_requestQue, &buf, 1, NULL, context))
     {
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
@@ -185,17 +174,12 @@ bool Socket::receive(Context* context) const
     context->init();
     context->_contextType = ContextType::Receive;
 #ifdef _WIN32
-    WSABUF wsaBuf = {
-            .len = static_cast<ULONG>(context->buffer.size()),
-            .buf = context->buffer.data()
-    };
+    RIO_BUF buf;
+    buf.BufferId = context->_bufferId;
+    buf.Length = sizeof(context->buffer);
+    buf.Offset = 0;
 
-    DWORD recvBytes = 0, flags = 0;
-    if (SOCKET_ERROR == WSARecv(_sock,
-                                &wsaBuf, 1,
-                                &recvBytes, &flags,
-                                reinterpret_cast<LPOVERLAPPED>(context), nullptr)
-            )
+    if (!Native::rioTable.RIOReceive(_requestQue, &buf, 1, NULL, context))
     {
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
@@ -337,6 +321,7 @@ Socket &Socket::operator=(const Socket& sock) = default;
 void Socket::create(Protocol pt) {
     auto type = SocketType::Stream;
     if(pt == Protocol::Udp) type = SocketType::Dgram;
+
     _sock = socket(PF_INET, static_cast<int>(type), static_cast<int>(pt));
 }
 
