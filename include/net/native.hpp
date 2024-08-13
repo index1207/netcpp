@@ -9,23 +9,23 @@
 
 using SOCKLEN = int;
 #else
-#include <sys/types.h>
-#include <sys/uio.h>
-#include <sys/ioctl.h>
+#include <arpa/inet.h>
+#include <arpa/nameser.h>
 #include <cerrno>
 #include <fcntl.h>
-#include <sys/socket.h>
+#include <net/if.h>
 #include <netdb.h>
+#include <netinet/in.h>
 #include <netinet/in_systm.h>
+#include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
-#include <netinet/ip.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <arpa/nameser.h>
 #include <resolv.h>
-#include <net/if.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/uio.h>
 #include <unistd.h>
 
 #include <cstring>
@@ -44,16 +44,16 @@ using SOCKLEN = socklen_t;
 
 namespace net
 {
-	class Native
-	{
-	public:
+class native
+{
+  public:
 #ifdef _WIN32
-        static LPFN_ACCEPTEX AcceptEx;
-		static LPFN_CONNECTEX ConnectEx;
-		static LPFN_DISCONNECTEX DisconnectEx;
-		static LPFN_GETACCEPTEXSOCKADDRS GetAcceptExSockaddrs;
+    static LPFN_ACCEPTEX AcceptEx;
+    static LPFN_CONNECTEX ConnectEx;
+    static LPFN_DISCONNECTEX DisconnectEx;
+    static LPFN_GETACCEPTEXSOCKADDRS GetAcceptExSockaddrs;
 #endif
-	public:
-		static bool initialize();
-	};
-}
+  public:
+    static bool initialize();
+};
+} // namespace net

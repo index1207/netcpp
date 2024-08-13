@@ -1,33 +1,33 @@
 #include "gtest/gtest.h"
-#include "net/Dns.hpp"
-#include "net/IpAddress.hpp"
+#include "net/dns.hpp"
+#include "net/ip_address.hpp"
 
 TEST(Dns, getHostName)
 {
-    EXPECT_NE(net::Dns::getHostName(), "");
+    EXPECT_NE(net::dns::get_host_name(), "");
 }
 
 TEST(Dns, getHostEntry_url)
 {
-    auto youtubeEntry = net::Dns::getHostEntry("www.youtube.com");
+    auto youtubeEntry = net::dns::get_host_entry("www.youtube.com");
     EXPECT_GT(youtubeEntry.address_list.size(), 0);
     EXPECT_GT(youtubeEntry.alias_list.size(), 0);
 }
 
 TEST(Dns, getHostEntry_address)
 {
-    auto entryByAddress = net::Dns::getHostEntry(net::IpAddress::Loopback);
+    auto entryByAddress = net::dns::get_host_entry(net::ip_address::loopback);
     EXPECT_GT(entryByAddress.address_list.size(), 0);
 }
 
 TEST(Dns, getHostEntry_url_failure)
 {
-    auto entry = net::Dns::getHostEntry(".com");
+    auto entry = net::dns::get_host_entry(".com");
     EXPECT_EQ(entry.address_list.size(), 0);
 }
 
 TEST(Dns, getHostEntry_address_failure)
 {
-    auto entry = net::Dns::getHostEntry(net::IpAddress::None);
+    auto entry = net::dns::get_host_entry(net::ip_address::none);
     EXPECT_EQ(entry.address_list.size(), 0);
 }
