@@ -3,10 +3,10 @@
 #include <iostream>
 #include <thread>
 
-#include "net/Exception.hpp"
-#include "net/Context.hpp"
-#include "net/Native.hpp"
-#include "net/Socket.hpp"
+#include "net/exception.hpp"
+#include "net/context.hpp"
+#include "net/native.hpp"
+#include "net/socket.hpp"
 
 using namespace net;
 
@@ -37,23 +37,25 @@ IoSystem::~IoSystem()
 void IoSystem::push(SOCKET s)
 {
 	if(INVALID_HANDLE_VALUE == ::CreateIoCompletionPort(reinterpret_cast<HANDLE>(s), _hcp, NULL, NULL))
-        throw network_error("CreateIoCompletionPort");
+        throw network_exception("CreateIoCompletionPort");
 }
 
-void IoSystem::dispatch(Context* context, DWORD numOfBytes, bool isSuccess) {
+void IoSystem::dispatch(context* context, DWORD numOfBytes, bool isSuccess) {
     switch (context->_contextType) {
         case ContextType::Accept:
             if (isSuccess) {
-                this->push(context->acceptSocket->getHandle());
-                if (!context->acceptSocket->setOption(OptionLevel::Socket, (OptionName)SO_UPDATE_ACCEPT_CONTEXT, _listeningSocket->getHandle()))
-                    throw net::network_error("setSocketOption()");
+                this->push(context->acceptSocket->get_handle());
+                if (!context->acceptSocket->set_option(options::level::socket, (option) SO_UPDATE_ACCEPT_CONTEXT,
+                                                       _listeningSocket->get_handle()))
+                    throw net::network_exception("setSocketOption()");
             }
             context->completed(context, isSuccess);
             break;
         case ContextType::Connect:
             if (isSuccess) {
-                if (!static_cast<Socket*>(context->token)->setOption(OptionLevel::Socket, (OptionName)SO_UPDATE_CONNECT_CONTEXT, nullptr))
-                    throw net::network_error("setSocketOption()");
+                if (!static_cast<socket *>(context->token)->set_option(options::level::socket,
+                                                                       (option) SO_UPDATE_CONNECT_CONTEXT, nullptr))
+                    throw net::network_exception("setSocketOption()");
             }
             context->completed(context, isSuccess);
             break;
@@ -73,7 +75,7 @@ void IoSystem::dispatch(Context* context, DWORD numOfBytes, bool isSuccess) {
 }
 
 DWORD IoSystem::worker() {
-    Context *context = nullptr;
+    context *context = nullptr;
     ULONG_PTR key = 0;
     DWORD numOfBytes = 0;
     if (GetQueuedCompletionStatus(_hcp,

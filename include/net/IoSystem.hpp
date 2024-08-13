@@ -4,7 +4,7 @@
 #include <thread>
 #include <mutex>
 
-#include "net/Native.hpp"
+#include "net/native.hpp"
 
 namespace net
 {
@@ -17,7 +17,7 @@ namespace net
     };
 	class IoSystem
 	{
-        friend class Socket;
+        friend class socket;
 	private:
 		IoSystem();
 		~IoSystem();
@@ -28,10 +28,10 @@ namespace net
         HANDLE getHandle();
     public:
         DWORD CALLBACK worker();
-        void dispatch(class Context* context, DWORD numOfBytes, bool isSuccess);
+        void dispatch(class context* context, DWORD numOfBytes, bool isSuccess);
 	private:
 		HANDLE _hcp;
-        const Socket* _listeningSocket;
+        const socket* _listeningSocket;
 	};
 #endif
 }

@@ -3,8 +3,8 @@
 #include <memory>
 #include <functional>
 
-#include "net/Native.hpp"
-#include "net/Socket.hpp"
+#include "net/native.hpp"
+#include "net/socket.hpp"
 
 namespace net
 {
@@ -18,24 +18,23 @@ namespace net
 		Receive
 	};
 
+    class context
 #ifdef _WIN32 /* WinSock */
-    class Context : private OVERLAPPED
-#else /* POSIX */
-    class Context
+        : private OVERLAPPED
 #endif
     {
-        friend class Socket;
+        friend class socket;
         friend class IoSystem;
 
-        using Callback = std::function<void(Context*, bool)>;
+        using callback = std::function<void(context*, bool)>;
     public:
-		Context();
-        ~Context();
+		context();
+        ~context();
     public:
-        Callback completed = [](Context*, bool) {};
+        callback completed = [](context*, bool) {};
     public:
-        std::unique_ptr<Socket> acceptSocket;
-        std::optional<Endpoint> endpoint;
+        std::unique_ptr<net::socket> acceptSocket;
+        std::optional<net::endpoint> endpoint;
         std::span<char> buffer {};
         u_long length = 0;
         void* token;

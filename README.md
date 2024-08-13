@@ -33,10 +33,10 @@ int main()
 {
     net::Native::initialize(); // Initialize Native API
   
-    net::Socket sock(net::Protocol::Tcp); // Create new TCP socket
-    if (!sock.isOpen()) // Invalidate socket
+    net::Socket sock(net::protocol::tcp); // Create new TCP socket
+    if (!sock.is_open()) // Invalidate socket
         return -1;
-    if(!sock.bind(net::Endpoint(net::IpAddress::Loopback, 8085))) // Bind address
+    if(!sock.bind(net::Endpoint(net::IpAddress::loopback, 8085))) // Bind address
         return -1;
     if(!sock.listen()) // Ready to accept
         return -1;
@@ -57,10 +57,10 @@ int main()
 {
     net::Native::initialize(); // Initialize Native API
   
-    net::Socket sock(net::Protocol::Tcp); // Create new TCP socket
-    if (!sock.isOpen()) // Invalidate socket
+    net::Socket sock(net::protocol::tcp); // Create new TCP socket
+    if (!sock.is_open()) // Invalidate socket
         return -1;
-    if (!sock.connect(net::Endpoint(net::IpAddress::Loopback, 8085))) // Try to connect to server.
+    if (!sock.connect(net::Endpoint(net::IpAddress::loopback, 8085))) // Try to connect to server.
         return -1;
     std::cout << "Connected!";
 }

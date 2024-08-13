@@ -44,7 +44,7 @@ using SOCKLEN = socklen_t;
 
 namespace net
 {
-	class Native
+	class native
 	{
 	public:
 #ifdef _WIN32
