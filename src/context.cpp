@@ -1,8 +1,8 @@
-#include "net/Context.hpp"
+#include "net/context.hpp"
 
 using namespace net;
 
-Context::Context() : acceptSocket(std::make_unique<Socket>())
+context::context() : acceptSocket(std::make_unique<socket>())
 {
     buffer = nullptr;
 #ifdef _WIN32
@@ -11,7 +11,7 @@ Context::Context() : acceptSocket(std::make_unique<Socket>())
     init();
 }
 
-void Context::init()
+void context::init()
 {
 #ifdef _WIN32
     ZeroMemory(this, sizeof(OVERLAPPED));
@@ -19,7 +19,7 @@ void Context::init()
     _contextType = ContextType::None;
 }
 
-Context::~Context()
+context::~context()
 {
 #ifdef _WIN32
     if (buffer)
