@@ -31,7 +31,7 @@ cmake --build build
       
 int main()
 {
-    net::Native::initialize(); // Initialize Native API
+    net::native::initialize(); // Initialize native API
   
     net::Socket sock(net::protocol::tcp); // Create new TCP socket
     if (!sock.is_open()) // Invalidate socket
@@ -55,7 +55,7 @@ int main()
   
 int main()
 {
-    net::Native::initialize(); // Initialize Native API
+    net::native::initialize(); // Initialize native API
   
     net::Socket sock(net::protocol::tcp); // Create new TCP socket
     if (!sock.is_open()) // Invalidate socket

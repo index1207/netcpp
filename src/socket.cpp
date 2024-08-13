@@ -121,7 +121,7 @@ bool socket::accept(context *context) const
 {
     context->init();
 
-    context->_contextType = ContextType::Accept;
+    context->type = ContextType::Accept;
 #ifdef _WIN32
     IoSystem::instance().push(context->acceptSocket->get_handle());
 
@@ -140,7 +140,7 @@ bool socket::accept(context *context) const
 bool socket::connect(context *context)
 {
     context->init();
-    context->_contextType = ContextType::Connect;
+    context->type = ContextType::Connect;
 #ifdef _WIN32
     bind(endpoint(ip_address::any, 0));
     _remote_endpoint = _local_endpoint;
@@ -162,7 +162,7 @@ bool socket::connect(context *context)
 bool socket::send(context *context) const
 {
     context->init();
-    context->_contextType = ContextType::Send;
+    context->type = ContextType::Send;
 #ifdef _WIN32
     WSABUF wsaBuf;
     wsaBuf.buf = context->buffer.data();
@@ -180,7 +180,7 @@ bool socket::send(context *context) const
 bool socket::receive(context *context) const
 {
     context->init();
-    context->_contextType = ContextType::Receive;
+    context->type = ContextType::Receive;
 #ifdef _WIN32
     WSABUF wsaBuf = {.len = static_cast<ULONG>(context->buffer.size()), .buf = context->buffer.data()};
 
@@ -199,7 +199,7 @@ bool net::socket::disconnect(context *context) const
 {
     context->init();
 
-    context->_contextType = ContextType::Disconnect;
+    context->type = ContextType::Disconnect;
 #ifdef _WIN32
     if (!native::DisconnectEx(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
     {

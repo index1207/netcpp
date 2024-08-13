@@ -44,59 +44,59 @@ using SOCKLEN = socklen_t;
 
 #include <functional>
 
-
 namespace net
 {
-    class Context;
+class context;
 
-    class Native
-	{
+class native
+{
 #ifdef _WIN32
-    public:
-        // Worker options
-        struct Option final
+  public:
+    // Worker options
+    struct option final
+    {
+        // IOCP Options
+        static bool Autorun;
+        static unsigned long Timeout;
+        static unsigned ThreadCount;
+
+        // RIO Options
+        static ULONG ResultSize;
+        static ULONG SendRequestQueSize;
+        static ULONG ReceiveRequestQueSize;
+        static ULONG MaxClientCount;
+
+        static inline ULONG getCompletionQueSize()
         {
-            // IOCP Options
-            static bool Autorun;
-            static unsigned long Timeout;
-            static unsigned ThreadCount;
+            return (SendRequestQueSize + ReceiveRequestQueSize) * MaxClientCount;
+        }
+    };
 
-            // RIO Options
-            static ULONG ResultSize;
-            static ULONG SendRequestQueSize;
-            static ULONG ReceiveRequestQueSize;
-            static ULONG MaxClientCount;
+    // IOCP Extension
+    static LPFN_ACCEPTEX acceptEx;
+    static LPFN_CONNECTEX connectEx;
+    static LPFN_DISCONNECTEX disconnectEx;
+    static LPFN_GETACCEPTEXSOCKADDRS getAcceptExSockAddr;
 
-            static inline ULONG getCompletionQueSize()
-            {
-                return (SendRequestQueSize + ReceiveRequestQueSize) * MaxClientCount;
-            }
-        };
+    // CK_READWRITE Extension
+    static RIO_EXTENSION_FUNCTION_TABLE rioTable;
+    static thread_local RIO_CQ completionQue;
 
+    static std::function<void(bool)> onExitIo;
 
-        // IOCP Extension
-        static LPFN_ACCEPTEX acceptEx;
-		static LPFN_CONNECTEX connectEx;
-		static LPFN_DISCONNECTEX disconnectEx;
-		static LPFN_GETACCEPTEXSOCKADDRS getAcceptExSockAddr;
-
-        // CK_READWRITE Extension
-        static RIO_EXTENSION_FUNCTION_TABLE rioTable;
-        static thread_local RIO_CQ completionQue;
-
-        static std::function<void(bool)> onExitIo;
-    public:
-        static bool addToCompletionPort(SOCKET sock);
+  public:
+    static bool register_to_iocp(SOCKET sock);
 #endif
-	public:
-		static bool initialize();
+  public:
+    static bool initialize();
 #ifdef _WIN32
-    private:
-        static bool handleIocpEvent(Context* context, bool success);
-        static bool handleRioEvent(Context* context, ULONG transferred);
-        static void ioWorker();
-    private:
-        static HANDLE _hcp;
+  private:
+    static bool handle_iocp_event(context* context, bool success);
+    static bool handle_rio_event(context* context, ULONG transferred);
+    static void io_worker();
+
+  private:
+    static HANDLE _hcp;
 #endif
-	};
-}
+};
+} // namespace net

@@ -6,7 +6,7 @@ context::context() : acceptSocket(std::make_unique<socket>())
 {
     buffer = nullptr;
 #ifdef _WIN32
-    _bufferId = RIO_INVALID_BUFFERID;
+    _buffer_id = RIO_INVALID_BUFFERID;
 #endif
     init();
 }
@@ -16,7 +16,7 @@ void context::init()
 #ifdef _WIN32
     ZeroMemory(this, sizeof(OVERLAPPED));
 #endif
-    _contextType = ContextType::None;
+	type = io_type::none;
 }
 
 context::~context()
@@ -24,14 +24,13 @@ context::~context()
 #ifdef _WIN32
     if (buffer)
     {
-        Native::rioTable.RIODeregisterBuffer(_bufferId);
+		native::rioTable.RIODeregisterBuffer(_buffer_id);
         VirtualFreeEx(GetCurrentProcess(), buffer, 0, MEM_RELEASE);
     }
 #endif
 }
 
-#ifdef _WIN32
-bool Context::createBuffer(DWORD size)
+bool context::create_buffer(u_long size)
 {
     SYSTEM_INFO systemInfo;
     GetSystemInfo(&systemInfo);
@@ -43,11 +42,10 @@ bool Context::createBuffer(DWORD size)
         if (!buffer)
             return false;
 
-        _bufferId = Native::rioTable.RIORegisterBuffer(buffer, size);
-        if (_bufferId == RIO_INVALID_BUFFERID)
+        _buffer_id = native::rioTable.RIORegisterBuffer(buffer, size);
+        if (_buffer_id == RIO_INVALID_BUFFERID)
             return false;
     }
     else return false;
     return true;
 }
-#endif

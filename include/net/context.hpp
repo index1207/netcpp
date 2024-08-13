@@ -8,15 +8,6 @@
 
 namespace net
 {
-enum class ContextType
-{
-    None,
-    Accept,
-    Connect,
-    Disconnect,
-    Send,
-    Receive
-};
 
 class context
 #ifdef _WIN32 /* WinSock */
@@ -24,10 +15,19 @@ class context
 #endif
 {
     friend class socket;
-    friend class IoSystem;
+	friend class native;
 
     using callback = std::function<void(context *, bool)>;
 
+    enum class io_type
+    {
+      none,
+      accept,
+      connect,
+      disconnect,
+      send,
+      receive
+    };
   public:
     context();
     ~context();
@@ -35,17 +35,23 @@ class context
   public:
     callback completed = [](context *, bool) {};
 
+    bool create_buffer(u_long size);
+
   public:
     std::unique_ptr<net::socket> acceptSocket;
     std::optional<net::endpoint> endpoint;
-    std::span<char> buffer{};
+    char* buffer;
     u_long length = 0;
-    void *token;
+    void* token;
+	io_type type;
 
   private:
     void init();
 
   private:
-    ContextType _contextType;
+#ifdef _WIN32
+    RIO_BUFFERID _buffer_id;
+#endif
+
 };
 } // namespace net
