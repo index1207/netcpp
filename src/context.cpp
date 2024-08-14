@@ -2,7 +2,7 @@
 
 using namespace net;
 
-context::context() : acceptSocket(std::make_unique<socket>())
+context::context() : accept_socket(std::make_unique<async_socket>())
 {
     buffer = nullptr;
 #ifdef _WIN32
@@ -24,9 +24,10 @@ context::~context()
 #ifdef _WIN32
     if (buffer)
     {
-		native::rioTable.RIODeregisterBuffer(_buffer_id);
+		native::rio.RIODeregisterBuffer(_buffer_id);
         VirtualFreeEx(GetCurrentProcess(), buffer, 0, MEM_RELEASE);
     }
+    CancelIoEx(native::get_handle(), reinterpret_cast<OVERLAPPED*>(this));
 #endif
 }
 
@@ -42,7 +43,7 @@ bool context::create_buffer(u_long size)
         if (!buffer)
             return false;
 
-        _buffer_id = native::rioTable.RIORegisterBuffer(buffer, size);
+        _buffer_id = native::rio.RIORegisterBuffer(buffer, size);
         if (_buffer_id == RIO_INVALID_BUFFERID)
             return false;
     }

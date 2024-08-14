@@ -1,19 +1,19 @@
 #include "gtest/gtest.h"
 #include "net/endpoint.hpp"
 
-TEST(Endpoint, constructor)
+TEST(endpoint, constructor)
 {
     net::endpoint endpoint(net::ip_address::loopback, 8080);
     EXPECT_EQ(endpoint.to_string(), "127.0.0.1:8080");
 }
 
-TEST(Endpoint, getAddress)
+TEST(endpoint, getAddress)
 {
     net::endpoint endpoint(net::ip_address::loopback, 8080);
     EXPECT_EQ(endpoint.get_address().to_string(), "127.0.0.1");
 }
 
-TEST(Endpoint, setAddress)
+TEST(endpoint, setAddress)
 {
     auto addr = net::ip_address::loopback;
     net::endpoint endpoint;
@@ -21,14 +21,14 @@ TEST(Endpoint, setAddress)
     EXPECT_EQ(endpoint.get_address(), addr);
 }
 
-TEST(Endpoint, getPort)
+TEST(endpoint, getPort)
 {
     u_short port = 8080;
     net::endpoint endpoint(net::ip_address::loopback, port);
     EXPECT_EQ(endpoint.get_port(), port);
 }
 
-TEST(Endpoint, setPort)
+TEST(endpoint, setPort)
 {
     u_short port = 8080;
     net::endpoint endpoint;
@@ -36,13 +36,13 @@ TEST(Endpoint, setPort)
     EXPECT_EQ(endpoint.get_port(), port);
 }
 
-TEST(Endpoint, toString)
+TEST(endpoint, toString)
 {
     net::endpoint endpoint(net::ip_address::loopback, 8080);
     EXPECT_EQ(endpoint.to_string(), "127.0.0.1:8080");
 }
 
-TEST(Endpoint, parse)
+TEST(endpoint, parse)
 {
     u_short port = 8080;
     sockaddr_in addr {};
@@ -53,13 +53,13 @@ TEST(Endpoint, parse)
     EXPECT_EQ(endpoint.get_port(), port);
 }
 
-TEST(Endpoint, tryParse)
+TEST(endpoint, tryParse)
 {
     net::endpoint endpoint;
     EXPECT_EQ(net::endpoint::try_parse("127.0.0.1:8080", &endpoint), true);
 }
 
-TEST(Endpoint, operator_equla_lvalue)
+TEST(endpoint, operator_equla_lvalue)
 {
     auto addr = net::ip_address::loopback;
     auto port = 8080;
@@ -67,7 +67,7 @@ TEST(Endpoint, operator_equla_lvalue)
     EXPECT_EQ(ep1 == ep2, true);
 }
 
-TEST(Endpoint, operator_equla_rvalue)
+TEST(endpoint, operator_equla_rvalue)
 {
     auto addr = net::ip_address::loopback;
     auto port = 8080;

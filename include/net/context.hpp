@@ -14,7 +14,7 @@ class context
     : private OVERLAPPED
 #endif
 {
-    friend class socket;
+    friend class async_socket;
 	friend class native;
 
     using callback = std::function<void(context *, bool)>;
@@ -38,7 +38,7 @@ class context
     bool create_buffer(u_long size);
 
   public:
-    std::unique_ptr<net::socket> acceptSocket;
+    std::unique_ptr<net::async_socket> accept_socket;
     std::optional<net::endpoint> endpoint;
     char* buffer;
     u_long length = 0;

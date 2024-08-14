@@ -1,7 +1,6 @@
 #include "net/socket.hpp"
 #include <net/exception.hpp>
 
-#include "net/IoSystem.hpp"
 #include "net/context.hpp"
 #include "net/native.hpp"
 
@@ -9,7 +8,7 @@ using namespace net;
 
 socket::socket(protocol pt) : socket()
 {
-    create(pt);
+    socket::create(pt);
 }
 
 socket::socket(const socket &sock)
@@ -58,15 +57,8 @@ bool socket::connect(endpoint ep)
 {
     _remote_endpoint = ep;
     ip_address ipAdr = ep.get_address();
-    auto ret = SOCKET_ERROR != ::connect(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in));
-    if (ret)
-    {
-        sockaddr_in remoteAddrIn{};
-        SOCKLEN len = sizeof(remoteAddrIn);
-        ret &= SOCKET_ERROR != getpeername(_sock, reinterpret_cast<sockaddr *>(&remoteAddrIn), &len);
-        _remote_endpoint = endpoint::parse(remoteAddrIn);
-    }
-    return ret;
+    auto r = SOCKET_ERROR != ::connect(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in));
+    return r;
 }
 
 bool socket::bind(endpoint ep)
@@ -75,16 +67,13 @@ bool socket::bind(endpoint ep)
     ip_address ipAdr = _local_endpoint->get_address();
     const auto ret = ::bind(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in));
 #ifdef _WIN32
-    IoSystem::instance().push(_sock);
+    native::register_to_iocp(get_handle());
 #endif
     return SOCKET_ERROR != ret;
 }
 
 bool socket::listen(int backlog) const
 {
-#ifdef _WIN32
-    IoSystem::instance()._listeningSocket = this;
-#endif
     return SOCKET_ERROR != ::listen(_sock, backlog);
 }
 
@@ -115,101 +104,6 @@ net::socket socket::accept() const
     clientSock.set_handle(::accept(_sock, nullptr, nullptr));
 
     return clientSock;
-}
-
-bool socket::accept(context *context) const
-{
-    context->init();
-
-    context->type = ContextType::Accept;
-#ifdef _WIN32
-    IoSystem::instance().push(context->acceptSocket->get_handle());
-
-    DWORD dwByte = 0;
-    char buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
-    if (!native::AcceptEx(_sock, context->acceptSocket->get_handle(), buf, 0, sizeof(SOCKADDR_IN) + 16,
-                          sizeof(SOCKADDR_IN) + 16, &dwByte, context))
-    {
-        const auto err = WSAGetLastError();
-        return err == WSA_IO_PENDING;
-    }
-#endif
-    return false;
-}
-
-bool socket::connect(context *context)
-{
-    context->init();
-    context->type = ContextType::Connect;
-#ifdef _WIN32
-    bind(endpoint(ip_address::any, 0));
-    _remote_endpoint = _local_endpoint;
-
-    context->token = static_cast<void *>(this);
-
-    ip_address ipAdr = context->endpoint->get_address();
-    DWORD dw;
-    if (!native::ConnectEx(_sock, reinterpret_cast<SOCKADDR *>(&ipAdr), sizeof(SOCKADDR_IN), nullptr, NULL, &dw,
-                           reinterpret_cast<LPOVERLAPPED>(context)))
-    {
-        const auto err = WSAGetLastError();
-        return WSA_IO_PENDING == err;
-    }
-#endif
-    return false;
-}
-
-bool socket::send(context *context) const
-{
-    context->init();
-    context->type = ContextType::Send;
-#ifdef _WIN32
-    WSABUF wsaBuf;
-    wsaBuf.buf = context->buffer.data();
-    wsaBuf.len = static_cast<ULONG>(context->buffer.size());
-
-    if (SOCKET_ERROR == WSASend(_sock, &wsaBuf, 1, &wsaBuf.len, 0, reinterpret_cast<LPOVERLAPPED>(context), nullptr))
-    {
-        const int err = WSAGetLastError();
-        return err == WSA_IO_PENDING;
-    }
-#endif
-    return true;
-}
-
-bool socket::receive(context *context) const
-{
-    context->init();
-    context->type = ContextType::Receive;
-#ifdef _WIN32
-    WSABUF wsaBuf = {.len = static_cast<ULONG>(context->buffer.size()), .buf = context->buffer.data()};
-
-    DWORD recvBytes = 0, flags = 0;
-    if (SOCKET_ERROR ==
-        WSARecv(_sock, &wsaBuf, 1, &recvBytes, &flags, reinterpret_cast<LPOVERLAPPED>(context), nullptr))
-    {
-        const int err = WSAGetLastError();
-        return err == WSA_IO_PENDING;
-    }
-#endif
-    return true;
-}
-
-bool net::socket::disconnect(context *context) const
-{
-    context->init();
-
-    context->type = ContextType::Disconnect;
-#ifdef _WIN32
-    if (!native::DisconnectEx(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
-    {
-        const int err = WSAGetLastError();
-        return err == WSA_IO_PENDING;
-    }
-#else
-
-#endif
-    return false;
 }
 
 bool socket::send(std::span<char> s) const
@@ -308,7 +202,7 @@ bool socket::is_open() const
     return INVALID_SOCKET != _sock;
 }
 
-net::socket &socket::operator=(socket &&sock) noexcept
+net::socket &socket::operator=(socket&& sock) noexcept
 {
     this->_sock = sock._sock;
     std::swap(_local_endpoint, sock._local_endpoint);
@@ -316,7 +210,7 @@ net::socket &socket::operator=(socket &&sock) noexcept
     return *this;
 }
 
-net::socket &socket::operator=(const socket &sock) = default;
+net::socket &socket::operator=(const socket& sock) = default;
 
 void socket::create(protocol pt)
 {
@@ -326,12 +220,129 @@ void socket::create(protocol pt)
     _sock = ::socket(PF_INET, static_cast<int>(type), static_cast<int>(pt));
 }
 
-bool socket::operator==(const socket &sock) const
+bool socket::operator==(const socket& sock) const
 {
     return _sock == sock._sock;
 }
 
-bool socket::operator==(socket &&sock) const
+bool socket::operator==(socket&& sock) const
 {
     return _sock == sock._sock;
+}
+void async_socket::create(protocol protocol)
+{
+	auto type = socket_type::stream;
+	if (protocol == protocol::udp)
+		type = socket_type::dgram;
+#ifdef _WIN32
+	_sock = WSASocketW(AF_INET, static_cast<int>(type), static_cast<int>(protocol), NULL, NULL, WSA_FLAG_REGISTERED_IO);
+#else
+	socket::create(protocol);
+#endif
+}
+async_socket::async_socket(protocol protocol)
+{
+	async_socket::create(protocol);
+}
+
+bool async_socket::accept(context* context)
+{
+	context->init();
+
+	context->type = context::io_type::accept;
+#ifdef _WIN32
+    context->token = this;
+	native::register_to_iocp(get_handle());
+
+	DWORD dwByte = 0;
+	char buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
+	if (!native::acceptex(_sock, context->accept_socket->get_handle(), buf, 0, sizeof(SOCKADDR_IN) + 16,
+						  sizeof(SOCKADDR_IN) + 16, &dwByte, context))
+	{
+		const auto err = WSAGetLastError();
+		return err == WSA_IO_PENDING;
+	}
+#endif
+	return false;
+}
+
+bool async_socket::connect(context* context)
+{
+	context->init();
+	context->type = context::io_type::connect;
+#ifdef _WIN32
+	bind(endpoint(ip_address::any, 0));
+	_remote_endpoint = _local_endpoint;
+
+	context->token = static_cast<void *>(this);
+
+	ip_address ipAdr = context->endpoint->get_address();
+	DWORD dw;
+	if (!native::connectex(_sock, reinterpret_cast<SOCKADDR *>(&ipAdr), sizeof(SOCKADDR_IN), nullptr, NULL, &dw,
+						   reinterpret_cast<LPOVERLAPPED>(context)))
+	{
+		const auto err = WSAGetLastError();
+		return WSA_IO_PENDING == err;
+	}
+#endif
+	return false;
+}
+
+bool async_socket::send(context* context) const
+{
+	context->init();
+	context->type = context::io_type::send;
+#ifdef _WIN32
+    RIO_BUF buf {
+        .BufferId = context->_buffer_id,
+        .Offset = 0,
+        .Length = sizeof(context->buffer)
+    };
+    if (!native::rio.RIOSend(_request_queue, &buf, 1, NULL, context))
+    {
+        const int err = WSAGetLastError();
+        return err == WSA_IO_PENDING;
+    }
+#endif
+	return true;
+}
+
+bool async_socket::receive(context* context) const
+{
+	context->init();
+	context->type = context::io_type::receive;
+#ifdef _WIN32
+	RIO_BUF buf {
+        .BufferId = context->_buffer_id,
+		.Offset = 0,
+		.Length = sizeof(context->buffer)
+    };
+    if (!native::rio.RIOReceive(_request_queue, &buf, 1, NULL, context))
+    {
+        const int err = WSAGetLastError();
+        return err == WSA_IO_PENDING;
+    }
+#endif
+	return true;
+}
+
+bool async_socket::disconnect(context* context) const
+{
+	context->init();
+
+	context->type = context::io_type::disconnect;
+#ifdef _WIN32
+	if (!native::disconnectex(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
+	{
+		const int err = WSAGetLastError();
+		return err == WSA_IO_PENDING;
+	}
+#else
+
+#endif
+	return false;
+}
+async_socket::async_socket() : socket::socket()
+{
+    _request_queue = RIO_INVALID_RQ;
 }

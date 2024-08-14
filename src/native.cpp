@@ -17,17 +17,17 @@ bool native::option::Autorun = true;
 unsigned long native::option::Timeout = INFINITE;
 unsigned native::option::ThreadCount = std::thread::hardware_concurrency();
 
-LPFN_ACCEPTEX native::acceptEx = nullptr;
-LPFN_CONNECTEX native::connectEx = nullptr;
-LPFN_DISCONNECTEX native::disconnectEx = nullptr;
-LPFN_GETACCEPTEXSOCKADDRS native::getAcceptExSockAddr = nullptr;
+LPFN_ACCEPTEX native::acceptex = nullptr;
+LPFN_CONNECTEX native::connectex = nullptr;
+LPFN_DISCONNECTEX native::disconnectex = nullptr;
+LPFN_GETACCEPTEXSOCKADDRS native::get_acceptex_socket_address = nullptr;
 
 ULONG native::option::ResultSize = 0x100;
 ULONG native::option::SendRequestQueSize = 0x20;
 ULONG native::option::ReceiveRequestQueSize = 0x4;
 ULONG native::option::MaxClientCount = 0x1000;
 
-RIO_EXTENSION_FUNCTION_TABLE native::rioTable{
+RIO_EXTENSION_FUNCTION_TABLE native::rio{
     0,
 };
 thread_local RIO_CQ native::completionQue = nullptr;
@@ -62,17 +62,17 @@ bool native::initialize()
 
     net::socket dummy(protocol::tcp);
     // Bind extension functions.
-    if (!bindIocpFunction(dummy, WSAID_ACCEPTEX, reinterpret_cast<PVOID *>(&acceptEx)))
+    if (!bindIocpFunction(dummy, WSAID_ACCEPTEX, reinterpret_cast<PVOID *>(&acceptex)))
         return false;
-    if (!bindIocpFunction(dummy, WSAID_CONNECTEX, reinterpret_cast<PVOID *>(&connectEx)))
+    if (!bindIocpFunction(dummy, WSAID_CONNECTEX, reinterpret_cast<PVOID *>(&connectex)))
         return false;
-    if (!bindIocpFunction(dummy, WSAID_DISCONNECTEX, reinterpret_cast<PVOID *>(&disconnectEx)))
+    if (!bindIocpFunction(dummy, WSAID_DISCONNECTEX, reinterpret_cast<PVOID *>(&disconnectex)))
         return false;
-    if (!bindIocpFunction(dummy, WSAID_GETACCEPTEXSOCKADDRS, reinterpret_cast<PVOID *>(&native::getAcceptExSockAddr)))
+    if (!bindIocpFunction(dummy, WSAID_GETACCEPTEXSOCKADDRS, reinterpret_cast<PVOID *>(&native::get_acceptex_socket_address)))
         return false;
 
     // Bind Registered I/O Function table.
-    if (!bindRioFunctionTable(dummy, reinterpret_cast<PVOID *>(&rioTable)))
+    if (!bindRioFunctionTable(dummy, reinterpret_cast<PVOID *>(&rio)))
         return false;
 
     _hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, NULL); // Create new CP.
@@ -104,14 +104,12 @@ void native::io_worker()
     completion.Iocp.CompletionKey = reinterpret_cast<void *>(CK_RIO);
     completion.Iocp.Overlapped = &rioCtx;
 
-    auto ioResults = new RIORESULT[option::ResultSize]{
-        0,
-    };
+    auto ioResults = new RIORESULT[option::ResultSize];
 
-    completionQue = rioTable.RIOCreateCompletionQueue(option::getCompletionQueSize(), &completion);
+    completionQue = rio.RIOCreateCompletionQueue(option::getCompletionQueSize(), &completion);
     while (completionQue)
     {
-        if (rioTable.RIONotify(completionQue) != ERROR_SUCCESS)
+        if (rio.RIONotify(completionQue) != ERROR_SUCCESS)
             break;
 
         if (!GetQueuedCompletionStatus(_hcp, &numOfBytes, &key, reinterpret_cast<LPOVERLAPPED *>(&context),
@@ -129,14 +127,17 @@ void native::io_worker()
             }
         }
         if (key != CK_RIO && context != nullptr)
+        {
             error |= handle_iocp_event(context, true);
+            continue;
+        }
 
         ZeroMemory(ioResults, sizeof(ioResults));
-        auto length = rioTable.RIODequeueCompletion(completionQue, ioResults, option::ResultSize);
+        auto length = rio.RIODequeueCompletion(completionQue, ioResults, option::ResultSize);
         if (length == 0 || RIO_CORRUPT_CQ == length)
             break;
 
-        if (rioTable.RIONotify(completionQue) != ERROR_SUCCESS)
+        if (rio.RIONotify(completionQue) != ERROR_SUCCESS)
             break;
 
         for (ULONG i = 0; i < length; ++i)
@@ -164,28 +165,29 @@ bool native::handle_iocp_event(context *context, bool success)
     case context::io_type::accept:
         if (success)
         {
-            if (!context->acceptSocket->set_option(options::level::socket, net::option::accept_context,
+            if (!context->accept_socket->set_option(options::level::socket, net::option::accept_context,
                                                    reinterpret_cast<net::socket *>(context->token)->get_handle()))
                 return false;
 
-            if (!register_to_iocp(context->acceptSocket->get_handle()))
+            if (!register_to_iocp(context->accept_socket->get_handle()))
                 return false;
 
             RIO_RQ requestQue =
-                rioTable.RIOCreateRequestQueue(context->acceptSocket->get_handle(), option::ReceiveRequestQueSize, 1,
+                rio.RIOCreateRequestQueue(context->accept_socket->get_handle(), option::ReceiveRequestQueSize, 1,
                                                option::SendRequestQueSize, 1, completionQue, completionQue, nullptr);
             if (requestQue == RIO_INVALID_RQ)
                 return false;
 
-            context->acceptSocket->_request_queue = requestQue;
+            context->accept_socket->_request_queue = requestQue;
         }
         context->completed(context, success);
         break;
     case context::io_type::connect:
         if (success)
         {
-            return static_cast<net::socket *>(context->token)
-                ->set_option(net::options::level::socket, (net::option)SO_UPDATE_CONNECT_CONTEXT, nullptr);
+            auto sock = static_cast<net::socket *>(context->token);
+            if (!sock->set_option(net::options::level::socket, (net::option)SO_UPDATE_CONNECT_CONTEXT, nullptr))
+                return false;
         }
         context->completed(context, success);
         break;
@@ -200,16 +202,6 @@ bool native::handle_iocp_event(context *context, bool success)
 
 bool native::handle_rio_event(context *context, ULONG transferred)
 {
-    auto sock = static_cast<net::socket *>(context->token);
-    if (transferred == 0)
-    {
-        auto disconnectCompl = [](net::context *context, bool success) { delete context; };
-        auto disconnectCtx = new net::context;
-        disconnectCtx->completed = disconnectCompl;
-        if (!sock->disconnect(disconnectCtx))
-            disconnectCompl(disconnectCtx, false);
-    }
-
     switch (context->type)
     {
     case context::io_type::send:
@@ -225,5 +217,9 @@ bool native::handle_rio_event(context *context, ULONG transferred)
         break;
     }
     return true;
+}
+HANDLE native::get_handle()
+{
+    return _hcp;
 }
 #endif

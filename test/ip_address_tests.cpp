@@ -7,25 +7,25 @@ TEST(IpAddrses, tryParse)
     EXPECT_EQ(net::ip_address::try_parse("127.0.0.1", &addr), true);
 }
 
-TEST(IpAddrses, tryParse_failure)
+TEST(ip_address, tryParse_failure)
 {
     EXPECT_EQ(net::ip_address::try_parse("127.0.0.1", nullptr), false);
 }
 
-TEST(IpAddress, toString)
+TEST(ip_address, toString)
 {
     auto addr = net::ip_address::loopback;
     EXPECT_EQ(addr.to_string(), "127.0.0.1");
 }
 
-TEST(IpAddress, operator_equal_lvalue)
+TEST(ip_address, operator_equal_lvalue)
 {
     auto addr = net::ip_address::loopback;
     EXPECT_EQ(addr.to_string(), "127.0.0.1");
     EXPECT_EQ(addr == net::ip_address::loopback, true);
 }
 
-TEST(IpAddress, operator_equal_rvalue)
+TEST(ip_address, operator_equal_rvalue)
 {
     auto addr = net::ip_address::loopback;
     EXPECT_EQ(addr.to_string(), "127.0.0.1");

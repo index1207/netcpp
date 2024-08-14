@@ -73,18 +73,19 @@ class native
     };
 
     // IOCP Extension
-    static LPFN_ACCEPTEX acceptEx;
-    static LPFN_CONNECTEX connectEx;
-    static LPFN_DISCONNECTEX disconnectEx;
-    static LPFN_GETACCEPTEXSOCKADDRS getAcceptExSockAddr;
+    static LPFN_ACCEPTEX acceptex;
+    static LPFN_CONNECTEX connectex;
+    static LPFN_DISCONNECTEX disconnectex;
+    static LPFN_GETACCEPTEXSOCKADDRS get_acceptex_socket_address;
 
     // CK_READWRITE Extension
-    static RIO_EXTENSION_FUNCTION_TABLE rioTable;
+    static RIO_EXTENSION_FUNCTION_TABLE rio;
     static thread_local RIO_CQ completionQue;
 
     static std::function<void(bool)> onExitIo;
 
   public:
+    static HANDLE get_handle();
     static bool register_to_iocp(SOCKET sock);
 #endif
   public:

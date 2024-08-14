@@ -16,7 +16,7 @@ class dns
 {
   public:
     static std::string get_host_name();
-    static host_entry get_host_entry(std::string_view hostname);
-    static host_entry get_host_entry(ip_address host);
+    [[nodiscard]] static host_entry get_host_entry(std::string_view hostname);
+    [[nodiscard]] static host_entry get_host_entry(ip_address host);
 };
 } // namespace net

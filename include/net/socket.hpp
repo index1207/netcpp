@@ -81,7 +81,7 @@ class socket
 
   public:
     void close();
-    void create(protocol pt = protocol::ip);
+    virtual void create(protocol pt);
 
     void set_handle(SOCKET s);
 
@@ -103,13 +103,6 @@ class socket
 
     int receive(std::span<char> s) const;
     int receive(std::span<char> s, endpoint target) const;
-
-  public:
-    bool disconnect(context *context) const;
-    bool accept(context *context) const;
-    bool connect(context *context);
-    bool send(context *context) const;
-    bool receive(context *context) const;
 
   public:
     template <class T> bool set_option(options::level level, option name, T value) const
@@ -146,9 +139,31 @@ class socket
     socket &operator=(const socket &sock);
     socket &operator=(socket &&sock) noexcept;
 
-  private:
-    std::optional<endpoint> _remote_endpoint;
-    std::optional<endpoint> _local_endpoint;
+  protected:
     SOCKET _sock;
+    std::optional<endpoint> _local_endpoint;
+    std::optional<endpoint> _remote_endpoint;
+};
+
+class async_socket : public socket
+{
+    friend class native;
+  public:
+    async_socket();
+    explicit async_socket(protocol protocol);
+
+  public:
+    void create(protocol protocol) override;
+
+  public:
+    bool disconnect(context *context) const;
+    bool accept(context *context);
+    bool connect(context *context);
+    bool send(context *context) const;
+    bool receive(context *context) const;
+  private:
+#ifdef _WIN32
+    RIO_RQ _request_queue;
+#endif
 };
 } // namespace net
