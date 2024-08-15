@@ -80,7 +80,7 @@ class native
 
     // CK_READWRITE Extension
     static RIO_EXTENSION_FUNCTION_TABLE rio;
-    static thread_local RIO_CQ completionQue;
+    static thread_local RIO_CQ cq;
 
     static std::function<void(bool)> onExitIo;
 
@@ -92,7 +92,7 @@ class native
     static bool initialize();
 #ifdef _WIN32
   private:
-    static bool handle_iocp_event(context* context, bool success);
+    static bool handle_iocp_event(context *context, bool success);
     static bool handle_rio_event(context* context, ULONG transferred);
     static void io_worker();
 

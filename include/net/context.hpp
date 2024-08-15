@@ -11,7 +11,7 @@ namespace net
 
 class context
 #ifdef _WIN32 /* WinSock */
-    : private OVERLAPPED
+    : OVERLAPPED, RIO_BUF
 #endif
 {
     friend class async_socket;
@@ -32,6 +32,8 @@ class context
     context();
     ~context();
 
+    void set_data(std::string_view data);
+
   public:
     callback completed = [](context *, bool) {};
 
@@ -47,11 +49,5 @@ class context
 
   private:
     void init();
-
-  private:
-#ifdef _WIN32
-    RIO_BUFFERID _buffer_id;
-#endif
-
 };
 } // namespace net

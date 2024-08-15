@@ -6,7 +6,9 @@ context::context() : accept_socket(std::make_unique<async_socket>())
 {
     buffer = nullptr;
 #ifdef _WIN32
-    _buffer_id = RIO_INVALID_BUFFERID;
+    RIO_BUF::Length = 0;
+    RIO_BUF::Offset = 0;
+    RIO_BUF::BufferId = RIO_INVALID_BUFFERID;
 #endif
     init();
 }
@@ -24,7 +26,7 @@ context::~context()
 #ifdef _WIN32
     if (buffer)
     {
-		native::rio.RIODeregisterBuffer(_buffer_id);
+		native::rio.RIODeregisterBuffer(BufferId);
         VirtualFreeEx(GetCurrentProcess(), buffer, 0, MEM_RELEASE);
     }
     CancelIoEx(native::get_handle(), reinterpret_cast<OVERLAPPED*>(this));
@@ -43,10 +45,17 @@ bool context::create_buffer(u_long size)
         if (!buffer)
             return false;
 
-        _buffer_id = native::rio.RIORegisterBuffer(buffer, size);
-        if (_buffer_id == RIO_INVALID_BUFFERID)
+        BufferId = native::rio.RIORegisterBuffer(buffer, size);
+        if (BufferId == RIO_INVALID_BUFFERID)
             return false;
+        Length = size;
     }
     else return false;
     return true;
+}
+
+void context::set_data(std::string_view data)
+{
+    memcpy(buffer, data.data(), data.length());
+    Length = data.length();
 }

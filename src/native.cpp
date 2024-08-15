@@ -30,7 +30,8 @@ ULONG native::option::MaxClientCount = 0x1000;
 RIO_EXTENSION_FUNCTION_TABLE native::rio{
     0,
 };
-thread_local RIO_CQ native::completionQue = nullptr;
+
+thread_local RIO_CQ native::cq = RIO_INVALID_CQ;
 
 std::function<void(bool)> native::onExitIo = [](bool) {};
 
@@ -91,7 +92,7 @@ bool native::initialize()
 #ifdef _WIN32
 void native::io_worker()
 {
-    bool error = false;
+    bool success = false;
 
     net::context *context = nullptr;
     ULONG_PTR key = 0;
@@ -104,14 +105,15 @@ void native::io_worker()
     completion.Iocp.CompletionKey = reinterpret_cast<void *>(CK_RIO);
     completion.Iocp.Overlapped = &rioCtx;
 
-    auto ioResults = new RIORESULT[option::ResultSize];
+    auto results = new RIORESULT[option::ResultSize];
 
-    completionQue = rio.RIOCreateCompletionQueue(option::getCompletionQueSize(), &completion);
-    while (completionQue)
+    cq = rio.RIOCreateCompletionQueue(option::getCompletionQueSize(), &completion);
+    if (cq != RIO_INVALID_CQ)
     {
-        if (rio.RIONotify(completionQue) != ERROR_SUCCESS)
-            break;
-
+        success |= rio.RIONotify(cq) == ERROR_SUCCESS;
+    }
+    while (success)
+    {
         if (!GetQueuedCompletionStatus(_hcp, &numOfBytes, &key, reinterpret_cast<LPOVERLAPPED *>(&context),
                                        option::Timeout))
         {
@@ -122,35 +124,36 @@ void native::io_worker()
             case ERROR_OPERATION_ABORTED:
                 break;
             default:
-                error |= handle_iocp_event(context, false);
+                success |= handle_iocp_event(context, false);
                 break;
             }
         }
+
         if (key != CK_RIO && context != nullptr)
         {
-            error |= handle_iocp_event(context, true);
+            success |= handle_iocp_event(context, true);
             continue;
         }
 
-        ZeroMemory(ioResults, sizeof(ioResults));
-        auto length = rio.RIODequeueCompletion(completionQue, ioResults, option::ResultSize);
+        ZeroMemory(results, sizeof(RIORESULT) * option::ResultSize);
+        auto length = rio.RIODequeueCompletion(cq, results, option::ResultSize);
         if (length == 0 || RIO_CORRUPT_CQ == length)
             break;
 
-        if (rio.RIONotify(completionQue) != ERROR_SUCCESS)
+        if (rio.RIONotify(cq) != ERROR_SUCCESS)
             break;
 
         for (ULONG i = 0; i < length; ++i)
         {
-            auto ctx = reinterpret_cast<net::context *>(ioResults[i].RequestContext);
-            error |= handle_rio_event(ctx, ioResults[i].BytesTransferred);
+            auto ctx = reinterpret_cast<net::context *>(results[i].RequestContext);
+            success |= handle_rio_event(ctx, results[i].BytesTransferred);
         }
 
-        if (!error)
+        if (!success)
             break;
     }
-    delete[] ioResults;
-    native::onExitIo(error);
+    delete[] results;
+    native::onExitIo(success);
 }
 
 bool native::register_to_iocp(SOCKET sock)
@@ -174,7 +177,7 @@ bool native::handle_iocp_event(context *context, bool success)
 
             RIO_RQ requestQue =
                 rio.RIOCreateRequestQueue(context->accept_socket->get_handle(), option::ReceiveRequestQueSize, 1,
-                                               option::SendRequestQueSize, 1, completionQue, completionQue, nullptr);
+                                          option::SendRequestQueSize, 1, cq, cq, nullptr);
             if (requestQue == RIO_INVALID_RQ)
                 return false;
 
@@ -185,9 +188,17 @@ bool native::handle_iocp_event(context *context, bool success)
     case context::io_type::connect:
         if (success)
         {
-            auto sock = static_cast<net::socket *>(context->token);
+            auto sock = static_cast<net::async_socket *>(context->token);
             if (!sock->set_option(net::options::level::socket, (net::option)SO_UPDATE_CONNECT_CONTEXT, nullptr))
                 return false;
+
+            RIO_RQ requestQue =
+                rio.RIOCreateRequestQueue(sock->get_handle(), option::ReceiveRequestQueSize, 1,
+                                                          option::SendRequestQueSize, 1, cq, cq, nullptr);
+            if (requestQue == RIO_INVALID_RQ)
+                return false;
+
+            sock->_request_queue = requestQue;
         }
         context->completed(context, success);
         break;

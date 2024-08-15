@@ -235,7 +235,7 @@ void async_socket::create(protocol protocol)
 	if (protocol == protocol::udp)
 		type = socket_type::dgram;
 #ifdef _WIN32
-	_sock = WSASocketW(AF_INET, static_cast<int>(type), static_cast<int>(protocol), NULL, NULL, WSA_FLAG_REGISTERED_IO);
+	_sock = WSASocketW(AF_INET, static_cast<int>(type), static_cast<int>(protocol), NULL, NULL, WSA_FLAG_REGISTERED_IO | WSA_FLAG_OVERLAPPED);
 #else
 	socket::create(protocol);
 #endif
@@ -274,7 +274,7 @@ bool async_socket::connect(context* context)
 	bind(endpoint(ip_address::any, 0));
 	_remote_endpoint = _local_endpoint;
 
-	context->token = static_cast<void *>(this);
+	context->token = this;
 
 	ip_address ipAdr = context->endpoint->get_address();
 	DWORD dw;
@@ -293,12 +293,8 @@ bool async_socket::send(context* context) const
 	context->init();
 	context->type = context::io_type::send;
 #ifdef _WIN32
-    RIO_BUF buf {
-        .BufferId = context->_buffer_id,
-        .Offset = 0,
-        .Length = sizeof(context->buffer)
-    };
-    if (!native::rio.RIOSend(_request_queue, &buf, 1, NULL, context))
+    auto rio_buf = reinterpret_cast<RIO_BUF *>(reinterpret_cast<OVERLAPPED *>(context) + 1);
+    if (!native::rio.RIOSend(_request_queue, rio_buf, 1, 0, context))
     {
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
@@ -312,12 +308,9 @@ bool async_socket::receive(context* context) const
 	context->init();
 	context->type = context::io_type::receive;
 #ifdef _WIN32
-	RIO_BUF buf {
-        .BufferId = context->_buffer_id,
-		.Offset = 0,
-		.Length = sizeof(context->buffer)
-    };
-    if (!native::rio.RIOReceive(_request_queue, &buf, 1, NULL, context))
+    auto rio_buf = reinterpret_cast<RIO_BUF *>(reinterpret_cast<OVERLAPPED *>(context) + 1);
+    if (!native::rio.RIOReceive(_request_queue, rio_buf,
+        1, NULL, context))
     {
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
