@@ -1,7 +1,6 @@
 #include "net/socket.hpp"
 #include <net/exception.hpp>
 
-#include "net/IoSystem.hpp"
 #include "net/context.hpp"
 #include "net/native.hpp"
 
@@ -75,16 +74,14 @@ bool socket::bind(endpoint ep)
     ip_address ipAdr = _local_endpoint->get_address();
     const auto ret = ::bind(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in));
 #ifdef _WIN32
-    IoSystem::instance().push(_sock);
+    if (!native::add_to_cp(this))
+		return false;
 #endif
     return SOCKET_ERROR != ret;
 }
 
 bool socket::listen(int backlog) const
 {
-#ifdef _WIN32
-    IoSystem::instance()._listeningSocket = this;
-#endif
     return SOCKET_ERROR != ::listen(_sock, backlog);
 }
 
@@ -117,17 +114,20 @@ net::socket socket::accept() const
     return clientSock;
 }
 
-bool socket::accept(context *context) const
+bool socket::accept(context *context)
 {
     context->init();
 
-    context->_contextType = ContextType::Accept;
+    context->_io_type = io_type::accept;
 #ifdef _WIN32
-    IoSystem::instance().push(context->acceptSocket->get_handle());
+	if (!native::add_to_cp(this))
+		return false;
+
+	context->_token = this;
 
     DWORD dwByte = 0;
     char buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
-    if (!native::accept(_sock, context->acceptSocket->get_handle(), buf, 0, sizeof(SOCKADDR_IN) + 16,
+    if (!native::accept(_sock, context->accept_socket->get_handle(), buf, 0, sizeof(SOCKADDR_IN) + 16,
                           sizeof(SOCKADDR_IN) + 16, &dwByte, context))
     {
         const auto err = WSAGetLastError();
@@ -140,12 +140,14 @@ bool socket::accept(context *context) const
 bool socket::connect(context *context)
 {
     context->init();
-    context->_contextType = ContextType::Connect;
+    context->_io_type = io_type::connect;
 #ifdef _WIN32
-    bind(endpoint(ip_address::any, 0));
+    if (bind(endpoint(ip_address::any, 0)))
+		return false;
+
     _remote_endpoint = _local_endpoint;
 
-    context->token = static_cast<void *>(this);
+    context->_token = static_cast<void *>(this);
 
     ip_address ipAdr = context->endpoint->get_address();
     DWORD dw;
@@ -162,7 +164,7 @@ bool socket::connect(context *context)
 bool socket::send(context *context) const
 {
     context->init();
-    context->_contextType = ContextType::Send;
+    context->_io_type = io_type::send;
 #ifdef _WIN32
     WSABUF wsaBuf;
     wsaBuf.buf = context->buffer.data();
@@ -180,7 +182,7 @@ bool socket::send(context *context) const
 bool socket::receive(context *context) const
 {
     context->init();
-    context->_contextType = ContextType::Receive;
+    context->_io_type = io_type::receive;
 #ifdef _WIN32
     WSABUF wsaBuf = {.len = static_cast<ULONG>(context->buffer.size()), .buf = context->buffer.data()};
 
@@ -199,7 +201,7 @@ bool net::socket::disconnect(context *context) const
 {
     context->init();
 
-    context->_contextType = ContextType::Disconnect;
+    context->_io_type = io_type::disconnect;
 #ifdef _WIN32
     if (!native::disconnect(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
     {

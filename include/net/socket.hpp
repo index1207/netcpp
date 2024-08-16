@@ -106,7 +106,7 @@ class socket
 
   public:
     bool disconnect(context *context) const;
-    bool accept(context *context) const;
+    bool accept(context *context);
     bool connect(context *context);
     bool send(context *context) const;
     bool receive(context *context) const;
