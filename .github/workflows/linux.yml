@@ -1,10 +1,6 @@
 name: linux
 
-on:
-  pull_request:
-    branches: [ "release" ]
-  push:
-    branches: [ "release" ]
+on: [pull_request, push]
 
 env:
   BUILD_TYPE: Release

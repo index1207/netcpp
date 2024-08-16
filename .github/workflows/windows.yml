@@ -1,10 +1,6 @@
 name: windows
 
-on:
-  push:
-    branches: [ "release" ]
-  pull_request:
-    branches: [ "release" ]
+on: [pull_request, push]
 
 env:
   BUILD_TYPE: Release
