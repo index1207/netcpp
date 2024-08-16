@@ -8,14 +8,13 @@
 
 namespace net
 {
-enum class ContextType
-{
-    None,
-    Accept,
-    Connect,
-    Disconnect,
-    Send,
-    Receive
+enum class io_type {
+	none,
+	accept,
+	connect,
+	disconnect,
+	send,
+	receive
 };
 
 class context
@@ -24,7 +23,7 @@ class context
 #endif
 {
     friend class socket;
-    friend class IoSystem;
+    friend class native;
 
     using callback = std::function<void(context *, bool)>;
 
@@ -36,16 +35,16 @@ class context
     callback completed = [](context *, bool) {};
 
   public:
-    std::unique_ptr<net::socket> acceptSocket;
+    std::unique_ptr<net::socket> accept_socket;
     std::optional<net::endpoint> endpoint;
     std::span<char> buffer{};
     u_long length = 0;
-    void *token;
 
   private:
     void init();
 
   private:
-    ContextType _contextType;
+	 void * _token;
+	 io_type _io_type;
 };
 } // namespace net

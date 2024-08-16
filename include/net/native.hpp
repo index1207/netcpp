@@ -42,18 +42,45 @@ using SOCKLEN = socklen_t;
 
 #endif
 
+#include <atomic>
+
 namespace net
 {
+class context;
+class socket;
 class native
 {
-  public:
+public:
+   struct option final
+   {
+	   static bool auto_run;
+	   static unsigned long timeout;
+	   static unsigned thread_count;
+   };
+
 #ifdef _WIN32
     static LPFN_ACCEPTEX accept;
     static LPFN_CONNECTEX connect;
     static LPFN_DISCONNECTEX disconnect;
     static LPFN_GETACCEPTEXSOCKADDRS get_accept_socket_address;
 #endif
-  public:
+public:
+public:
     static bool initialize();
+
+	static void io();
+#ifdef _WIN32
+	static bool add_to_cp(socket*);
+#endif
+
+private:
+	static bool demux(context*, u_long, bool);
+
+private:
+   	static std::atomic<bool> _running;
+
+#ifdef _WIN32
+	static HANDLE _cp;
+#endif
 };
 } // namespace net
