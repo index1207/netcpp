@@ -48,10 +48,10 @@ class native
 {
   public:
 #ifdef _WIN32
-    static LPFN_ACCEPTEX AcceptEx;
-    static LPFN_CONNECTEX ConnectEx;
-    static LPFN_DISCONNECTEX DisconnectEx;
-    static LPFN_GETACCEPTEXSOCKADDRS GetAcceptExSockaddrs;
+    static LPFN_ACCEPTEX accept;
+    static LPFN_CONNECTEX connect;
+    static LPFN_DISCONNECTEX disconnect;
+    static LPFN_GETACCEPTEXSOCKADDRS get_accept_socket_address;
 #endif
   public:
     static bool initialize();
