@@ -6,10 +6,10 @@
 using namespace net;
 
 #ifdef _WIN32
-LPFN_ACCEPTEX native::AcceptEx = nullptr;
-LPFN_CONNECTEX native::ConnectEx = nullptr;
-LPFN_DISCONNECTEX native::DisconnectEx = nullptr;
-LPFN_GETACCEPTEXSOCKADDRS native::GetAcceptExSockaddrs = nullptr;
+LPFN_ACCEPTEX native::accept = nullptr;
+LPFN_CONNECTEX native::connect = nullptr;
+LPFN_DISCONNECTEX native::disconnect = nullptr;
+LPFN_GETACCEPTEXSOCKADDRS native::get_accept_socket_address = nullptr;
 
 bool bindExtensionFunction(SOCKET s, GUID guid, PVOID *func)
 {
@@ -27,14 +27,14 @@ bool native::initialize()
         return false;
 
     socket dummy(protocol::tcp);
-    if (!bindExtensionFunction(dummy.get_handle(), WSAID_ACCEPTEX, reinterpret_cast<PVOID *>(&AcceptEx)))
+    if (!bindExtensionFunction(dummy.get_handle(), WSAID_ACCEPTEX, reinterpret_cast<PVOID *>(&accept)))
         return false;
-    if (!bindExtensionFunction(dummy.get_handle(), WSAID_CONNECTEX, reinterpret_cast<PVOID *>(&ConnectEx)))
+    if (!bindExtensionFunction(dummy.get_handle(), WSAID_CONNECTEX, reinterpret_cast<PVOID *>(&connect)))
         return false;
-    if (!bindExtensionFunction(dummy.get_handle(), WSAID_DISCONNECTEX, reinterpret_cast<PVOID *>(&DisconnectEx)))
+    if (!bindExtensionFunction(dummy.get_handle(), WSAID_DISCONNECTEX, reinterpret_cast<PVOID *>(&disconnect)))
         return false;
     if (!bindExtensionFunction(dummy.get_handle(), WSAID_GETACCEPTEXSOCKADDRS,
-                               reinterpret_cast<PVOID *>(&native::GetAcceptExSockaddrs)))
+                               reinterpret_cast<PVOID *>(&native::get_accept_socket_address)))
         return false;
 #else
 #endif

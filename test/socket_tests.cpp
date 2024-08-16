@@ -158,7 +158,7 @@ TEST(socket, sync_accept)
         EXPECT_EQ(sock.listen(), true);
         EXPECT_EQ(sock.accept().is_open(), true);
     });
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
     auto client = std::async(std::launch::async, [] {
         net::socket sock(net::protocol::tcp);
         EXPECT_EQ(sock.is_open(), true);
@@ -214,7 +214,7 @@ TEST(socket, sync_receive)
         char buffer[] = "hello";
         EXPECT_GE(client.send(buffer), 0);
     });
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
     auto client = std::async(std::launch::async, [] {
         net::socket sock(net::protocol::tcp);
         EXPECT_EQ(sock.is_open(), true);
@@ -237,7 +237,7 @@ TEST(socket, sync_receive_from)
         char buffer[16] { 0, };
         EXPECT_GE(server.receive(buffer, clientEndpoint), 0);
     });
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
     auto client = std::async(std::launch::async, [] {
         net::socket client(net::protocol::udp);
         EXPECT_EQ(client.is_open(), true);

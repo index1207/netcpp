@@ -127,7 +127,7 @@ bool socket::accept(context *context) const
 
     DWORD dwByte = 0;
     char buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
-    if (!native::AcceptEx(_sock, context->acceptSocket->get_handle(), buf, 0, sizeof(SOCKADDR_IN) + 16,
+    if (!native::accept(_sock, context->acceptSocket->get_handle(), buf, 0, sizeof(SOCKADDR_IN) + 16,
                           sizeof(SOCKADDR_IN) + 16, &dwByte, context))
     {
         const auto err = WSAGetLastError();
@@ -149,7 +149,7 @@ bool socket::connect(context *context)
 
     ip_address ipAdr = context->endpoint->get_address();
     DWORD dw;
-    if (!native::ConnectEx(_sock, reinterpret_cast<SOCKADDR *>(&ipAdr), sizeof(SOCKADDR_IN), nullptr, NULL, &dw,
+    if (!native::connect(_sock, reinterpret_cast<SOCKADDR *>(&ipAdr), sizeof(SOCKADDR_IN), nullptr, NULL, &dw,
                            reinterpret_cast<LPOVERLAPPED>(context)))
     {
         const auto err = WSAGetLastError();
@@ -201,7 +201,7 @@ bool net::socket::disconnect(context *context) const
 
     context->_contextType = ContextType::Disconnect;
 #ifdef _WIN32
-    if (!native::DisconnectEx(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
+    if (!native::disconnect(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
     {
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
