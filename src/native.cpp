@@ -123,10 +123,14 @@ void native::io()
 			continue;
 
 		if (!cqe->user_data)
+		{
+			perror("io_uring_wait_cqe()");
+			io_uring_cqe_seen(&ring, cqe);
 			break;
+		}
 
 		auto ctx = reinterpret_cast<context*>(cqe->user_data);
-		if (!demux(ctx, cqe->res, true))
+		if (!demux(ctx, static_cast<u_long>(cqe->res), true))
 			break;
 
 		io_uring_cqe_seen(&ring, cqe);
@@ -174,8 +178,24 @@ bool native::demux(context* context, u_long transferred, bool success)
 #elif __linux__
 	switch (context->_io_type)
 	{
-	case io_type::accept:
+	case io_type::accept: {
+		// Set accepted socket fd
+		context->accept_socket->set_handle(static_cast<SOCKET>(transferred));
+
+		// Set endpoints
+		sockaddr_in addr{};
+		SOCKLEN len = sizeof(addr);
+		if (SOCKET_ERROR == getpeername(context->accept_socket->get_handle(), reinterpret_cast<sockaddr*>(&addr), &len))
+			perror("getpeername()");
+
+		auto endpoint = endpoint::parse(addr);
+		context->accept_socket->_remote_endpoint = endpoint;
+		endpoint.set_port(reinterpret_cast<net::socket*>(context->_token)->_local_endpoint->get_port());
+		context->accept_socket->_local_endpoint = endpoint;
+
+		// Call callback
 		context->completed(context, success);
+	}
 		break;
 	case io_type::connect:
 		context->completed(context, success);
@@ -184,9 +204,8 @@ bool native::demux(context* context, u_long transferred, bool success)
 		context->completed(context, success);
 		break;
 	case io_type::send:
-		context->completed(context, success);
-		break;
 	case io_type::receive:
+		context->length = transferred;
 		context->completed(context, success);
 		break;
 	default:

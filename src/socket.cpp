@@ -123,9 +123,9 @@ bool socket::accept(context *context)
 
 	if (!context->accept_socket->is_open())
 		return false;
-#ifdef _WIN32
-	context->_token = this;
 
+	context->_token = this;
+#ifdef _WIN32
     DWORD dwByte = 0;
     char buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
     if (!native::accept(_sock, context->accept_socket->get_handle(), buf, 0, sizeof(SOCKADDR_IN) + 16,
@@ -138,9 +138,7 @@ bool socket::accept(context *context)
 	auto uring = native::get_handle();
 	auto sqe = io_uring_get_sqe(uring);
 
-	sockaddr addr{};
-	SOCKLEN len = sizeof(addr);
-	io_uring_prep_accept(sqe, get_handle(), &addr, &len, 0);
+	io_uring_prep_accept(sqe, get_handle(), nullptr, nullptr, 0);
 	io_uring_sqe_set_data(sqe, context);
 	io_uring_submit(uring);
 #endif
@@ -171,10 +169,13 @@ bool socket::connect(context *context)
         return WSA_IO_PENDING == err;
     }
 #elif __linux__
-	auto sqe = io_uring_get_sqe(native::get_handle());
+	auto uring = native::get_handle();
+	auto sqe = io_uring_get_sqe(uring);
+
 	auto addr = context->endpoint->get_address();
 	io_uring_prep_connect(sqe, get_handle(), reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
 	io_uring_sqe_set_data(sqe, context);
+	io_uring_submit(uring);
 #endif
     return false;
 }

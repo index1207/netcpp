@@ -181,7 +181,9 @@ TEST(socket, async_accept)
 	};
 	ctx.accept_socket->create(net::protocol::tcp);
 	EXPECT_EQ(sock.accept(&ctx), true);
+
 	std::this_thread::sleep_for(100ms);
+
 	auto client = std::async(std::launch::async, [] {
 		net::socket sock(net::protocol::tcp);
 		EXPECT_EQ(sock.is_open(), true);

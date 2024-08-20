@@ -72,14 +72,14 @@ class context;
 
 class socket
 {
-  public:
+	friend class native;
+public:
     socket();
     explicit socket(protocol pt);
     socket(const socket &sock);
     socket(socket &&sock) noexcept;
     virtual ~socket();
-
-  public:
+public:
     void close();
     void create(protocol pt = protocol::ip);
 
@@ -88,12 +88,12 @@ class socket
     bool bind(endpoint ep);
     bool listen(int backlog = SOMAXCONN) const;
 
-  public:
+public:
     [[nodiscard]] SOCKET get_handle() const;
     [[nodiscard]] std::optional<endpoint> get_remote_endpoint() const;
     [[nodiscard]] std::optional<endpoint> get_local_endpoint() const;
 
-  public:
+public:
     void disconnect();
     [[nodiscard]] socket accept() const;
     bool connect(endpoint ep);
@@ -104,14 +104,14 @@ class socket
     int receive(std::span<char> s) const;
     int receive(std::span<char> s, endpoint target) const;
 
-  public:
+public:
     bool disconnect(context *context) const;
     bool accept(context *context);
     bool connect(context *context);
     bool send(context *context) const;
     bool receive(context *context) const;
 
-  public:
+public:
     template <class T> bool set_option(options::level level, option name, T value) const
     {
         if (_sock == INVALID_SOCKET)
@@ -139,14 +139,14 @@ class socket
 
     [[nodiscard]] bool is_open() const;
 
-  public:
+public:
     bool operator==(const socket &sock) const;
     bool operator==(socket &&sock) const;
 
     socket &operator=(const socket &sock);
     socket &operator=(socket &&sock) noexcept;
 
-  private:
+private:
     std::optional<endpoint> _remote_endpoint;
     std::optional<endpoint> _local_endpoint;
     SOCKET _sock;
