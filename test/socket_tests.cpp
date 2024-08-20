@@ -174,6 +174,36 @@ TEST(socket, sync_disconnect)
     EXPECT_EQ(sock.get_remote_endpoint().has_value(), false);
 }
 
+TEST(socket, async_disconnect)
+{
+	net::socket sock(net::protocol::tcp);
+	EXPECT_EQ(sock.is_open(), true);
+	EXPECT_EQ(sock.set_reuse_address(true), true);
+	EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
+	EXPECT_EQ(sock.listen(), true);
+
+	std::atomic<std::optional<bool>> flag;
+	net::context ctx;
+	ctx.completed = [&](net::context* ctx, bool success) {
+		ctx->completed = [&flag](net::context*, bool success) {
+			flag = success;
+		};
+		ctx->accept_socket->disconnect(ctx);
+	};
+	EXPECT_EQ(sock.accept(&ctx), true);
+
+	std::this_thread::sleep_for(100ms);
+
+	auto client = std::async(std::launch::async, [] {
+		net::socket sock(net::protocol::tcp);
+		EXPECT_EQ(sock.is_open(), true);
+		EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
+	});
+
+	while(!flag.load().has_value()) {}
+	EXPECT_EQ(flag.load(), true);
+}
+
 TEST(socket, sync_accept)
 {
     auto server = std::async(std::launch::async, [] {
@@ -190,6 +220,9 @@ TEST(socket, sync_accept)
         EXPECT_EQ(sock.is_open(), true);
         EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
     });
+
+	server.get();
+	client.get();
 }
 
 TEST(socket, async_accept)
@@ -205,7 +238,6 @@ TEST(socket, async_accept)
 	ctx.completed = [&flag](net::context* ctx, bool success) {
 		flag = success;
 	};
-	ctx.accept_socket->create(net::protocol::tcp);
 	EXPECT_EQ(sock.accept(&ctx), true);
 
 	std::this_thread::sleep_for(100ms);

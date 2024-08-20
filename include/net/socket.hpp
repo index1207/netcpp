@@ -105,7 +105,7 @@ public:
     int receive(std::span<char> s, endpoint target) const;
 
 public:
-    bool disconnect(context *context) const;
+    bool disconnect(context *context);
     bool accept(context *context);
     bool connect(context *context);
     bool send(context *context) const;

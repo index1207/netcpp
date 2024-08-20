@@ -1,5 +1,4 @@
 #include "net/socket.hpp"
-#include <net/exception.hpp>
 
 #include "net/context.hpp"
 #include "net/dns.hpp"
@@ -56,11 +55,9 @@ void socket::close()
 
 bool socket::connect(endpoint ep)
 {
+	_remote_endpoint = ep;
     ip_address ipAdr = ep.get_address();
-    auto ret = SOCKET_ERROR != ::connect(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in));
-    if (ret)
-		_remote_endpoint = ep;
-    return ret;
+    return SOCKET_ERROR != ::connect(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in));
 }
 
 bool socket::bind(endpoint ep)
@@ -94,7 +91,7 @@ std::optional<endpoint> socket::get_local_endpoint() const
 
 void socket::disconnect()
 {
-    shutdown(_sock, NET_SOCK_SHUTDOWN);
+    shutdown(_sock, SOCK_DISCONNECT);
     _remote_endpoint = std::nullopt;
 }
 
@@ -114,11 +111,10 @@ bool socket::accept(context *context)
     context->init();
     context->_io_type = io_type::accept;
 
-	if (!context->accept_socket->is_open())
-		return false;
-
 	context->_token = this;
 #ifdef _WIN32
+	context->accept_socket->create(net::protocol::tcp);
+
     DWORD dwByte = 0;
     char buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
     if (!native::accept(_sock, context->accept_socket->get_handle(), buf, 0, sizeof(SOCKADDR_IN) + 16,
@@ -183,11 +179,17 @@ bool socket::send(context *context) const
     wsaBuf.buf = context->buffer.data();
     wsaBuf.len = static_cast<ULONG>(context->buffer.size());
 
-    if (SOCKET_ERROR == WSASend(_sock, &wsaBuf, 1, &wsaBuf.len, 0, reinterpret_cast<LPOVERLAPPED>(context), nullptr))
+	auto res = WSASend(_sock, &wsaBuf, 1, &wsaBuf.len, 0, reinterpret_cast<LPOVERLAPPED>(context), nullptr);
+    if (res == SOCKET_ERROR)
     {
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
+	else if (res == ERROR_SUCCESS)
+	{
+		context->length = wsaBuf.len;
+		context->completed(context, true);
+	}
 #elif __linux__
 	auto uring = native::get_handle();
 	auto sqe = io_uring_get_sqe(uring);
@@ -207,31 +209,54 @@ bool socket::receive(context *context) const
     WSABUF wsaBuf = {.len = static_cast<ULONG>(context->buffer.size()), .buf = context->buffer.data()};
 
     DWORD recvBytes = 0, flags = 0;
-    if (SOCKET_ERROR ==
-        WSARecv(_sock, &wsaBuf, 1, &recvBytes, &flags, reinterpret_cast<LPOVERLAPPED>(context), nullptr))
+	auto res = WSARecv(_sock, &wsaBuf, 1, &recvBytes, &flags, reinterpret_cast<LPOVERLAPPED>(context), nullptr);
+    if (res == SOCKET_ERROR)
     {
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
+	else if (res == ERROR_SUCCESS)
+	{
+		context->length = recvBytes;
+		context->completed(context, true);
+	}
+#elif __linux__
+	auto uring = native::get_handle();
+	auto sqe = io_uring_get_sqe(uring);
+
+	io_uring_prep_recv(sqe, get_handle(), context->buffer.data(), context->buffer.size(), 0);
+	io_uring_sqe_set_data(sqe, context);
+	io_uring_submit(uring);
 #endif
     return true;
 }
 
-bool net::socket::disconnect(context *context) const
+bool net::socket::disconnect(context *context)
 {
     context->init();
 
     context->_io_type = io_type::disconnect;
+
+	_remote_endpoint = std::nullopt;
 #ifdef _WIN32
     if (!native::disconnect(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
     {
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
-#else
+	else
+	{
+		context->completed(context, true);
+	}
+#elif __linux__
+	auto uring = native::get_handle();
+	auto sqe = io_uring_get_sqe(uring);
 
+	io_uring_prep_shutdown(sqe, get_handle(), SOCK_DISCONNECT);
+	io_uring_sqe_set_data(sqe, context);
+	io_uring_submit(uring);
 #endif
-    return false;
+    return true;
 }
 
 bool socket::send(std::span<char> s) const

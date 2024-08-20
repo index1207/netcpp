@@ -5,7 +5,7 @@
 #include <WS2tcpip.h>
 #include <MSWSock.h>
 
-#define NET_SOCK_SHUTDOWN SD_BOTH
+#define SOCK_DISCONNECT SD_BOTH
 
 using SOCKLEN = int;
 #else
@@ -36,7 +36,7 @@ using SOCKLEN = int;
 
 #define ZeroMemory(addr, size) memset(addr, 0, size)
 
-#define NET_SOCK_SHUTDOWN SHUT_RDWR
+#define SOCK_DISCONNECT SHUT_RDWR
 
 using SOCKET = int;
 using SOCKLEN = socklen_t;

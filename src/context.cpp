@@ -2,7 +2,11 @@
 
 using namespace net;
 
-context::context() : accept_socket(std::make_unique<socket>())
+context::context() :
+#if _WIN32
+	  OVERLAPPED(),
+#endif
+	  accept_socket(std::make_unique<socket>()), completed([](context *, bool) {}), length(0), buffer(), _token(nullptr), _io_type(io_type::none)
 {
     init();
 }
@@ -15,6 +19,4 @@ void context::init()
 	_io_type = io_type::none;
 }
 
-context::~context()
-{
-}
+context::~context() = default;

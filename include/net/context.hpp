@@ -27,24 +27,24 @@ class context
 
     using callback = std::function<void(context *, bool)>;
 
-  public:
+public:
     context();
     ~context();
 
-  public:
-    callback completed = [](context *, bool) {};
+public:
+    callback completed;
 
-  public:
+public:
     std::unique_ptr<net::socket> accept_socket;
     std::optional<net::endpoint> endpoint;
-    std::span<char> buffer{};
-    u_long length = 0;
+    std::span<char> buffer;
+    u_long length;
 
-  private:
+private:
     void init();
 
-  private:
-	 void * _token;
+private:
+	 void* _token;
 	 io_type _io_type;
 };
 } // namespace net
