@@ -48,7 +48,7 @@ TEST(socket, getHandle)
     EXPECT_NE(sock.get_handle(), INVALID_SOCKET);
 }
 
-TEST(socket, setHandle)
+TEST(socket, set_handle)
 {
     net::socket s1(net::protocol::tcp), s2;
     EXPECT_EQ(s1.is_open(), true);
@@ -106,7 +106,7 @@ TEST(socket, listen)
     EXPECT_EQ(sock.listen(), true);
 }
 
-TEST(socket, server_getLocalEndpoint)
+TEST(socket, server_get_local_endpoint)
 {
     net::socket sock(net::protocol::tcp);
     EXPECT_EQ(sock.is_open(), true);
@@ -118,7 +118,7 @@ TEST(socket, server_getLocalEndpoint)
     EXPECT_EQ(localEndpoint.value(), TEST_ENDPOINT);
 }
 
-TEST(socket, server_getRemoteEndpoint)
+TEST(socket, server_get_remote_endpoint)
 {
     net::socket sock(net::protocol::tcp);
     EXPECT_EQ(sock.is_open(), true);
@@ -164,6 +164,32 @@ TEST(socket, sync_accept)
         EXPECT_EQ(sock.is_open(), true);
         EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
     });
+}
+
+TEST(socket, async_accept)
+{
+	net::socket sock(net::protocol::tcp);
+	EXPECT_EQ(sock.is_open(), true);
+	EXPECT_EQ(sock.set_reuse_address(true), true);
+	EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
+	EXPECT_EQ(sock.listen(), true);
+
+	std::atomic<std::optional<bool>> flag;
+	net::context ctx;
+	ctx.completed = [&flag](net::context* ctx, bool success) {
+		flag = success;
+	};
+	ctx.accept_socket->create(net::protocol::tcp);
+	EXPECT_EQ(sock.accept(&ctx), true);
+	std::this_thread::sleep_for(100ms);
+	auto client = std::async(std::launch::async, [] {
+		net::socket sock(net::protocol::tcp);
+		EXPECT_EQ(sock.is_open(), true);
+		EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
+	});
+
+	while(!flag.load().has_value()) {}
+	EXPECT_EQ(flag.load(), true);
 }
 
 TEST(socket, sync_send)
@@ -247,7 +273,7 @@ TEST(socket, sync_receive_from)
     });
 }
 
-TEST(socket, disableBlocking)
+TEST(socket, disable_blocking)
 {
     net::socket sock(net::protocol::tcp);
     EXPECT_EQ(sock.is_open(), true);
@@ -257,69 +283,69 @@ TEST(socket, disableBlocking)
     EXPECT_EQ(sock.receive(buffer), SOCKET_ERROR);
 }
 
-TEST(socket, disableBlocking_invalid)
+TEST(socket, disable_blocking_failure)
 {
     net::socket sock;
     EXPECT_EQ(sock.is_open(), false);
     EXPECT_EQ(sock.set_blocking(false), false);
 }
 
-TEST(socket, setLinger)
+TEST(socket, set_linger)
 {
     net::socket sock(net::protocol::tcp);
     EXPECT_EQ(sock.is_open(), true);
     EXPECT_EQ(sock.set_linger({.enabled = true, .time = 0}), true);
 }
 
-TEST(socket, setBroadcast)
+TEST(socket, set_broadcast)
 {
     net::socket sock(net::protocol::udp);
     EXPECT_EQ(sock.is_open(), true);
     EXPECT_EQ(sock.set_broadcast(true), true);
 }
 
-TEST(socket, setReuseAddress)
+TEST(socket, set_reuse_address)
 {
     net::socket sock(net::protocol::tcp);
     EXPECT_EQ(sock.is_open(), true);
     EXPECT_EQ(sock.set_reuse_address(true), true);
 }
 
-TEST(socket, setNoDelay)
+TEST(socket, set_no_delay)
 {
     net::socket sock(net::protocol::tcp);
     EXPECT_EQ(sock.is_open(), true);
     EXPECT_EQ(sock.set_no_delay(true), true);
 }
 
-TEST(socket, setTTL)
+TEST(socket, set_ttl)
 {
     net::socket sock(net::protocol::tcp);
     EXPECT_EQ(sock.is_open(), true);
     EXPECT_EQ(sock.set_ttl(255), true);
 }
 
-TEST(socket, setSendBuffer)
+TEST(socket, set_send_buffer)
 {
     net::socket sock(net::protocol::tcp);
     EXPECT_EQ(sock.is_open(), true);
     EXPECT_EQ(sock.set_send_buffer(1024), true);
 }
 
-TEST(socket, setReceiveBuffer)
+TEST(socket, set_receive_buffer)
 {
     net::socket sock(net::protocol::tcp);
     EXPECT_EQ(sock.is_open(), true);
     EXPECT_EQ(sock.set_receive_buffer(1024), true);
 }
 
-TEST(socket, isOpen)
+TEST(socket, is_open)
 {
     net::socket sock(net::protocol::tcp);
     EXPECT_EQ(sock.is_open(), true);
 }
 
-TEST(socket, getOption)
+TEST(socket, get_option)
 {
     net::socket sock(net::protocol::tcp);
     EXPECT_EQ(sock.is_open(), true);
@@ -328,7 +354,7 @@ TEST(socket, getOption)
     EXPECT_EQ(sock.get_option(net::options::level::socket, net::option::send_buffer, value), true);
 }
 
-TEST(socket, getOption_failure)
+TEST(socket, get_option_failure)
 {
     net::socket sock;
     EXPECT_EQ(sock.is_open(), false);

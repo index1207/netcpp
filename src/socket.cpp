@@ -72,12 +72,11 @@ bool socket::bind(endpoint ep)
 {
     _local_endpoint = ep;
     ip_address ipAdr = _local_endpoint->get_address();
-    const auto ret = ::bind(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in));
-#ifdef _WIN32
-    if (!native::add_to_cp(this))
-		return false;
-#endif
-    return SOCKET_ERROR != ret;
+	if (SOCKET_ERROR != ::bind(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in)))
+	{
+		return native::observe(this);
+	}
+	return false;
 }
 
 bool socket::listen(int backlog) const
@@ -116,13 +115,15 @@ net::socket socket::accept() const
 
 bool socket::accept(context *context)
 {
-    context->init();
-
-    context->_io_type = io_type::accept;
-#ifdef _WIN32
-	if (!native::add_to_cp(this))
+	if (!context)
 		return false;
 
+    context->init();
+    context->_io_type = io_type::accept;
+
+	if (!context->accept_socket->is_open())
+		return false;
+#ifdef _WIN32
 	context->_token = this;
 
     DWORD dwByte = 0;
@@ -133,12 +134,24 @@ bool socket::accept(context *context)
         const auto err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
+#else
+	auto uring = native::get_handle();
+	auto sqe = io_uring_get_sqe(uring);
+
+	sockaddr addr{};
+	SOCKLEN len = sizeof(addr);
+	io_uring_prep_accept(sqe, get_handle(), &addr, &len, 0);
+	io_uring_sqe_set_data(sqe, context);
+	io_uring_submit(uring);
 #endif
-    return false;
+    return true;
 }
 
 bool socket::connect(context *context)
 {
+	if (!context)
+		return false;
+
     context->init();
     context->_io_type = io_type::connect;
 #ifdef _WIN32
@@ -157,6 +170,11 @@ bool socket::connect(context *context)
         const auto err = WSAGetLastError();
         return WSA_IO_PENDING == err;
     }
+#elif __linux__
+	auto sqe = io_uring_get_sqe(native::get_handle());
+	auto addr = context->endpoint->get_address();
+	io_uring_prep_connect(sqe, get_handle(), reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
+	io_uring_sqe_set_data(sqe, context);
 #endif
     return false;
 }

@@ -77,7 +77,7 @@ class socket
     explicit socket(protocol pt);
     socket(const socket &sock);
     socket(socket &&sock) noexcept;
-    ~socket();
+    virtual ~socket();
 
   public:
     void close();

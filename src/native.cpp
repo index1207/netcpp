@@ -2,17 +2,19 @@
 #include "net/socket.hpp"
 #include "net/context.hpp"
 
+#include <cassert>
+#include <mutex>
+#include <random>
 #include <stdexcept>
 #include <thread>
 
 using namespace net;
 
-std::atomic<bool> native::_running = false;
+bool native::option::auto_run = true;
+unsigned native::option::thread_count = std::thread::hardware_concurrency();
 
 #ifdef _WIN32
-bool native::option::auto_run = true;
 unsigned long native::option::timeout = INFINITE;
-unsigned native::option::thread_count = std::thread::hardware_concurrency();
 
 LPFN_ACCEPTEX native::accept = nullptr;
 LPFN_CONNECTEX native::connect = nullptr;
@@ -27,7 +29,23 @@ bool bind_extension_function(SOCKET s, GUID guid, PVOID *func)
     return SOCKET_ERROR != WSAIoctl(s, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid, sizeof(GUID), func, sizeof(*func),
                                     &dwBytes, NULL, NULL);
 }
+#elif __linux__
+u_int native::option::entry_count = 128;
+
+std::mutex s_mtx;
+std::vector<io_uring*> native::_io_uring_list;
+thread_local io_uring* native::_io_uring = nullptr;
 #endif
+
+template<class T>
+inline T random(T begin, T end )
+{
+	static std::random_device rd;
+	static std::mt19937_64 gen(rd());
+
+	std::uniform_int_distribution<T> dist(begin, end);
+	return dist(rd);
+}
 
 bool native::initialize()
 {
@@ -48,22 +66,32 @@ bool native::initialize()
         return false;
 
 	_cp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, NULL);
-
+#elif __linux__
+#endif
 	if (option::auto_run)
 	{
-		_running = true;
 		for (unsigned i = 0; i < option::thread_count; ++i)
 		{
 			new std::thread(&native::io);
 		}
 	}
-#else
-#endif
     return true;
 }
 void native::io()
 {
-	while (_running)
+#ifdef __linux__
+	io_uring ring {};
+	_io_uring = &ring;
+	if (io_uring_queue_init(option::entry_count, &ring, 0))
+		perror("io_uring_queue_init()");
+	else
+	{
+		std::scoped_lock lock(s_mtx);
+		_io_uring_list.push_back(&ring);
+	}
+	io_uring_cqe* cqe;
+#endif
+	while (true)
 	{
 #ifdef _WIN32
 		context *context = nullptr;
@@ -75,7 +103,7 @@ void native::io()
 									  reinterpret_cast<LPOVERLAPPED *>(&context),
 									  option::timeout)) {
 			if (!demux(context, numOfBytes, true))
-				_running = false;
+				break;
 		}
 		else
 		{
@@ -86,10 +114,22 @@ void native::io()
 				break;
 			default:
 				if (!demux(context, numOfBytes, false))
-					_running = false;
+					break;
 				break;
 			}
 		}
+#elif __linux__
+		if (io_uring_wait_cqe(&ring, &cqe))
+			continue;
+
+		if (!cqe->user_data)
+			break;
+
+		auto ctx = reinterpret_cast<context*>(cqe->user_data);
+		if (!demux(ctx, cqe->res, true))
+			break;
+
+		io_uring_cqe_seen(&ring, cqe);
 #endif
 	}
 }
@@ -101,7 +141,7 @@ bool native::demux(context* context, u_long transferred, bool success)
 	{
 	case io_type::accept:
 		if (success) {
-			if (!add_to_cp(context->accept_socket.get()))
+			if (!observe(context->accept_socket.get()))
 				return false;
 
 			if (!context->accept_socket->set_option(options::level::socket, (net::option) SO_UPDATE_ACCEPT_CONTEXT,
@@ -131,14 +171,52 @@ bool native::demux(context* context, u_long transferred, bool success)
 	default:
 		return false;
 	}
+#elif __linux__
+	switch (context->_io_type)
+	{
+	case io_type::accept:
+		context->completed(context, success);
+		break;
+	case io_type::connect:
+		context->completed(context, success);
+		break;
+	case io_type::disconnect:
+		context->completed(context, success);
+		break;
+	case io_type::send:
+		context->completed(context, success);
+		break;
+	case io_type::receive:
+		context->completed(context, success);
+		break;
+	default:
+		return false;
+	}
 #endif
 	return true;
 }
 
-#ifdef _WIN32
-bool native::add_to_cp(class socket* sock)
+bool native::observe(socket* sock)
 {
-	auto ret = CreateIoCompletionPort(reinterpret_cast<HANDLE>(sock->get_handle()), _cp, NULL, NULL);
-	return ret != nullptr;
+#ifdef _WIN32
+	auto r = CreateIoCompletionPort(reinterpret_cast<HANDLE>(sock->get_handle()), _cp, NULL, NULL);
+	return nullptr != r;
+#elif __linux__
+	return true;
+#endif
+}
+
+#ifdef _WIN32
+HANDLE native::get_handle()
+{
+	return _cp;
+}
+#elif __linux__
+io_uring* native::get_handle()
+{
+	auto uring = _io_uring;
+	if (!uring)
+		uring = _io_uring_list[random<size_t>(0, _io_uring_list.size()-1)];
+	return uring;
 }
 #endif

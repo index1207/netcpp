@@ -27,6 +27,7 @@ using SOCKLEN = int;
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#include <liburing.h>
 
 #include <cstring>
 
@@ -43,19 +44,26 @@ using SOCKLEN = socklen_t;
 #endif
 
 #include <atomic>
+#include <vector>
 
 namespace net
 {
 class context;
 class socket;
+
 class native
 {
 public:
    struct option final
    {
 	   static bool auto_run;
-	   static unsigned long timeout;
 	   static unsigned thread_count;
+
+#ifdef _WIN32
+	   static unsigned long timeout;
+#elif __linux__
+	   static u_int entry_count;
+#endif
    };
 
 #ifdef _WIN32
@@ -65,22 +73,25 @@ public:
     static LPFN_GETACCEPTEXSOCKADDRS get_accept_socket_address;
 #endif
 public:
+#ifdef _WIN32
+   static HANDLE get_handle();
+#elif __linux__
+   static io_uring* get_handle();
+#endif
 public:
     static bool initialize();
 
 	static void io();
-#ifdef _WIN32
-	static bool add_to_cp(socket*);
-#endif
-
+	static bool observe(socket* sock);
 private:
 	static bool demux(context*, u_long, bool);
 
 private:
-   	static std::atomic<bool> _running;
-
 #ifdef _WIN32
 	static HANDLE _cp;
+#elif __linux__
+	static std::vector<io_uring*> _io_uring_list;
+	static thread_local io_uring* _io_uring;
 #endif
 };
 } // namespace net
