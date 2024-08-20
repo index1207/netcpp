@@ -239,6 +239,34 @@ TEST(socket, sync_send)
     EXPECT_GE(sock.send(buffer), 0);
 }
 
+TEST(socket, async_send)
+{
+	net::socket sock(net::protocol::tcp);
+	EXPECT_EQ(sock.is_open(), true);
+
+	auto httpsPort = 443;
+	auto example = "www.example.com";
+	auto entry = net::dns::get_host_entry(example);
+	EXPECT_GT(entry.address_list.size(), 0);
+
+	net::endpoint endpoint(entry.address_list[0], httpsPort);
+	EXPECT_EQ(endpoint.to_string(),
+			  std::format("{}:{}", entry.address_list[0].to_string(), httpsPort));
+	EXPECT_EQ(sock.connect(endpoint), true);
+
+	std::atomic<std::optional<bool>> flag;
+	std::string data = "Hello, World!";
+	net::context ctx;
+	ctx.completed = [&flag](net::context* ctx, bool success) {
+		flag = success && ctx->length > 0;
+	};
+	ctx.buffer = data;
+	EXPECT_EQ(sock.send(&ctx), true);
+
+	while(!flag.load().has_value()) {}
+	EXPECT_EQ(flag.load(), true);
+}
+
 TEST(socket, sync_sendto)
 {
     net::socket server(net::protocol::udp);

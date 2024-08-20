@@ -145,11 +145,12 @@ bool socket::connect(context *context)
 
     context->init();
     context->_io_type = io_type::connect;
+	_remote_endpoint = context->endpoint;
 #ifdef _WIN32
-    if (bind(endpoint(ip_address::any, 0)))
+    if (!bind(endpoint(ip_address::any, 0)))
 		return false;
 
-    _remote_endpoint = _local_endpoint;
+    _local_endpoint = std::nullopt;
 
     context->_token = static_cast<void *>(this);
 
@@ -187,6 +188,13 @@ bool socket::send(context *context) const
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
+#elif __linux__
+	auto uring = native::get_handle();
+	auto sqe = io_uring_get_sqe(uring);
+
+	io_uring_prep_send(sqe, get_handle(), context->buffer.data(), context->buffer.size(), 0);
+	io_uring_sqe_set_data(sqe, context);
+	io_uring_submit(uring);
 #endif
     return true;
 }
