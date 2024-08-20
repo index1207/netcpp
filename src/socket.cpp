@@ -2,6 +2,7 @@
 #include <net/exception.hpp>
 
 #include "net/context.hpp"
+#include "net/dns.hpp"
 #include "net/native.hpp"
 
 using namespace net;
@@ -55,16 +56,10 @@ void socket::close()
 
 bool socket::connect(endpoint ep)
 {
-    _remote_endpoint = ep;
     ip_address ipAdr = ep.get_address();
     auto ret = SOCKET_ERROR != ::connect(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in));
     if (ret)
-    {
-        sockaddr_in remoteAddrIn{};
-        SOCKLEN len = sizeof(remoteAddrIn);
-        ret &= SOCKET_ERROR != getpeername(_sock, reinterpret_cast<sockaddr *>(&remoteAddrIn), &len);
-        _remote_endpoint = endpoint::parse(remoteAddrIn);
-    }
+		_remote_endpoint = ep;
     return ret;
 }
 
@@ -73,9 +68,7 @@ bool socket::bind(endpoint ep)
     _local_endpoint = ep;
     ip_address ipAdr = _local_endpoint->get_address();
 	if (SOCKET_ERROR != ::bind(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in)))
-	{
 		return native::observe(this);
-	}
 	return false;
 }
 
@@ -177,7 +170,7 @@ bool socket::connect(context *context)
 	io_uring_sqe_set_data(sqe, context);
 	io_uring_submit(uring);
 #endif
-    return false;
+    return true;
 }
 
 bool socket::send(context *context) const

@@ -140,25 +140,42 @@ void native::io()
 
 bool native::demux(context* context, u_long transferred, bool success)
 {
-#ifdef _WIN32
 	switch (context->_io_type)
 	{
 	case io_type::accept:
-		if (success) {
+		if (success)
+		{
+			auto listen_socket = reinterpret_cast<const socket*>(context->_token);
+#ifdef _WIN32
 			if (!observe(context->accept_socket.get()))
 				return false;
 
-			if (!context->accept_socket->set_option(options::level::socket, (net::option) SO_UPDATE_ACCEPT_CONTEXT,
-													reinterpret_cast<const socket*>(context->_token)->get_handle()))
+			if (!context->accept_socket->set_option(options::level::socket, (net::option) SO_UPDATE_ACCEPT_CONTEXT, listen_socket->get_handle()))
 				return false;
+#elif __linux__
+			context->accept_socket->set_handle(static_cast<SOCKET>(transferred));
+#endif
+
+			sockaddr_in addr {};
+			SOCKLEN len = sizeof(addr);
+			if (SOCKET_ERROR == getpeername(context->accept_socket->get_handle(), reinterpret_cast<sockaddr*>(&addr), &len))
+				perror("getpeername()");
+
+			auto endpoint = endpoint::parse(addr);
+			context->accept_socket->_remote_endpoint = endpoint;
+			endpoint.set_port(listen_socket->get_local_endpoint()->get_port());
+			context->accept_socket->_local_endpoint = endpoint;
 		}
 		context->completed(context, success);
 		break;
 	case io_type::connect:
-		if (success) {
+		if (success)
+		{
+#ifdef _WIN32
 			if (!static_cast<socket *>(context->_token)->set_option(options::level::socket,
 																  (net::option) SO_UPDATE_CONNECT_CONTEXT, nullptr))
 				return false;
+#endif
 		}
 		context->completed(context, success);
 		break;
@@ -167,7 +184,8 @@ bool native::demux(context* context, u_long transferred, bool success)
 		break;
 	case io_type::receive:
 	case io_type::send:
-		if(success) {
+		if (success)
+		{
 			context->length = transferred;
 		}
 		context->completed(context, success);
@@ -175,43 +193,6 @@ bool native::demux(context* context, u_long transferred, bool success)
 	default:
 		return false;
 	}
-#elif __linux__
-	switch (context->_io_type)
-	{
-	case io_type::accept: {
-		// Set accepted socket fd
-		context->accept_socket->set_handle(static_cast<SOCKET>(transferred));
-
-		// Set endpoints
-		sockaddr_in addr{};
-		SOCKLEN len = sizeof(addr);
-		if (SOCKET_ERROR == getpeername(context->accept_socket->get_handle(), reinterpret_cast<sockaddr*>(&addr), &len))
-			perror("getpeername()");
-
-		auto endpoint = endpoint::parse(addr);
-		context->accept_socket->_remote_endpoint = endpoint;
-		endpoint.set_port(reinterpret_cast<net::socket*>(context->_token)->_local_endpoint->get_port());
-		context->accept_socket->_local_endpoint = endpoint;
-
-		// Call callback
-		context->completed(context, success);
-	}
-		break;
-	case io_type::connect:
-		context->completed(context, success);
-		break;
-	case io_type::disconnect:
-		context->completed(context, success);
-		break;
-	case io_type::send:
-	case io_type::receive:
-		context->length = transferred;
-		context->completed(context, success);
-		break;
-	default:
-		return false;
-	}
-#endif
 	return true;
 }
 
