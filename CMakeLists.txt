@@ -21,10 +21,7 @@ endif ()
 
 # Platforms
 if (MSVC)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi /MTd")
-    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG")
-
-    set(CMAKE_CXX_FLAGS_RELEASE /MT)
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "/DEBUG")
 else()
     add_compile_definitions(_LIBCPP_ENABLE_EXPERIMENTAL)
 endif(MSVC)
