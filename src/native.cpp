@@ -3,7 +3,6 @@
 #include "net/context.hpp"
 
 #include <cassert>
-#include <mutex>
 #include <random>
 #include <stdexcept>
 #include <thread>
@@ -32,20 +31,9 @@ bool bind_extension_function(SOCKET s, GUID guid, PVOID *func)
 #elif __linux__
 u_int native::option::entry_count = 128;
 
-std::mutex s_mtx;
 std::vector<io_uring*> native::_io_uring_list;
 thread_local io_uring* native::_io_uring = nullptr;
 #endif
-
-template<class T>
-inline T random(T begin, T end )
-{
-	static std::random_device rd;
-	static std::mt19937_64 gen(rd());
-
-	std::uniform_int_distribution<T> dist(begin, end);
-	return dist(rd);
-}
 
 bool native::initialize()
 {
@@ -70,14 +58,24 @@ bool native::initialize()
 #endif
 	if (option::auto_run)
 	{
-		for (unsigned i = 0; i < option::thread_count; ++i)
-		{
-			new std::thread(&native::io);
-		}
+		run_io(option::thread_count);
 	}
     return true;
 }
-void native::io()
+
+void native::run_io(unsigned int num)
+{
+#ifdef __linux__
+	_io_uring_list.clear();
+	_io_uring_list.resize(num);
+#endif
+	for (unsigned i = 0; i < num; ++i)
+	{
+		new std::thread(&native::io, i);
+	}
+}
+
+void native::io(unsigned id)
 {
 #ifdef _WIN32
 	context *context = nullptr;
@@ -85,15 +83,13 @@ void native::io()
 	DWORD numOfBytes = 0;
 #elif __linux__
 	io_uring ring {};
+	io_uring_cqe* cqe = nullptr;
+
 	_io_uring = &ring;
 	if (io_uring_queue_init(option::entry_count, &ring, 0))
 		perror("io_uring_queue_init()");
 	else
-	{
-		std::scoped_lock lock(s_mtx);
-		_io_uring_list.push_back(&ring);
-	}
-	io_uring_cqe* cqe;
+		_io_uring_list[id] = &ring;
 #endif
 	while (true)
 	{
@@ -133,8 +129,17 @@ void native::io()
 		}
 
 		auto ctx = reinterpret_cast<context*>(cqe->user_data);
-		if (!demux(ctx, static_cast<u_long>(cqe->res), true))
-			break;
+		if (cqe->res < 0)
+		{
+			if (!demux(ctx, static_cast<u_long>(cqe->res), false))
+				break;
+		}
+		else
+		{
+			if (!demux(ctx, static_cast<u_long>(cqe->res), true))
+				break;
+		}
+
 
 		io_uring_cqe_seen(&ring, cqe);
 #endif
@@ -214,9 +219,18 @@ HANDLE native::get_handle()
 #elif __linux__
 io_uring* native::get_handle()
 {
+	static auto random = [](auto min, auto max) {
+		static std::random_device rd;
+		static std::mt19937_64 gen(rd());
+
+		std::uniform_int_distribution<decltype(max)> dist(min, max);
+		return dist(rd);
+	};
+
 	auto uring = _io_uring;
 	if (!uring)
-		uring = _io_uring_list[random<size_t>(0, _io_uring_list.size()-1)];
+		uring = _io_uring_list[random(0, _io_uring_list.size()-1)];
 	return uring;
 }
+
 #endif

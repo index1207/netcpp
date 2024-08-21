@@ -81,7 +81,8 @@ public:
 public:
     static bool initialize();
 
-	static void io();
+	static void run_io(unsigned num);
+	static void io(unsigned id);
 	static bool observe(socket* sock);
 private:
 	static bool demux(context*, u_long, bool);

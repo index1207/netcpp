@@ -346,26 +346,27 @@ TEST(socket, sync_receive)
 
 TEST(socket, async_receive)
 {
-	net::socket sock(net::protocol::tcp);
-	EXPECT_EQ(sock.is_open(), true);
-	EXPECT_EQ(sock.set_reuse_address(true), true);
-	EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
-	EXPECT_EQ(sock.listen(), true);
+	auto server = std::async(std::launch::async, [] {
+		net::socket sock(net::protocol::tcp);
+		EXPECT_EQ(sock.is_open(), true);
+		EXPECT_EQ(sock.set_reuse_address(true), true);
+		EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
+		EXPECT_EQ(sock.listen(), true);
 
-	net::context ctx;
-	ctx.completed = [](net::context* ctx, bool) {
-		char buffer[] = "hello";
-		EXPECT_GE(ctx->accept_socket->send(buffer), 0);
-	};
-	EXPECT_EQ(sock.accept(&ctx), true);
+		auto client = sock.accept();
+		EXPECT_EQ(client.is_open(), true);
+
+		std::string data = "Hello";
+		EXPECT_GT(client.send(data), 0);
+	});
 
 	std::this_thread::sleep_for(100ms);
 
-	std::atomic<std::optional<bool>> flag;
-	auto fut = std::async(std::launch::async, [&] {
-		net::socket client(net::protocol::tcp);
-		EXPECT_EQ(client.is_open(), true);
-		EXPECT_EQ(client.connect(TEST_ENDPOINT), true);
+	auto client = std::async(std::launch::async, [&] {
+		std::atomic<std::optional<bool>> flag;
+		net::socket sock(net::protocol::tcp);
+		EXPECT_EQ(sock.is_open(), true);
+		EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
 
 		auto ctx = new net::context;
 		char buffer[16] = { 0, };
@@ -373,11 +374,13 @@ TEST(socket, async_receive)
 		ctx->completed = [&flag](net::context* ctx, bool success) {
 			flag = true;
 		};
-		EXPECT_EQ(client.receive(ctx), true);
+		EXPECT_EQ(sock.receive(ctx), true);
+		while (!flag.load().has_value()) {};
+		return flag.load();
 	});
 
-	while (!flag.load().has_value()) {};
-	EXPECT_EQ(flag.load(), true);
+	server.get();
+	EXPECT_EQ(client.get(), true);
 }
 
 TEST(socket, sync_receive_from)
