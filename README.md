@@ -1,5 +1,5 @@
-# netcpp ![windows](https://github.com/index1207/netcpp/actions/workflows/windows.yml/badge.svg) ![linux](https://github.com/index1207/netcpp/actions/workflows/linux.yml/badge.svg) [![codecov](https://codecov.io/gh/index1207/netcpp/graph/badge.svg?_token=BVVUC5S422)](https://codecov.io/gh/index1207/netcpp) ![lang](https://img.shields.io/badge/language-C++20-blue) [![Vcpkg package](https://img.shields.io/badge/vcpkg-netcpp-blue)](https://github.com/microsoft/vcpkg/tree/master/ports/netcpp) [![License](https://img.shields.io/github/license/index1207/netcpp.svg)](LICENSE)
-netcpp is open-source simple C++ network library. netcpp supports windows and linux(ubuntu) platform. asynchronous feature implement by each os's api. Windows implemented using IOCP and Ubuntu will implement using Epoll.
+# 📦 netcpp ![windows](https://github.com/index1207/netcpp/actions/workflows/windows.yml/badge.svg) ![linux](https://github.com/index1207/netcpp/actions/workflows/linux.yml/badge.svg) [![codecov](https://codecov.io/gh/index1207/netcpp/graph/badge.svg?_token=BVVUC5S422)](https://codecov.io/gh/index1207/netcpp) ![lang](https://img.shields.io/badge/language-C++20-blue) [![Vcpkg package](https://img.shields.io/badge/vcpkg-netcpp-blue)](https://github.com/microsoft/vcpkg/tree/master/ports/netcpp) [![License](https://img.shields.io/github/license/index1207/netcpp.svg)](LICENSE)
+netcpp is open-source simple C++ network library. netcpp supports windows and linux platform. asynchronous feature implement by each os's api. Windows implemented using IOCP and Linux implemented using io_uring.
 
 ## Installation
 To use netcpp, create new application by vcpkg or enable manifest mode at Visual Studio. <br>
@@ -22,7 +22,35 @@ cmake -B build
 cmake --build build
 ```
 
-## Example and Features
+## Example
+- Create a socket
+```cpp
+// <net/socket.hpp>
+net::socket tcp_socket(net::protocol::tcp); // Create a TCP socket
+
+net::socket udp_socket(net::protocol::udp); // Create a UDP socket
+
+net::socket empty_socket;
+empty_socket.create(net::protocol::tcp); // Create a new tcp socket
+```
+- Async I/O
+```cpp
+// <net/context.hpp>
+net::socket sock(net::protocol::tcp); // Create a new TCP socket.
+net::context connect_ctx;
+connect_ctx.endpoint = ENDPOINT; // Specify the endpoint.
+connect_ctx.completed = [](net::context* ctx, bool success) { // callback
+	if (success)
+	{
+		std::cout << "Connected" << std::endl;
+	}
+	else
+	{
+		std::cout << "Failed to connect" << std::endl;
+	}
+};
+sock.connect(&connect_ctx); // Connect to specified endpoint asynchronously.
+```
 - Basic connection
 ```cpp
 // Server
@@ -31,12 +59,12 @@ cmake --build build
       
 int main()
 {
-    net::Native::initialize(); // Initialize Native API
+    net::native::initialize(); // Initialize Native API
   
-    net::Socket sock(net::protocol::tcp); // Create new TCP socket
-    if (!sock.is_open()) // Invalidate socket
+    net::socket sock(net::protocol::tcp); // Create new TCP socket
+    if (!sock.is_open()) // Validate socket
         return -1;
-    if(!sock.bind(net::Endpoint(net::IpAddress::loopback, 8085))) // Bind address
+    if(!sock.bind(net::endpoint(net::ip_address::loopback, 8085))) // Bind the address `tcp://loopback:8085`
         return -1;
     if(!sock.listen()) // Ready to accept
         return -1;
@@ -50,21 +78,32 @@ int main()
 ```
 ```cpp
 // Client
-#include <net/Socket.hpp>
+#include <net/socket.hpp>
 #include <iostream>
   
 int main()
 {
-    net::Native::initialize(); // Initialize Native API
+    net::native::initialize(); // Initialize Native API
   
-    net::Socket sock(net::protocol::tcp); // Create new TCP socket
+    net::socket sock(net::protocol::tcp); // Create new TCP socket
     if (!sock.is_open()) // Invalidate socket
         return -1;
-    if (!sock.connect(net::Endpoint(net::IpAddress::loopback, 8085))) // Try to connect to server.
+    if (!sock.connect(net::endpoint(net::ip_address::loopback, 8085))) // Try to connect to server.
         return -1;
     std::cout << "Connected!";
 }
 ```
+- DNS
+```cpp
+// <net/dns.hpp>
+net::dns::get_host_name() // get host's name
+
+net::dns::get_host_entry("www.example.com") // get www.example.com's host entry
+```
+
+## Contribute
+The repository is whenever welcome any issues or PRs!  
+
 ## Minimum required compiler version
 - Windows
   - Visual Studio 2019
