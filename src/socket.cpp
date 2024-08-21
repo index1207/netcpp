@@ -194,11 +194,6 @@ bool socket::send(context *context) const
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
-	else if (res == ERROR_SUCCESS)
-	{
-		context->length = wsaBuf.len;
-		context->completed(context, true);
-	}
 #elif __linux__
 	auto uring = native::get_handle();
 	auto sqe = io_uring_get_sqe(uring);
@@ -227,11 +222,6 @@ bool socket::receive(context *context) const
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
-//	else if (res == ERROR_SUCCESS)
-//	{
-//		context->length = recvBytes;
-//		context->completed(context, true);
-//	}
 #elif __linux__
 	auto uring = native::get_handle();
 	auto sqe = io_uring_get_sqe(uring);
@@ -259,10 +249,6 @@ bool net::socket::disconnect(context *context)
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
-	else
-	{
-		context->completed(context, true);
-	}
 #elif __linux__
 	auto uring = native::get_handle();
 	auto sqe = io_uring_get_sqe(uring);

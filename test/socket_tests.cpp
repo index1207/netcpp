@@ -372,7 +372,7 @@ TEST(socket, async_receive)
 		char buffer[16] = { 0, };
 		ctx->buffer = buffer;
 		ctx->completed = [&flag](net::context* ctx, bool success) {
-			flag = true;
+			flag = success && ctx->length > 0;
 		};
 		EXPECT_EQ(sock.receive(ctx), true);
 		while (!flag.load().has_value()) {};
