@@ -61,7 +61,7 @@ public:
 
 #ifdef _WIN32
 	   static unsigned long timeout;
-#elif __linux__
+#else
 	   static u_int entry_count;
 #endif
    };
@@ -75,7 +75,7 @@ public:
 public:
 #ifdef _WIN32
    static HANDLE get_handle();
-#elif __linux__
+#else
    static io_uring* get_handle();
 #endif
 public:
@@ -90,7 +90,7 @@ private:
 private:
 #ifdef _WIN32
 	static HANDLE _cp;
-#elif __linux__
+#else
 	static std::vector<io_uring*> _io_uring_list;
 	static thread_local io_uring* _io_uring;
 #endif

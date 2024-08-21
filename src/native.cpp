@@ -28,7 +28,7 @@ bool bind_extension_function(SOCKET s, GUID guid, PVOID *func)
     return SOCKET_ERROR != WSAIoctl(s, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid, sizeof(GUID), func, sizeof(*func),
                                     &dwBytes, NULL, NULL);
 }
-#elif __linux__
+#else
 u_int native::option::entry_count = 128;
 
 std::vector<io_uring*> native::_io_uring_list;
@@ -54,7 +54,7 @@ bool native::initialize()
         return false;
 
 	_cp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, NULL);
-#elif __linux__
+#else
 #endif
 	if (option::auto_run)
 	{
@@ -65,7 +65,7 @@ bool native::initialize()
 
 void native::run_io(unsigned int num)
 {
-#ifdef __linux__
+#ifndef _WIN32
 	_io_uring_list.clear();
 	_io_uring_list.resize(num);
 #endif
@@ -81,7 +81,7 @@ void native::io(unsigned id)
 	context *context = nullptr;
 	ULONG_PTR key = 0;
 	DWORD numOfBytes = 0;
-#elif __linux__
+#else
 	io_uring ring {};
 	io_uring_cqe* cqe = nullptr;
 
@@ -117,7 +117,7 @@ void native::io(unsigned id)
 				break;
 			}
 		}
-#elif __linux__
+#else
 		if (io_uring_wait_cqe(&ring, &cqe))
 			continue;
 
@@ -160,7 +160,7 @@ bool native::demux(context* context, u_long transferred, bool success)
 
 			if (!context->accept_socket->set_option(options::level::socket, (net::option) SO_UPDATE_ACCEPT_CONTEXT, listen_socket->get_handle()))
 				return false;
-#elif __linux__
+#else
 			context->accept_socket->set_handle(static_cast<SOCKET>(transferred));
 #endif
 
@@ -206,7 +206,7 @@ bool native::observe(socket* sock)
 #ifdef _WIN32
 	auto r = CreateIoCompletionPort(reinterpret_cast<HANDLE>(sock->get_handle()), _cp, NULL, NULL);
 	return nullptr != r;
-#elif __linux__
+#else
 	return true;
 #endif
 }
@@ -216,7 +216,7 @@ HANDLE native::get_handle()
 {
 	return _cp;
 }
-#elif __linux__
+#else
 io_uring* native::get_handle()
 {
 	static auto random = [](auto min, auto max) {

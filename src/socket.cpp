@@ -164,7 +164,7 @@ bool socket::connect(context *context)
         const auto err = WSAGetLastError();
         return WSA_IO_PENDING == err;
     }
-#elif __linux__
+#else
 	auto uring = native::get_handle();
 	auto sqe = io_uring_get_sqe(uring);
 
@@ -194,7 +194,7 @@ bool socket::send(context *context) const
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
-#elif __linux__
+#else
 	auto uring = native::get_handle();
 	auto sqe = io_uring_get_sqe(uring);
 
@@ -222,7 +222,7 @@ bool socket::receive(context *context) const
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
-#elif __linux__
+#else
 	auto uring = native::get_handle();
 	auto sqe = io_uring_get_sqe(uring);
 
@@ -249,7 +249,7 @@ bool net::socket::disconnect(context *context)
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
-#elif __linux__
+#else
 	auto uring = native::get_handle();
 	auto sqe = io_uring_get_sqe(uring);
 
