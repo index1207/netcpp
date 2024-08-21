@@ -1,18 +1,20 @@
 #include "net/exception.hpp"
 #include "net/native.hpp"
 
-#include <format>
+#include <sstream>
 
 using namespace net;
 
-network_exception::network_exception(std::string_view msg) : _msg(msg)
+network_exception::network_exception(std::string_view msg)
 {
 #ifdef _WIN32
     _error = WSAGetLastError();
 #else
     _error = errno;
 #endif
-    const_cast<std::string &>(_msg) = std::format("[{}] {}: {}", _error, _msg, std::system_category().message(_error));
+	std::stringstream ss;
+	ss << "[" << _error << "] " << msg << ": " << std::system_category().message(_error);
+	const_cast<std::string &>(_msg) = ss.str();
 }
 
 char const *network_exception::what() const noexcept
