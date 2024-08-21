@@ -13,7 +13,7 @@ network_exception::network_exception(std::string_view msg)
     _error = errno;
 #endif
 	std::stringstream ss;
-	ss << "[" << _error << "] " << msg << ": " << std::system_category().message(_error);
+	ss << msg << ": " << std::system_category().message(_error) << " [" << _error << "]";
 	const_cast<std::string &>(_msg) = ss.str();
 }
 
