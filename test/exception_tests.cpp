@@ -2,7 +2,7 @@
 #include "net/exception.hpp"
 #include "net/socket.hpp"
 
-TEST(Exception, what)
+TEST(exception, what)
 {
     try {
         net::socket sock;
@@ -16,7 +16,7 @@ TEST(Exception, what)
     }
 }
 
-TEST(Exception, getCode)
+TEST(exception, get_code)
 {
     net::socket sock;
     EXPECT_EQ(sock.is_open(), false);

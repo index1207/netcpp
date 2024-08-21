@@ -1,9 +1,9 @@
 name: windows
 
 on:
-  push:
-    branches: [ "release" ]
   pull_request:
+    branches: [ "release" ]
+  push:
     branches: [ "release" ]
 
 env:

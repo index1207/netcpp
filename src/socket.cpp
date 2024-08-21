@@ -1,8 +1,7 @@
 #include "net/socket.hpp"
-#include <net/exception.hpp>
 
-#include "net/IoSystem.hpp"
 #include "net/context.hpp"
+#include "net/dns.hpp"
 #include "net/native.hpp"
 
 using namespace net;
@@ -56,35 +55,28 @@ void socket::close()
 
 bool socket::connect(endpoint ep)
 {
-    _remote_endpoint = ep;
+	if (!is_open())
+		return false;
+
+	if (!native::observe(this))
+		return false;
+
+	_remote_endpoint = ep;
     ip_address ipAdr = ep.get_address();
-    auto ret = SOCKET_ERROR != ::connect(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in));
-    if (ret)
-    {
-        sockaddr_in remoteAddrIn{};
-        SOCKLEN len = sizeof(remoteAddrIn);
-        ret &= SOCKET_ERROR != getpeername(_sock, reinterpret_cast<sockaddr *>(&remoteAddrIn), &len);
-        _remote_endpoint = endpoint::parse(remoteAddrIn);
-    }
-    return ret;
+    return SOCKET_ERROR != ::connect(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in));
 }
 
 bool socket::bind(endpoint ep)
 {
     _local_endpoint = ep;
     ip_address ipAdr = _local_endpoint->get_address();
-    const auto ret = ::bind(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in));
-#ifdef _WIN32
-    IoSystem::instance().push(_sock);
-#endif
-    return SOCKET_ERROR != ret;
+	if (SOCKET_ERROR != ::bind(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in)))
+		return native::observe(this);
+	return false;
 }
 
 bool socket::listen(int backlog) const
 {
-#ifdef _WIN32
-    IoSystem::instance()._listeningSocket = this;
-#endif
     return SOCKET_ERROR != ::listen(_sock, backlog);
 }
 
@@ -105,7 +97,7 @@ std::optional<endpoint> socket::get_local_endpoint() const
 
 void socket::disconnect()
 {
-    shutdown(_sock, NET_SOCK_SHUTDOWN);
+    shutdown(_sock, SOCK_DISCONNECT);
     _remote_endpoint = std::nullopt;
 }
 
@@ -117,99 +109,169 @@ net::socket socket::accept() const
     return clientSock;
 }
 
-bool socket::accept(context *context) const
+bool socket::accept(context *context)
 {
-    context->init();
+	if (!context)
+		return false;
 
-    context->_contextType = ContextType::Accept;
+    context->init();
+    context->_io_type = io_type::accept;
+
+	context->_token = this;
 #ifdef _WIN32
-    IoSystem::instance().push(context->acceptSocket->get_handle());
+	context->accept_socket->create(net::protocol::tcp);
 
     DWORD dwByte = 0;
     char buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
-    if (!native::AcceptEx(_sock, context->acceptSocket->get_handle(), buf, 0, sizeof(SOCKADDR_IN) + 16,
+    if (!native::accept(_sock, context->accept_socket->get_handle(), buf, 0, sizeof(SOCKADDR_IN) + 16,
                           sizeof(SOCKADDR_IN) + 16, &dwByte, context))
     {
         const auto err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
+#else
+	auto uring = native::get_handle();
+	auto sqe = io_uring_get_sqe(uring);
+
+	io_uring_prep_accept(sqe, get_handle(), nullptr, nullptr, 0);
+	io_uring_sqe_set_data(sqe, context);
+	io_uring_submit(uring);
 #endif
-    return false;
+    return true;
 }
 
 bool socket::connect(context *context)
 {
-    context->init();
-    context->_contextType = ContextType::Connect;
-#ifdef _WIN32
-    bind(endpoint(ip_address::any, 0));
-    _remote_endpoint = _local_endpoint;
+	if (!context)
+		return false;
 
-    context->token = static_cast<void *>(this);
+    context->init();
+    context->_io_type = io_type::connect;
+	_remote_endpoint = context->endpoint;
+#ifdef _WIN32
+    if (!bind(endpoint(ip_address::any, 0)))
+		return false;
+
+    _local_endpoint = std::nullopt;
+
+    context->_token = static_cast<void *>(this);
 
     ip_address ipAdr = context->endpoint->get_address();
     DWORD dw;
-    if (!native::ConnectEx(_sock, reinterpret_cast<SOCKADDR *>(&ipAdr), sizeof(SOCKADDR_IN), nullptr, NULL, &dw,
+    if (!native::connect(_sock, reinterpret_cast<SOCKADDR *>(&ipAdr), sizeof(SOCKADDR_IN), nullptr, NULL, &dw,
                            reinterpret_cast<LPOVERLAPPED>(context)))
     {
         const auto err = WSAGetLastError();
         return WSA_IO_PENDING == err;
     }
+#elif __linux__
+	auto uring = native::get_handle();
+	auto sqe = io_uring_get_sqe(uring);
+
+	auto addr = context->endpoint->get_address();
+	io_uring_prep_connect(sqe, get_handle(), reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
+	io_uring_sqe_set_data(sqe, context);
+	io_uring_submit(uring);
 #endif
-    return false;
+    return true;
 }
 
 bool socket::send(context *context) const
 {
+	if (!context)
+		return false;
+
     context->init();
-    context->_contextType = ContextType::Send;
+    context->_io_type = io_type::send;
 #ifdef _WIN32
     WSABUF wsaBuf;
     wsaBuf.buf = context->buffer.data();
     wsaBuf.len = static_cast<ULONG>(context->buffer.size());
 
-    if (SOCKET_ERROR == WSASend(_sock, &wsaBuf, 1, &wsaBuf.len, 0, reinterpret_cast<LPOVERLAPPED>(context), nullptr))
+	auto res = WSASend(_sock, &wsaBuf, 1, &wsaBuf.len, 0, reinterpret_cast<LPOVERLAPPED>(context), nullptr);
+    if (res == SOCKET_ERROR)
     {
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
+	else if (res == ERROR_SUCCESS)
+	{
+		context->length = wsaBuf.len;
+		context->completed(context, true);
+	}
+#elif __linux__
+	auto uring = native::get_handle();
+	auto sqe = io_uring_get_sqe(uring);
+
+	io_uring_prep_send(sqe, get_handle(), context->buffer.data(), context->buffer.size(), 0);
+	io_uring_sqe_set_data(sqe, context);
+	io_uring_submit(uring);
 #endif
     return true;
 }
 
 bool socket::receive(context *context) const
 {
+	if (!context)
+		return false;
+
     context->init();
-    context->_contextType = ContextType::Receive;
+    context->_io_type = io_type::receive;
 #ifdef _WIN32
     WSABUF wsaBuf = {.len = static_cast<ULONG>(context->buffer.size()), .buf = context->buffer.data()};
 
     DWORD recvBytes = 0, flags = 0;
-    if (SOCKET_ERROR ==
-        WSARecv(_sock, &wsaBuf, 1, &recvBytes, &flags, reinterpret_cast<LPOVERLAPPED>(context), nullptr))
+	auto res = WSARecv(_sock, &wsaBuf, 1, &recvBytes, &flags, reinterpret_cast<LPOVERLAPPED>(context), nullptr);
+    if (res == SOCKET_ERROR)
     {
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
+//	else if (res == ERROR_SUCCESS)
+//	{
+//		context->length = recvBytes;
+//		context->completed(context, true);
+//	}
+#elif __linux__
+	auto uring = native::get_handle();
+	auto sqe = io_uring_get_sqe(uring);
+
+	io_uring_prep_recv(sqe, get_handle(), context->buffer.data(), context->buffer.size(), 0);
+	io_uring_sqe_set_data(sqe, context);
+	io_uring_submit(uring);
 #endif
     return true;
 }
 
-bool net::socket::disconnect(context *context) const
+bool net::socket::disconnect(context *context)
 {
+	if (!context)
+		return false;
+
     context->init();
 
-    context->_contextType = ContextType::Disconnect;
+    context->_io_type = io_type::disconnect;
+
+	_remote_endpoint = std::nullopt;
 #ifdef _WIN32
-    if (!native::DisconnectEx(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
+    if (!native::disconnect(_sock, reinterpret_cast<LPOVERLAPPED>(context), 0, 0))
     {
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
-#else
+	else
+	{
+		context->completed(context, true);
+	}
+#elif __linux__
+	auto uring = native::get_handle();
+	auto sqe = io_uring_get_sqe(uring);
 
+	io_uring_prep_shutdown(sqe, get_handle(), SOCK_DISCONNECT);
+	io_uring_sqe_set_data(sqe, context);
+	io_uring_submit(uring);
 #endif
-    return false;
+    return true;
 }
 
 bool socket::send(std::span<char> s) const

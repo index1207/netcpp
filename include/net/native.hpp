@@ -5,7 +5,7 @@
 #include <WS2tcpip.h>
 #include <MSWSock.h>
 
-#define NET_SOCK_SHUTDOWN SD_BOTH
+#define SOCK_DISCONNECT SD_BOTH
 
 using SOCKLEN = int;
 #else
@@ -27,6 +27,7 @@ using SOCKLEN = int;
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#include <liburing.h>
 
 #include <cstring>
 
@@ -35,25 +36,63 @@ using SOCKLEN = int;
 
 #define ZeroMemory(addr, size) memset(addr, 0, size)
 
-#define NET_SOCK_SHUTDOWN SHUT_RDWR
+#define SOCK_DISCONNECT SHUT_RDWR
 
 using SOCKET = int;
 using SOCKLEN = socklen_t;
 
 #endif
 
+#include <atomic>
+#include <vector>
+
 namespace net
 {
+class context;
+class socket;
+
 class native
 {
-  public:
+public:
+   struct option final
+   {
+	   static bool auto_run;
+	   static unsigned thread_count;
+
 #ifdef _WIN32
-    static LPFN_ACCEPTEX AcceptEx;
-    static LPFN_CONNECTEX ConnectEx;
-    static LPFN_DISCONNECTEX DisconnectEx;
-    static LPFN_GETACCEPTEXSOCKADDRS GetAcceptExSockaddrs;
+	   static unsigned long timeout;
+#elif __linux__
+	   static u_int entry_count;
 #endif
-  public:
+   };
+
+#ifdef _WIN32
+    static LPFN_ACCEPTEX accept;
+    static LPFN_CONNECTEX connect;
+    static LPFN_DISCONNECTEX disconnect;
+    static LPFN_GETACCEPTEXSOCKADDRS get_accept_socket_address;
+#endif
+public:
+#ifdef _WIN32
+   static HANDLE get_handle();
+#elif __linux__
+   static io_uring* get_handle();
+#endif
+public:
     static bool initialize();
+
+	static void run_io(unsigned num);
+	static void io(unsigned id);
+	static bool observe(socket* sock);
+private:
+	static bool demux(context*, u_long, bool);
+
+private:
+#ifdef _WIN32
+	static HANDLE _cp;
+#elif __linux__
+	static std::vector<io_uring*> _io_uring_list;
+	static thread_local io_uring* _io_uring;
+#endif
 };
 } // namespace net

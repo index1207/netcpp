@@ -36,7 +36,7 @@ std::string endpoint::to_string() const
 endpoint endpoint::parse(sockaddr_in addr)
 {
 	endpoint ep;
-    ep.set_port(htons(addr.sin_port));
+    ep.set_port(addr.sin_port);
     ep.set_address(ip_address(addr));
 
 	return ep;

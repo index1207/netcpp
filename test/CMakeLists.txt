@@ -8,10 +8,12 @@ add_executable(${BINARY_NAME} ${TEST_FILES} ${SOURCE_FILES})
 
 target_include_directories(${BINARY_NAME} PRIVATE ${INCLUDES})
 
-target_link_libraries(${BINARY_NAME} PUBLIC gtest netcpp::netcpp)
+target_link_libraries(${BINARY_NAME} PUBLIC gtest)
+
 if (MSVC)
     target_link_libraries(${BINARY_NAME} PUBLIC ws2_32)
 else ()
+    target_link_libraries(${BINARY_NAME} PUBLIC uring)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set(CMAKE_CXX_FLAGS "--coverage")
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
