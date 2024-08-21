@@ -4,6 +4,11 @@ set(BINARY_NAME "unitTest")
 
 option(gtest_disable_pthreads ON)
 
+if (MSVC)
+    set(CMAKE_CXX_FLAGS_DEBUG "/Zi /MTd")
+    set(CMAKE_CXX_FLAGS_RELEASE "/MT")
+endif()
+
 add_executable(${BINARY_NAME} ${TEST_FILES} ${SOURCE_FILES})
 
 target_include_directories(${BINARY_NAME} PRIVATE ${INCLUDES})
