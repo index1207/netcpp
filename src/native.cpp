@@ -79,7 +79,11 @@ bool native::initialize()
 }
 void native::io()
 {
-#ifdef __linux__
+#ifdef _WIN32
+	context *context = nullptr;
+	ULONG_PTR key = 0;
+	DWORD numOfBytes = 0;
+#elif __linux__
 	io_uring ring {};
 	_io_uring = &ring;
 	if (io_uring_queue_init(option::entry_count, &ring, 0))
@@ -94,14 +98,13 @@ void native::io()
 	while (true)
 	{
 #ifdef _WIN32
-		context *context = nullptr;
-		ULONG_PTR key = 0;
-		DWORD numOfBytes = 0;
-		if (GetQueuedCompletionStatus(_cp,
-									  &numOfBytes,
-									  &key,
-									  reinterpret_cast<LPOVERLAPPED *>(&context),
-									  option::timeout)) {
+		auto ret = GetQueuedCompletionStatus(_cp,
+								  &numOfBytes,
+								  &key,
+								  reinterpret_cast<LPOVERLAPPED *>(&context),
+								  option::timeout);
+		if (ret)
+		{
 			if (!demux(context, numOfBytes, true))
 				break;
 		}
@@ -184,10 +187,7 @@ bool native::demux(context* context, u_long transferred, bool success)
 		break;
 	case io_type::receive:
 	case io_type::send:
-		if (success)
-		{
-			context->length = transferred;
-		}
+		context->length = transferred;
 		context->completed(context, success);
 		break;
 	default:

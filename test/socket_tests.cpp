@@ -7,7 +7,7 @@
 #include <future>
 #include <format>
 
-#define TEST_ENDPOINT net::endpoint(net::ip_address::loopback, 5500)
+#define TEST_ENDPOINT net::endpoint(net::ip_address::loopback, 8888)
 
 using namespace std::chrono_literals;
 
@@ -183,14 +183,15 @@ TEST(socket, async_disconnect)
 	EXPECT_EQ(sock.listen(), true);
 
 	std::atomic<std::optional<bool>> flag;
-	net::context ctx;
-	ctx.completed = [&](net::context* ctx, bool success) {
-		ctx->completed = [&flag](net::context*, bool success) {
+	auto ctx = new net::context;
+	ctx->completed = [&](net::context* ctx, bool success) {
+		ctx->completed = [&flag](net::context* ctx, bool success) {
 			flag = success;
+			//delete ctx;
 		};
 		ctx->accept_socket->disconnect(ctx);
 	};
-	EXPECT_EQ(sock.accept(&ctx), true);
+	EXPECT_EQ(sock.accept(ctx), true);
 
 	std::this_thread::sleep_for(100ms);
 
@@ -234,11 +235,12 @@ TEST(socket, async_accept)
 	EXPECT_EQ(sock.listen(), true);
 
 	std::atomic<std::optional<bool>> flag;
-	net::context ctx;
-	ctx.completed = [&flag](net::context* ctx, bool success) {
+	auto ctx = new net::context;
+	ctx->completed = [&flag](net::context* ctx, bool success) {
 		flag = success;
+		//delete ctx;
 	};
-	EXPECT_EQ(sock.accept(&ctx), true);
+	EXPECT_EQ(sock.accept(ctx), true);
 
 	std::this_thread::sleep_for(100ms);
 
@@ -288,12 +290,13 @@ TEST(socket, async_send)
 
 	std::atomic<std::optional<bool>> flag;
 	std::string data = "Hello, World!";
-	net::context ctx;
-	ctx.completed = [&flag](net::context* ctx, bool success) {
+	auto ctx = new net::context;
+	ctx->completed = [&flag](net::context* ctx, bool success) {
 		flag = success && ctx->length > 0;
+		//delete ctx;
 	};
-	ctx.buffer = data;
-	EXPECT_EQ(sock.send(&ctx), true);
+	ctx->buffer = data;
+	EXPECT_EQ(sock.send(ctx), true);
 
 	while(!flag.load().has_value()) {}
 	EXPECT_EQ(flag.load(), true);
@@ -301,16 +304,15 @@ TEST(socket, async_send)
 
 TEST(socket, sync_sendto)
 {
-    net::socket server(net::protocol::udp);
-    EXPECT_EQ(server.is_open(), true);
-    EXPECT_EQ(server.set_reuse_address(true), true);
-    EXPECT_EQ(server.bind(TEST_ENDPOINT), true);
+	net::socket server(net::protocol::udp);
+	EXPECT_EQ(server.is_open(), true);
+	EXPECT_EQ(server.bind(TEST_ENDPOINT), true);
 
-    net::socket client(net::protocol::udp);
-    EXPECT_EQ(client.is_open(), true);
+	net::socket client(net::protocol::udp);
+	EXPECT_EQ(client.is_open(), true);
 
-    char buffer[] = "Hello";
-    EXPECT_GE(client.send(buffer, TEST_ENDPOINT), 0);
+	char buffer[] = "Hello";
+	EXPECT_GE(client.send(buffer, TEST_ENDPOINT), 0);
 }
 
 TEST(socket, sync_receive)
@@ -337,6 +339,45 @@ TEST(socket, sync_receive)
         char buffer[16] = { 0, };
         EXPECT_GE(sock.receive(buffer), 0);
     });
+
+	server.get();
+	client.get();
+}
+
+TEST(socket, async_receive)
+{
+	net::socket sock(net::protocol::tcp);
+	EXPECT_EQ(sock.is_open(), true);
+	EXPECT_EQ(sock.set_reuse_address(true), true);
+	EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
+	EXPECT_EQ(sock.listen(), true);
+
+	net::context ctx;
+	ctx.completed = [](net::context* ctx, bool) {
+		char buffer[] = "hello";
+		EXPECT_GE(ctx->accept_socket->send(buffer), 0);
+	};
+	EXPECT_EQ(sock.accept(&ctx), true);
+
+	std::this_thread::sleep_for(100ms);
+
+	std::atomic<std::optional<bool>> flag;
+	auto fut = std::async(std::launch::async, [&] {
+		net::socket client(net::protocol::tcp);
+		EXPECT_EQ(client.is_open(), true);
+		EXPECT_EQ(client.connect(TEST_ENDPOINT), true);
+
+		auto ctx = new net::context;
+		char buffer[16] = { 0, };
+		ctx->buffer = buffer;
+		ctx->completed = [&flag](net::context* ctx, bool success) {
+			flag = true;
+		};
+		EXPECT_EQ(client.receive(ctx), true);
+	});
+
+	while (!flag.load().has_value()) {};
+	EXPECT_EQ(flag.load(), true);
 }
 
 TEST(socket, sync_receive_from)

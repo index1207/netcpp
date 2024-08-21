@@ -55,6 +55,12 @@ void socket::close()
 
 bool socket::connect(endpoint ep)
 {
+	if (!is_open())
+		return false;
+
+	if (!native::observe(this))
+		return false;
+
 	_remote_endpoint = ep;
     ip_address ipAdr = ep.get_address();
     return SOCKET_ERROR != ::connect(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in));
@@ -172,6 +178,9 @@ bool socket::connect(context *context)
 
 bool socket::send(context *context) const
 {
+	if (!context)
+		return false;
+
     context->init();
     context->_io_type = io_type::send;
 #ifdef _WIN32
@@ -203,6 +212,9 @@ bool socket::send(context *context) const
 
 bool socket::receive(context *context) const
 {
+	if (!context)
+		return false;
+
     context->init();
     context->_io_type = io_type::receive;
 #ifdef _WIN32
@@ -215,11 +227,11 @@ bool socket::receive(context *context) const
         const int err = WSAGetLastError();
         return err == WSA_IO_PENDING;
     }
-	else if (res == ERROR_SUCCESS)
-	{
-		context->length = recvBytes;
-		context->completed(context, true);
-	}
+//	else if (res == ERROR_SUCCESS)
+//	{
+//		context->length = recvBytes;
+//		context->completed(context, true);
+//	}
 #elif __linux__
 	auto uring = native::get_handle();
 	auto sqe = io_uring_get_sqe(uring);
@@ -233,6 +245,9 @@ bool socket::receive(context *context) const
 
 bool net::socket::disconnect(context *context)
 {
+	if (!context)
+		return false;
+
     context->init();
 
     context->_io_type = io_type::disconnect;
