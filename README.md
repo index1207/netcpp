@@ -31,7 +31,7 @@ net::socket tcp_socket(net::protocol::tcp); // Create a TCP socket
 net::socket udp_socket(net::protocol::udp); // Create a UDP socket
 
 net::socket empty_socket;
-empty_socket.create(net::protocol::tcp); // Create a new tcp socket
+empty_socket.create(net::protocol::tcp); // Create a new TCP socket
 ```
 - Async I/O
 ```cpp
@@ -64,9 +64,9 @@ int main()
     net::socket sock(net::protocol::tcp); // Create new TCP socket
     if (!sock.is_open()) // Validate socket
         return -1;
-    if(!sock.bind(net::endpoint(net::ip_address::loopback, 8085))) // Bind the address `tcp://loopback:8085`
+    if (!sock.bind(net::endpoint(net::ip_address::loopback, 8085))) // Bind the address `tcp://loopback:8085`
         return -1;
-    if(!sock.listen()) // Ready to accept
+    if (!sock.listen()) // Ready to accept
         return -1;
           
     while(true)
@@ -86,7 +86,7 @@ int main()
     net::native::initialize(); // Initialize Native API
   
     net::socket sock(net::protocol::tcp); // Create new TCP socket
-    if (!sock.is_open()) // Invalidate socket
+    if (!sock.is_open()) // Validate socket
         return -1;
     if (!sock.connect(net::endpoint(net::ip_address::loopback, 8085))) // Try to connect to server.
         return -1;
@@ -99,6 +99,16 @@ int main()
 net::dns::get_host_name() // get host's name
 
 net::dns::get_host_entry("www.example.com") // get www.example.com's host entry
+```
+- Exception
+```cpp
+try {
+	if (!sock.connect(ENDPOINT))
+	    throw net::network_exception("connect()");
+}
+catch(std::exception& e) {
+	std::cout << e.what() << std::endl; // connect(): Cannot assign requested address. [10049]
+}
 ```
 
 ## Contribute
