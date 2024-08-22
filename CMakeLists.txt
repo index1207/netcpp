@@ -4,21 +4,6 @@ project(netcpp VERSION 0.3 DESCRIPTION "C++ Network library." LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
-# Compiler version check
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13)
-        message(FATAL_ERROR "The target does not support gcc-12 or lower versions.")
-    endif ()
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 16)
-        message(FATAL_ERROR "The target does not support clang-15 or lower versions.")
-    endif ()
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    if(MSVC_VERSION VERSION_LESS 1920)
-        message(FATAL_ERROR "The target does not support this Visual Studio version.")
-    endif ()
-endif ()
-
 # Platforms
 if (MSVC)
     set(CMAKE_EXE_LINKER_FLAGS_DEBUG "/DEBUG")
