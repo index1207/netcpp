@@ -11,17 +11,15 @@ endif()
 
 add_executable(${BINARY_NAME} ${TEST_FILES} ${SOURCE_FILES})
 
-target_include_directories(${BINARY_NAME} PRIVATE ${INCLUDES})
+target_include_directories(${BINARY_NAME} PRIVATE ${INCLUDES} ${URING_INCLUDE_DIRS})
 
-target_link_libraries(${BINARY_NAME} PUBLIC gtest)
+target_link_libraries(${BINARY_NAME} PRIVATE gtest netcpp::netcpp)
 
-if (MSVC)
-    target_link_libraries(${BINARY_NAME} PUBLIC ws2_32)
-else ()
-    target_link_libraries(${BINARY_NAME} PUBLIC uring)
+if (NOT MSVC)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set(CMAKE_CXX_FLAGS "--coverage")
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_link_libraries(${BINARY_NAME} PRIVATE atomic)
         set(CMAKE_CXX_FLAGS "-fprofile-instr-generate -fcoverage-mapping")
     endif ()
 endif ()

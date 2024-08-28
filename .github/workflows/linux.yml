@@ -15,13 +15,26 @@ jobs:
       fail-fast: false
       matrix:
         compiler:
-          - { cc: "gcc-13",   cxx: "g++-13",     os: "ubuntu-2404" }
-          - { cc: "clang-16", cxx: "clang++-16", os: "ubuntu-2404" }
+          - { cc: "gcc-10",   cxx: "g++-10",     os: "ubuntu-22.04" }
+          - { cc: "clang-12", cxx: "clang++-12", os: "ubuntu-22.04" }
 
     name: ${{ matrix.compiler.cc }}
     runs-on: ${{ matrix.compiler.os }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Compiler
+        run: |
+          if [[ "${{ matrix.compiler.cc }}" == "clang"* ]]; then
+            sudo apt-get update
+            sudo apt-get install -y ${{ matrix.compiler.cc }}
+          else
+            sudo apt-get update
+            sudo apt-get install -y ${{ matrix.compiler.cxx }}
+          fi
+
+      - name: Setup dependencies
+        run: sudo apt-get install liburing-dev
 
       - name: Configure CMake
         run: |
@@ -31,7 +44,7 @@ jobs:
                 -DINCLUDE_TEST=ON
 
       - name: Build
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 16
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
       - name: Google Test
         working-directory: ${{github.workspace}}/build/test
