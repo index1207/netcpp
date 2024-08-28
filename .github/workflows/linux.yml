@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         compiler:
-          - { cc: "gcc-10",   cxx: "g++-10",     os: "ubuntu-20.04" }
-          - { cc: "clang-10", cxx: "clang++-10", os: "ubuntu-20.04" }
+          - { cc: "gcc-10",   cxx: "g++-10",     os: "ubuntu-22.04" }
+          - { cc: "clang-12", cxx: "clang++-12", os: "ubuntu-22.04" }
 
     name: ${{ matrix.compiler.cc }}
     runs-on: ${{ matrix.compiler.os }}
@@ -29,16 +29,12 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y ${{ matrix.compiler.cc }}
           else
-            sudo apt update
-            sudo apt install -y ${{ matrix.compiler.cxx }}
+            sudo apt-get update
+            sudo apt-get install -y ${{ matrix.compiler.cxx }}
           fi
 
       - name: Setup dependencies
-        run: |
-          wget https://ftp.debian.org/debian/pool/main/libu/liburing/liburing1_0.7-3_amd64.deb
-          wget https://ftp.debian.org/debian/pool/main/libu/liburing/liburing-dev_0.7-3_amd64.deb
-          sudo dpkg -i liburing1_0.7-3_amd64.deb
-          sudo dpkg -i liburing-dev_0.7-3_amd64.deb
+        run: sudo apt-get install liburing-dev
 
       - name: Configure CMake
         run: |
