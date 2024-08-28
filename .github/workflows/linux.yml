@@ -33,6 +33,9 @@ jobs:
             sudo apt install -y ${{ matrix.compiler.cxx }}
           fi
 
+      - name: Setup dependencies
+        run: sudo apt-get install -y liburing-dev
+
       - name: Configure CMake
         run: |
           cmake -B ${{github.workspace}}/build \
