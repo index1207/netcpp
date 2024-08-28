@@ -135,5 +135,5 @@ The repository is whenever welcome any issues or PRs!
 - Windows
   - Visual Studio 2019
 - Linux
-  - Clang 10
+  - Clang 12
   - GCC 10
