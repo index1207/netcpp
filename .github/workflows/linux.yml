@@ -16,7 +16,7 @@ jobs:
       matrix:
         compiler:
           - { cc: "gcc-10",   cxx: "g++-10",     os: "ubuntu-latest" }
-          - { cc: "clang-10", cxx: "clang++-10", os: "ubuntu-latest" }
+          - { cc: "clang-10", cxx: "clang++-10", os: "ubuntu-20.04" }
 
     name: ${{ matrix.compiler.cc }}
     runs-on: ${{ matrix.compiler.os }}

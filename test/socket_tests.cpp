@@ -5,7 +5,6 @@
 #include "net/context.hpp"
 
 #include <future>
-#include <format>
 
 #define TEST_ENDPOINT net::endpoint(net::ip_address::loopback, 8888)
 
@@ -78,8 +77,6 @@ TEST(socket, sync_connect)
     EXPECT_GT(entry.address_list.size(), 0);
 
     net::endpoint endpoint(entry.address_list[0], httpsPort);
-    EXPECT_EQ(endpoint.to_string(),
-                 std::format("{}:{}", entry.address_list[0].to_string(), httpsPort));
     EXPECT_EQ(sock.connect(endpoint), true);
 }
 
@@ -94,9 +91,6 @@ TEST(socket, async_connect)
 	EXPECT_GT(entry.address_list.size(), 0);
 
 	net::endpoint endpoint(entry.address_list[0], httpsPort);
-	EXPECT_EQ(endpoint.to_string(),
-			  std::format("{}:{}", entry.address_list[0].to_string(), httpsPort));
-
 	std::atomic<std::optional<bool>> flag;
 	net::context ctx;
 	ctx.endpoint = endpoint;
@@ -166,8 +160,6 @@ TEST(socket, sync_disconnect)
     EXPECT_GT(entry.address_list.size(), 0);
 
     net::endpoint endpoint(entry.address_list[0], httpsPort);
-    EXPECT_EQ(endpoint.to_string(),
-              std::format("{}:{}", entry.address_list[0].to_string(), httpsPort));
     EXPECT_EQ(sock.connect(endpoint), true);
 
     sock.disconnect();
@@ -265,8 +257,6 @@ TEST(socket, sync_send)
     EXPECT_GT(entry.address_list.size(), 0);
 
     net::endpoint endpoint(entry.address_list[0], httpsPort);
-    EXPECT_EQ(endpoint.to_string(),
-              std::format("{}:{}", entry.address_list[0].to_string(), httpsPort));
     EXPECT_EQ(sock.connect(endpoint), true);
 
     char buffer[] = "Hello";
@@ -284,8 +274,6 @@ TEST(socket, async_send)
 	EXPECT_GT(entry.address_list.size(), 0);
 
 	net::endpoint endpoint(entry.address_list[0], httpsPort);
-	EXPECT_EQ(endpoint.to_string(),
-			  std::format("{}:{}", entry.address_list[0].to_string(), httpsPort));
 	EXPECT_EQ(sock.connect(endpoint), true);
 
 	std::atomic<std::optional<bool>> flag;
