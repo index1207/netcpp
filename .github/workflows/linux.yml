@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         compiler:
-          - { cc: "gcc-10",   cxx: "g++-10",     os: "ubuntu-20.04" }
-          - { cc: "clang-10", cxx: "clang++-10", os: "ubuntu-20.04" }
+          - { cc: "gcc-10",   cxx: "g++-10",     os: "ubuntu-latest" }
+          - { cc: "clang-10", cxx: "clang++-10", os: "ubuntu-latest" }
 
     name: ${{ matrix.compiler.cc }}
     runs-on: ${{ matrix.compiler.os }}
@@ -34,7 +34,9 @@ jobs:
           fi
 
       - name: Setup dependencies
-        run: sudo apt-get install -y liburing-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y liburing-dev
 
       - name: Configure CMake
         run: |
