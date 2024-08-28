@@ -13,7 +13,7 @@ add_executable(${BINARY_NAME} ${TEST_FILES} ${SOURCE_FILES})
 
 target_include_directories(${BINARY_NAME} PRIVATE ${INCLUDES} ${URING_INCLUDE_DIRS})
 
-target_link_libraries(${BINARY_NAME} PUBLIC gtest netcpp::netcpp)
+target_link_libraries(${BINARY_NAME} PUBLIC gtest)
 
 if (NOT MSVC)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
