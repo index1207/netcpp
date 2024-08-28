@@ -35,10 +35,10 @@ jobs:
 
       - name: Setup dependencies
         run: |
-          wget https://ftp.debian.org/debian/pool/main/libu/liburing/liburing2_2.7-1_amd64.deb
-          wget https://ftp.debian.org/debian/pool/main/libu/liburing/liburing-dev_2.7-1_amd64.deb
-          sudo dpkg -i liburing2_2.7-1_amd64.deb
-          sudo dpkg -i liburing-dev_2.7-1_amd64.deb
+          wget https://ftp.debian.org/debian/pool/main/libu/liburing/liburing1_0.7-3_amd64.deb
+          wget https://ftp.debian.org/debian/pool/main/libu/liburing/liburing-dev_0.7-3_amd64.deb
+          sudo dpkg -i liburing1_0.7-3_amd64.deb
+          sudo dpkg -i liburing-dev_0.7-3_amd64.deb
 
       - name: Configure CMake
         run: |
