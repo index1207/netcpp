@@ -11,14 +11,14 @@ socket::socket(protocol pt) : socket()
     create(pt);
 }
 
-socket::socket(const socket &sock)
+socket::socket(const socket& sock)
 {
     _sock = sock._sock;
     _local_endpoint = sock._local_endpoint;
     _remote_endpoint = sock._remote_endpoint;
 }
 
-socket::socket(socket &&sock) noexcept
+socket::socket(socket&& sock) noexcept
 {
     _sock = sock._sock;
     std::swap(_local_endpoint, sock._local_endpoint);
@@ -109,7 +109,7 @@ net::socket socket::accept() const
     return clientSock;
 }
 
-bool socket::accept(context *context)
+bool socket::accept(context* context)
 {
 	if (!context)
 		return false;
@@ -140,7 +140,7 @@ bool socket::accept(context *context)
     return true;
 }
 
-bool socket::connect(context *context)
+bool socket::connect(context* context)
 {
 	if (!context)
 		return false;
@@ -176,7 +176,7 @@ bool socket::connect(context *context)
     return true;
 }
 
-bool socket::send(context *context) const
+bool socket::send(context* context) const
 {
 	if (!context)
 		return false;
@@ -205,7 +205,7 @@ bool socket::send(context *context) const
     return true;
 }
 
-bool socket::receive(context *context) const
+bool socket::receive(context* context) const
 {
 	if (!context)
 		return false;
@@ -233,7 +233,7 @@ bool socket::receive(context *context) const
     return true;
 }
 
-bool net::socket::disconnect(context *context)
+bool net::socket::disconnect(context* context)
 {
 	if (!context)
 		return false;
@@ -356,7 +356,7 @@ bool socket::is_open() const
     return INVALID_SOCKET != _sock;
 }
 
-net::socket &socket::operator=(socket &&sock) noexcept
+net::socket &socket::operator=(socket&& sock) noexcept
 {
     this->_sock = sock._sock;
     std::swap(_local_endpoint, sock._local_endpoint);
@@ -364,7 +364,7 @@ net::socket &socket::operator=(socket &&sock) noexcept
     return *this;
 }
 
-net::socket &socket::operator=(const socket &sock) = default;
+net::socket &socket::operator=(const socket& sock) = default;
 
 void socket::create(protocol pt)
 {
@@ -374,12 +374,12 @@ void socket::create(protocol pt)
     _sock = ::socket(PF_INET, static_cast<int>(type), static_cast<int>(pt));
 }
 
-bool socket::operator==(const socket &sock) const
+bool socket::operator==(const socket& sock) const
 {
     return _sock == sock._sock;
 }
 
-bool socket::operator==(socket &&sock) const
+bool socket::operator==(socket&& sock) const
 {
     return _sock == sock._sock;
 }

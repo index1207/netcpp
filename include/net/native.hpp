@@ -48,51 +48,47 @@ using SOCKLEN = socklen_t;
 
 namespace net
 {
-class context;
-class socket;
+	class context;
+	class socket;
 
-class native
-{
-public:
-   struct option final
-   {
-	   static bool auto_run;
-	   static unsigned thread_count;
+	class native
+	{
+	public:
+	   struct option final
+	   {
+		   static bool auto_run;
+		   static unsigned thread_count;
+		   static unsigned long timeout;
+		   static u_int entry_count;
+	   };
 
-#ifdef _WIN32
-	   static unsigned long timeout;
-#else
-	   static u_int entry_count;
-#endif
-   };
+	#ifdef _WIN32
+	    static LPFN_ACCEPTEX accept;
+	    static LPFN_CONNECTEX connect;
+	    static LPFN_DISCONNECTEX disconnect;
+	    static LPFN_GETACCEPTEXSOCKADDRS get_accept_socket_address;
+	#endif
+	public:
+	#ifdef _WIN32
+	   static HANDLE get_handle();
+	#else
+	   static io_uring* get_handle();
+	#endif
+	public:
+	    static bool initialize();
 
-#ifdef _WIN32
-    static LPFN_ACCEPTEX accept;
-    static LPFN_CONNECTEX connect;
-    static LPFN_DISCONNECTEX disconnect;
-    static LPFN_GETACCEPTEXSOCKADDRS get_accept_socket_address;
-#endif
-public:
-#ifdef _WIN32
-   static HANDLE get_handle();
-#else
-   static io_uring* get_handle();
-#endif
-public:
-    static bool initialize();
+		static void run_io(unsigned num);
+		static void io(unsigned id);
+		static bool observe(socket* sock);
+	private:
+		static bool demux(context*, u_long, bool);
 
-	static void run_io(unsigned num);
-	static void io(unsigned id);
-	static bool observe(socket* sock);
-private:
-	static bool demux(context*, u_long, bool);
-
-private:
-#ifdef _WIN32
-	static HANDLE _cp;
-#else
-	static std::vector<io_uring*> _io_uring_list;
-	static thread_local io_uring* _io_uring;
-#endif
-};
+	private:
+	#ifdef _WIN32
+		static HANDLE _cp;
+	#else
+		static std::vector<io_uring*> _io_uring_list;
+		static thread_local io_uring* _io_uring;
+	#endif
+	};
 } // namespace net

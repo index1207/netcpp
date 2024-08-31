@@ -30,7 +30,7 @@ ip_address::ip_address() : sockaddr_in()
     sin_family = AF_INET;
 }
 
-ip_address::ip_address(const sockaddr_in &adrs) : sockaddr_in()
+ip_address::ip_address(const sockaddr_in& adrs) : sockaddr_in()
 {
     sin_addr = adrs.sin_addr;
     sin_family = AF_INET;
@@ -44,12 +44,12 @@ std::string ip_address::to_string() const
     return ipStrBuf;
 }
 
-bool ip_address::operator==(const ip_address &ipAdr) const
+bool ip_address::operator==(const ip_address& ipAdr) const
 {
     return 0 == memcmp(this, &ipAdr, sizeof(sockaddr_in));
 }
 
-bool ip_address::operator==(ip_address &&ipAdr) const
+bool ip_address::operator==(ip_address&& ipAdr) const
 {
     return 0 == memcmp(this, &ipAdr, sizeof(sockaddr_in));
 }
