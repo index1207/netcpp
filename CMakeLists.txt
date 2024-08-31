@@ -15,7 +15,7 @@ endif(MSVC)
 add_compile_definitions(NETCPP_BUILD)
 
 # Initialize
-option(INCLUDE_TEST "Include with unitTest source" OFF)
+option(INCLUDE_TEST "Include with unitTest source" ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(EXPORT_NAMESPACE "${PROJECT_NAME}::")

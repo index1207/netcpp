@@ -5,24 +5,29 @@
 
 using namespace net;
 
-network_exception::network_exception(std::string_view msg)
+exception::exception(std::string_view msg)
 {
+    const auto error =
 #ifdef _WIN32
-    _error = WSAGetLastError();
+        WSAGetLastError();
 #else
-    _error = errno;
+        errno;
 #endif
 	std::stringstream ss;
-	ss << msg << ": " << std::system_category().message(_error) << " [" << _error << "]";
+	ss << msg << ": " << std::system_category().message(error) << " [" << error << "]";
 	const_cast<std::string &>(_msg) = ss.str();
 }
 
-char const *network_exception::what() const noexcept
+char const *exception::what() const noexcept
 {
     return _msg.c_str();
 }
 
-int network_exception::get_code() const
+int exception::get_code()
 {
-    return _error;
+#ifdef _WIN32
+    return WSAGetLastError();
+#else
+    return errno;
+#endif
 }

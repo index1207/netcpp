@@ -5,17 +5,15 @@
 
 namespace net
 {
-class network_exception : public std::exception
-{
-  public:
-    explicit network_exception(std::string_view msg);
+    class exception : public std::exception
+    {
+    public:
+        explicit exception(std::string_view msg);
 
-    [[nodiscard]] const char *what() const noexcept override;
-    [[nodiscard]] int get_code() const;
+        [[nodiscard]] const char* what() const noexcept override;
+        [[nodiscard]] static int get_code();
 
-  private:
-    std::string _msg;
-    int _error;
-};
-
-} // namespace net
+    private:
+        std::string _msg;
+    };
+}

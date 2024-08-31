@@ -2,25 +2,25 @@
 #include "net/socket.hpp"
 #include "net/context.hpp"
 
-#include <cassert>
 #include <random>
-#include <stdexcept>
 #include <thread>
 
 using namespace net;
 
 bool native::option::auto_run = true;
 unsigned native::option::thread_count = std::thread::hardware_concurrency();
-
 #ifdef _WIN32
 unsigned long native::option::timeout = INFINITE;
+#else
+unsigned long native::option::timeout = 0;
+#endif
+u_int native::option::entry_count = 128;
 
+#ifdef _WIN32
 LPFN_ACCEPTEX native::accept = nullptr;
 LPFN_CONNECTEX native::connect = nullptr;
 LPFN_DISCONNECTEX native::disconnect = nullptr;
 LPFN_GETACCEPTEXSOCKADDRS native::get_accept_socket_address = nullptr;
-
-HANDLE native::_cp = nullptr;
 
 bool bind_extension_function(SOCKET s, GUID guid, PVOID *func)
 {
@@ -28,9 +28,9 @@ bool bind_extension_function(SOCKET s, GUID guid, PVOID *func)
     return SOCKET_ERROR != WSAIoctl(s, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid, sizeof(GUID), func, sizeof(*func),
                                     &dwBytes, NULL, NULL);
 }
-#else
-u_int native::option::entry_count = 128;
 
+HANDLE native::_cp = nullptr;
+#else
 std::vector<io_uring*> native::_io_uring_list;
 thread_local io_uring* native::_io_uring = nullptr;
 #endif
