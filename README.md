@@ -1,5 +1,6 @@
 # netcpp ![windows](https://github.com/index1207/netcpp/actions/workflows/windows.yml/badge.svg) ![linux](https://github.com/index1207/netcpp/actions/workflows/linux.yml/badge.svg) [![codecov](https://codecov.io/gh/index1207/netcpp/graph/badge.svg?_token=BVVUC5S422)](https://codecov.io/gh/index1207/netcpp) ![lang](https://img.shields.io/badge/language-C++20-blue) [![Vcpkg package](https://img.shields.io/badge/vcpkg-0.4.1-yellow)](https://github.com/microsoft/vcpkg/tree/master/ports/netcpp) [![License](https://img.shields.io/github/license/index1207/netcpp.svg)](LICENSE)
-netcpp is open-source **simple** C++ network library.
+[[한국어]](README_ko_KR.md) <br>
+netcpp is **simple** C++ network library.
 It supports windows and linux platform.
 
 ## Installation
@@ -18,19 +19,17 @@ In manifest mode, you can add this package in `vcpkg.json`.
 
 Or clone this repository, and execute the command line below.
 ```shell
-git clone https://github.com/index1207/netcpp.git && cd netcpp
-cmake -B build
-cmake --build build --config Debug
-cmake --build build --config Release
-cmake --install build --prefix {PATH_TO_INSTALL}
+git clone https://github.com/index1207/netcpp.git && cd netcpp # clone and move directory
+cmake -B build # CMake Configuration
+cmake --build build --config Debug # Build Debug mode
+cmake --build build --config Release # Build Release mode
+cmake --install build --prefix {PATH_TO_INSTALL} # Install to other project
 ```
 
-The usage
-```text
 netcpp provides CMake targets:
-
-    find_package(netcpp CONFIG REQUIRED)
-    target_link_libraries(main PRIVATE netcpp::netcpp)
+```cmake
+find_package(netcpp CONFIG REQUIRED)
+target_link_libraries(main PRIVATE netcpp::netcpp)
 ```
 
 ## Example
@@ -48,7 +47,7 @@ empty_socket.create(net::protocol::tcp); // Create a new TCP socket
 ```cpp
 // <net/context.hpp>
 net::socket sock(net::protocol::tcp); // Create a new TCP socket.
-net::context connect_ctx;
+net::context connect_ctx; // A context that necessary to async I/O
 connect_ctx.endpoint = ENDPOINT; // Specify the endpoint.
 connect_ctx.completed = [](net::context* ctx, bool success) { // callback
 	if (success)
@@ -122,11 +121,14 @@ catch(std::exception& e) {
 }
 ```
 
+## Cmake Options
+- `INCLUDE_TEST`: Include unit test in build.
+
 ## Dependencies
-| OS      | Library    |
-|---------|------------|
-| Windows | ws2_32.lib |
-| Linux   | liburing.a |
+| OS      | Library  |
+|---------|----------|
+| Windows | Winsock2 |
+| Linux   | liburing |
 
 ## Contribute
 The repository is whenever welcome any issues or PRs!
