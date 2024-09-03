@@ -7,7 +7,7 @@ netcpp는 간단하게 사용할 수 있는 크로스플랫폼 C++ 네트워크 
 ```shell
 vcpkg install netcpp
 ```
-매니페스트 모드에서는 `vcpkg.json`에 아래의 dependencies를 추가해 사용할 수 있습니다.
+매니페스트 모드에서는 `vcpkg.json`의 dependencies에서 netcpp를 추가해 사용할 수 있습니다.
 ```json
 {
   "dependencies": [
@@ -15,18 +15,17 @@ vcpkg install netcpp
   ]
 }
 ```
-
 직접 클론하고 빌드하여 사용할 수 있습니다.
 ```shell
-git clone https://github.com/index1207/netcpp.git && cd netcpp
-cmake -B build
-cmake --build build --config Debug
-cmake --build build --config Release
-cmake --install build --prefix {PATH_TO_INSTALL}
+git clone https://github.com/index1207/netcpp.git && cd netcpp # 클론 및 디렉토리 이동
+cmake -B build # CMake 설정
+cmake --build build --config Debug # 디버그 모드로 빌드
+cmake --build build --config Release # 릴리즈 모드로 빌드
+cmake --install build --prefix {PATH_TO_INSTALL} # 다른 프로젝트에 설치
 ```
 
 netcpp는 다음의 CMake 타겟을 지원합니다.
-```text
+```cmake
 find_package(netcpp CONFIG REQUIRED)
 target_link_libraries(main PRIVATE netcpp::netcpp)
 ```
@@ -121,7 +120,7 @@ catch(std::exception& e) {
 ```
 
 ## CMake 옵션
-- `INCLUDE_TEST`: 유닛테스르를 빌드에 포함합니다.
+- `INCLUDE_TEST`: 유닛테스트를 빌드에 포함합니다.
 
 ## 종속성
 | OS      | Library  |

@@ -19,15 +19,15 @@ In manifest mode, you can add this package in `vcpkg.json`.
 
 Or clone this repository, and execute the command line below.
 ```shell
-git clone https://github.com/index1207/netcpp.git && cd netcpp
-cmake -B build
-cmake --build build --config Debug
-cmake --build build --config Release
-cmake --install build --prefix {PATH_TO_INSTALL}
+git clone https://github.com/index1207/netcpp.git && cd netcpp # clone and move directory
+cmake -B build # CMake Configuration
+cmake --build build --config Debug # Build Debug mode
+cmake --build build --config Release # Build Release mode
+cmake --install build --prefix {PATH_TO_INSTALL} # Install to other project
 ```
 
 netcpp provides CMake targets:
-```text
+```cmake
 find_package(netcpp CONFIG REQUIRED)
 target_link_libraries(main PRIVATE netcpp::netcpp)
 ```
