@@ -1,6 +1,6 @@
-﻿cmake_minimum_required(VERSION 3.10)
+﻿cmake_minimum_required(VERSION 3.23)
 
-project(netcpp VERSION 0.3 DESCRIPTION "C++ Network library." LANGUAGES CXX)
+project(netcpp VERSION 0.4 DESCRIPTION "C++ Network library." LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
@@ -15,13 +15,12 @@ endif(MSVC)
 add_compile_definitions(NETCPP_BUILD)
 
 # Initialize
-option(INCLUDE_TEST "Include with unitTest source" ON)
+option(NETCPP_TEST "Enable build with unitTest source" ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(EXPORT_NAMESPACE "${PROJECT_NAME}::")
 set(CMAKE_CONFIG_FILE_BASENAME "${PROJECT_NAME}Config.cmake")
 set(CMAKE_EXPORT_FILE_BASENAME "${PROJECT_NAME}Export.cmake")
-
 file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 set(INCLUDES "${PROJECT_SOURCE_DIR}/include")
 
@@ -30,7 +29,7 @@ string(REPLACE "/${CMAKE_LIBRARY_ARCHITECTURE}" "" CMAKE_INSTALL_LIBDIR_ARCHIND 
 add_subdirectory(src)
 
 # googletest
-if (${INCLUDE_TEST})
+if (NETCPP_TEST)
     include(FetchContent)
     FetchContent_Declare(
             googletest
@@ -64,6 +63,9 @@ endforeach()
 
 install(TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 export(TARGETS "${PROJECT_NAME}"
@@ -75,4 +77,3 @@ install(EXPORT "${PROJECT_NAME}"
         FILE "${CMAKE_CONFIG_FILE_BASENAME}"
         NAMESPACE "${EXPORT_NAMESPACE}"
         DESTINATION "${CMAKE_INSTALL_LIBDIR_ARCHIND}/cmake/${PROJECT_NAME}")
-

@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 
+#include "export.hpp"
 #include "net/native.hpp"
 #include "net/socket.hpp"
 
@@ -18,7 +19,7 @@ namespace net
 	    receive
     };
 
-    class context
+    class NETCPP_API context
 #ifdef _WIN32
         : private OVERLAPPED
 #endif

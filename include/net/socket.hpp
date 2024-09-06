@@ -4,8 +4,8 @@
 #include <span>
 
 #include "net/endpoint.hpp"
-#include "net/ip_address.hpp"
 #include "net/native.hpp"
+#include "net/export.hpp"
 
 namespace net
 {
@@ -70,7 +70,7 @@ namespace net
 {
     class context;
 
-    class socket
+    class NETCPP_API socket
     {
 	    friend class native;
     public:
@@ -148,4 +148,15 @@ namespace net
         std::optional<endpoint> _local_endpoint;
         SOCKET _sock;
     };
-} // namespace net
+#ifdef _WIN32
+    template bool NETCPP_API socket::set_option<::linger>(options::level level, option name, ::linger value) const;
+    template bool NETCPP_API socket::set_option<int>(options::level level, option name, int value) const;
+    template bool NETCPP_API socket::set_option<bool>(options::level level, option name, bool value) const;
+    template bool NETCPP_API socket::set_option<DWORD>(options::level level, option name, DWORD value) const;
+
+    template bool NETCPP_API socket::get_option<::linger>(options::level level, option name, ::linger& value) const;
+    template bool NETCPP_API socket::get_option<int>(options::level level, option name, int& value) const;
+    template bool NETCPP_API socket::get_option<bool>(options::level level, option name, bool& value) const;
+    template bool NETCPP_API socket::get_option<DWORD>(options::level level, option name, DWORD& value) const;
+#endif
+}

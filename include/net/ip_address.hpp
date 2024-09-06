@@ -3,10 +3,11 @@
 #include <string>
 
 #include "net/native.hpp"
+#include "net/export.hpp"
 
 namespace net
 {
-    class ip_address : sockaddr_in
+    class NETCPP_API ip_address : sockaddr_in
     {
         friend class endpoint;
         friend class dns;

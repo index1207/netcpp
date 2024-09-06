@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "net/export.hpp"
+
 namespace net
 {
     struct host_entry
@@ -12,7 +14,7 @@ namespace net
         std::string host_name;
     };
 
-    class dns
+    class NETCPP_API dns
     {
     public:
         static std::string get_host_name();

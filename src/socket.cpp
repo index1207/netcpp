@@ -384,7 +384,7 @@ bool socket::set_linger(options::linger linger) const
         .l_linger = linger.time
 #endif
     };
-    return set_option(options::level::socket, option::linger, &lingerData);
+    return set_option<::linger>(options::level::socket, option::linger, lingerData);
 }
 
 bool socket::set_broadcast(bool broadcast) const

@@ -42,16 +42,16 @@ using SOCKET = int;
 using SOCKLEN = socklen_t;
 
 #endif
-
-#include <atomic>
 #include <vector>
+
+#include "net/export.hpp"
 
 namespace net
 {
 	class context;
 	class socket;
 
-	class native
+	class NETCPP_API native
 	{
 	public:
 	   struct option final
