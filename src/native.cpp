@@ -161,6 +161,7 @@ bool native::demux(context* context, u_long transferred, bool success)
 			if (!context->accept_socket->set_option(options::level::socket, (net::option) SO_UPDATE_ACCEPT_CONTEXT, listen_socket->get_handle()))
 				return false;
 #else
+			context->accept_socket->close();
 			context->accept_socket->set_handle(static_cast<SOCKET>(transferred));
 #endif
 

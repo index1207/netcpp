@@ -168,33 +168,26 @@ TEST(socket, sync_disconnect)
 
 TEST(socket, async_disconnect)
 {
-	net::socket sock(net::protocol::tcp);
-	EXPECT_EQ(sock.is_open(), true);
-	EXPECT_EQ(sock.set_reuse_address(true), true);
-	EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
-	EXPECT_EQ(sock.listen(), true);
+    net::socket sock(net::protocol::tcp);
+    EXPECT_EQ(sock.is_open(), true);
 
-	std::atomic<std::optional<bool>> flag;
-	auto ctx = new net::context;
-	ctx->completed = [&](net::context* ctx, bool success) {
-		ctx->completed = [&flag](net::context* ctx, bool success) {
-			flag = success;
-			//delete ctx;
-		};
-		ctx->accept_socket->disconnect(ctx);
-	};
-	EXPECT_EQ(sock.accept(ctx), true);
+    auto httpsPort = 443;
+    auto example = "www.example.com";
+    auto entry = net::dns::get_host_entry(example);
+    EXPECT_GT(entry.address_list.size(), 0);
 
-	std::this_thread::sleep_for(100ms);
+    net::endpoint endpoint(entry.address_list[0], httpsPort);
+    EXPECT_EQ(sock.connect(endpoint), true);
 
-	auto client = std::async(std::launch::async, [] {
-		net::socket sock(net::protocol::tcp);
-		EXPECT_EQ(sock.is_open(), true);
-		EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
-	});
+    std::atomic<std::optional<bool>> flag;
+    auto ctx = new net::context;
+    ctx->completed = [&](net::context*, bool success) {
+        flag = success;
+    };
+    EXPECT_EQ(sock.disconnect(ctx), true);
 
-	while(!flag.load().has_value()) {}
-	EXPECT_EQ(flag.load(), true);
+    while (!flag.load().has_value()) {}
+    EXPECT_EQ(flag.load(), true);
 }
 
 TEST(socket, sync_accept)
@@ -208,42 +201,42 @@ TEST(socket, sync_accept)
         EXPECT_EQ(sock.accept().is_open(), true);
     });
     std::this_thread::sleep_for(100ms);
+    // auto client = std::async(std::launch::async, [] {
+        net::socket sock(net::protocol::tcp);
+        EXPECT_EQ(sock.is_open(), true);
+        EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
+    // });
+
+	server.get();
+	//client.get();
+}
+
+TEST(socket, async_accept)
+{
+    net::socket sock(net::protocol::tcp);
+    EXPECT_EQ(sock.is_open(), true);
+    EXPECT_EQ(sock.set_reuse_address(true), true);
+    EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
+    EXPECT_EQ(sock.listen(), true);
+
+    std::atomic<std::optional<bool>> flag;
+    auto ctx = new net::context;
+    ctx->completed = [&flag](net::context* ctx, bool success) {
+        flag = success;
+        //delete ctx;
+    };
+    EXPECT_EQ(sock.accept(ctx), true);
+
+    std::this_thread::sleep_for(100ms);
+
     auto client = std::async(std::launch::async, [] {
         net::socket sock(net::protocol::tcp);
         EXPECT_EQ(sock.is_open(), true);
         EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
     });
 
-	server.get();
-	client.get();
-}
-
-TEST(socket, async_accept)
-{
-	net::socket sock(net::protocol::tcp);
-	EXPECT_EQ(sock.is_open(), true);
-	EXPECT_EQ(sock.set_reuse_address(true), true);
-	EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
-	EXPECT_EQ(sock.listen(), true);
-
-	std::atomic<std::optional<bool>> flag;
-	auto ctx = new net::context;
-	ctx->completed = [&flag](net::context* ctx, bool success) {
-		flag = success;
-		//delete ctx;
-	};
-	EXPECT_EQ(sock.accept(ctx), true);
-
-	std::this_thread::sleep_for(100ms);
-
-	auto client = std::async(std::launch::async, [] {
-		net::socket sock(net::protocol::tcp);
-		EXPECT_EQ(sock.is_open(), true);
-		EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
-	});
-
-	while(!flag.load().has_value()) {}
-	EXPECT_EQ(flag.load(), true);
+    while(!flag.load().has_value()) {}
+    EXPECT_EQ(flag.load(), true);
 }
 
 TEST(socket, sync_send)
@@ -283,7 +276,7 @@ TEST(socket, async_send)
 		flag = success && ctx->length > 0;
 		//delete ctx;
 	};
-	ctx->buffer = data;
+	ctx->set_buffer(data);
 	EXPECT_EQ(sock.send(ctx), true);
 
 	while(!flag.load().has_value()) {}
@@ -358,7 +351,7 @@ TEST(socket, async_receive)
 
 		auto ctx = new net::context;
 		char buffer[16] = { 0, };
-		ctx->buffer = buffer;
+		ctx->set_buffer(buffer);
 		ctx->completed = [&flag](net::context* ctx, bool success) {
 			flag = success && ctx->length > 0;
 		};

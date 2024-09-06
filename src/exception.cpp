@@ -14,8 +14,8 @@ exception::exception(std::string_view msg)
         errno;
 #endif
 	std::stringstream ss;
-	ss << msg << ": " << std::system_category().message(error) << " [" << error << "]";
-	const_cast<std::string &>(_msg) = ss.str();
+	ss << msg << ": " << std::system_category().message(error);
+	_msg = ss.str();
 }
 
 char const *exception::what() const noexcept

@@ -4,6 +4,8 @@
 #include "net/dns.hpp"
 #include "net/native.hpp"
 
+#include <algorithm>
+
 using namespace net;
 
 socket::socket(protocol pt) : socket()
@@ -63,14 +65,14 @@ bool socket::connect(endpoint ep)
 
 	_remote_endpoint = ep;
     ip_address ipAdr = ep.get_address();
-    return SOCKET_ERROR != ::connect(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in));
+    return SOCKET_ERROR != ::connect(_sock, reinterpret_cast<sockaddr*>(&ipAdr), sizeof(sockaddr_in));
 }
 
 bool socket::bind(endpoint ep)
 {
     _local_endpoint = ep;
     ip_address ipAdr = _local_endpoint->get_address();
-	if (SOCKET_ERROR != ::bind(_sock, reinterpret_cast<sockaddr *>(&ipAdr), sizeof(sockaddr_in)))
+	if (SOCKET_ERROR != ::bind(_sock, reinterpret_cast<sockaddr*>(&ipAdr), sizeof(sockaddr_in)))
 		return native::observe(this);
 	return false;
 }
@@ -118,9 +120,8 @@ bool socket::accept(context* context)
     context->_io_type = io_type::accept;
 
 	context->_token = this;
+    context->accept_socket = std::make_shared<net::socket>(protocol::tcp);
 #ifdef _WIN32
-	context->accept_socket->create(net::protocol::tcp);
-
     DWORD dwByte = 0;
     char buf[(sizeof(SOCKADDR_IN) + 16) * 2] = "";
     if (!native::accept(_sock, context->accept_socket->get_handle(), buf, 0, sizeof(SOCKADDR_IN) + 16,
@@ -184,23 +185,58 @@ bool socket::send(context* context) const
     context->init();
     context->_io_type = io_type::send;
 #ifdef _WIN32
-    WSABUF wsaBuf;
-    wsaBuf.buf = context->buffer.data();
-    wsaBuf.len = static_cast<ULONG>(context->buffer.size());
-
-	auto res = WSASend(_sock, &wsaBuf, 1, &wsaBuf.len, 0, reinterpret_cast<LPOVERLAPPED>(context), nullptr);
-    if (res == SOCKET_ERROR)
+    if (!context->buffer_list.has_value())
     {
-        const int err = WSAGetLastError();
-        return err == WSA_IO_PENDING;
+        WSABUF wsaBuf {
+            .len = static_cast<ULONG>(context->_buffer.size()),
+            .buf = context->_buffer.data()
+        };
+        if (SOCKET_ERROR == WSASend(_sock, &wsaBuf, 1, &wsaBuf.len, 0, context, nullptr))
+        {
+            return WSA_IO_PENDING == WSAGetLastError();
+        }
+    }
+    else
+    {
+        std::vector<WSABUF> wsabufs(context->buffer_list.value().size());
+        std::ranges::transform(context->buffer_list.value(), wsabufs.begin(), [](const auto& span) {
+            return WSABUF {
+                .len = static_cast<ULONG>(span.size()),
+                .buf = span.data()
+            };
+        });
+
+        DWORD dwSent = 0;
+        if (SOCKET_ERROR == WSASend(_sock, wsabufs.data(), static_cast<DWORD>(wsabufs.size()), &dwSent, 0, context, nullptr))
+        {
+            return WSA_IO_PENDING == WSAGetLastError();
+        }
     }
 #else
-	auto uring = native::get_handle();
-	auto sqe = io_uring_get_sqe(uring);
+    auto uring = native::get_handle();
+    auto sqe = io_uring_get_sqe(uring);
 
-	io_uring_prep_send(sqe, get_handle(), context->buffer.data(), context->buffer.size(), 0);
-	io_uring_sqe_set_data(sqe, context);
-	io_uring_submit(uring);
+    if (!context->buffer_list.has_value())
+    {
+        io_uring_prep_send(sqe, get_handle(), context->_buffer.data(), context->_buffer.size(), 0);
+    }
+    else
+    {
+        std::vector<iovec> iovecs(context->buffer_list->size());
+        std::ranges::transform(context->buffer_list.value(), iovecs.begin(), [](const auto& span) {
+            return iovec {
+                .iov_base = span.data(),
+                .iov_len = span.size()
+            };
+        });;
+        msghdr msg {};
+        msg.msg_iov = iovecs.data();
+        msg.msg_iovlen = iovecs.size();
+        io_uring_prep_sendmsg(sqe, get_handle(), &msg, 0);
+    }
+
+    io_uring_sqe_set_data(sqe, context);
+    io_uring_submit(uring);
 #endif
     return true;
 }
@@ -213,21 +249,58 @@ bool socket::receive(context* context) const
     context->init();
     context->_io_type = io_type::receive;
 #ifdef _WIN32
-    WSABUF wsaBuf = {.len = static_cast<ULONG>(context->buffer.size()), .buf = context->buffer.data()};
-
     DWORD recvBytes = 0, flags = 0;
-	auto res = WSARecv(_sock, &wsaBuf, 1, &recvBytes, &flags, reinterpret_cast<LPOVERLAPPED>(context), nullptr);
-    if (res == SOCKET_ERROR)
+    if (!context->buffer_list.has_value())
     {
-        const int err = WSAGetLastError();
-        return err == WSA_IO_PENDING;
+        WSABUF wsaBuf {
+            .len = static_cast<ULONG>(context->_buffer.size()),
+            .buf = context->_buffer.data()
+        };
+
+        if (SOCKET_ERROR == WSARecv(_sock, &wsaBuf, 1, &recvBytes, &flags, context, nullptr))
+        {
+            return WSA_IO_PENDING == WSAGetLastError();
+        }
+    }
+    else
+    {
+        std::vector<WSABUF> wsabufs(context->buffer_list->size());
+        std::ranges::transform(context->buffer_list.value(), wsabufs.begin(), [](const auto& span) {
+            return WSABUF {
+                .len = static_cast<ULONG>(span.size()),
+                .buf = span.data()
+            };
+        });
+
+        if (SOCKET_ERROR == WSARecv(_sock, wsabufs.data(), static_cast<DWORD>(wsabufs.size()), &recvBytes, &flags, context, nullptr))
+        {
+            return WSA_IO_PENDING == WSAGetLastError();
+        }
     }
 #else
 	auto uring = native::get_handle();
 	auto sqe = io_uring_get_sqe(uring);
 
-	io_uring_prep_recv(sqe, get_handle(), context->buffer.data(), context->buffer.size(), 0);
-	io_uring_sqe_set_data(sqe, context);
+    if (!context->buffer_list.has_value())
+    {
+        io_uring_prep_recv(sqe, get_handle(), context->_buffer.data(), context->_buffer.size(), 0);
+    }
+    else
+    {
+        std::vector<iovec> iovecs(context->buffer_list->size());
+        std::ranges::transform(context->buffer_list.value(), iovecs.begin(), [](const auto& span) {
+            return iovec {
+                .iov_base = span.data(),
+                .iov_len = span.size()
+            };
+        });;
+        msghdr msg {};
+        msg.msg_iov = iovecs.data();
+        msg.msg_iovlen = iovecs.size();
+        io_uring_prep_recvmsg(sqe, get_handle(), &msg, 0);
+    }
+
+    io_uring_sqe_set_data(sqe, context);
 	io_uring_submit(uring);
 #endif
     return true;
@@ -267,7 +340,7 @@ bool socket::send(std::span<char> s) const
 
 bool socket::send(std::span<char> s, endpoint target) const
 {
-    auto &addr = target.get_address();
+    auto& addr = target.get_address();
     return SOCKET_ERROR == sendto(_sock, s.data(), static_cast<int>(s.size()), 0,
                                   reinterpret_cast<const sockaddr *>(&addr), sizeof(sockaddr_in));
 }
@@ -280,9 +353,9 @@ int socket::receive(std::span<char> s) const
 
 int socket::receive(std::span<char> s, endpoint target) const
 {
-    auto &addr = const_cast<ip_address &>(target.get_address());
+    auto& addr = const_cast<ip_address &>(target.get_address());
     SOCKLEN len = sizeof(sockaddr_in);
-    auto ret = recvfrom(_sock, s.data(), static_cast<int>(s.size()), 0, reinterpret_cast<sockaddr *>(&addr), &len);
+    auto ret = recvfrom(_sock, s.data(), static_cast<int>(s.size()), 0, reinterpret_cast<sockaddr*>(&addr), &len);
     return static_cast<int>(ret);
 }
 
@@ -304,9 +377,11 @@ bool socket::set_linger(options::linger linger) const
 {
     ::linger lingerData{
 #ifdef _WIN32
-        .l_onoff = static_cast<u_short>(linger.enabled), .l_linger = static_cast<u_short>(linger.time)
+        .l_onoff = static_cast<u_short>(linger.enabled),
+        .l_linger = static_cast<u_short>(linger.time)
 #else
-        .l_onoff = static_cast<int>(linger.enabled), .l_linger = linger.time
+        .l_onoff = static_cast<int>(linger.enabled),
+        .l_linger = linger.time
 #endif
     };
     return set_option(options::level::socket, option::linger, &lingerData);
