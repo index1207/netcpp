@@ -191,6 +191,8 @@ bool native::demux(context* context, u_long transferred, bool success)
 		context->completed(context, success);
 		break;
 	case io_type::receive:
+		if (transferred == 0)
+			success = true;
 	case io_type::send:
 		context->length = transferred;
 		context->completed(context, success);
