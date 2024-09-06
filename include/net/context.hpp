@@ -8,7 +8,8 @@
 
 namespace net
 {
-    enum class io_type {
+    enum class io_type
+    {
 	    none,
 	    accept,
 	    connect,
@@ -32,14 +33,18 @@ namespace net
     public:
         callback completed;
     public:
-        std::unique_ptr<net::socket> accept_socket;
+        void set_buffer(char* buffer, int offset, int count);
+        void set_buffer(std::span<char> buffer);
+    public:
+        std::shared_ptr<net::socket> accept_socket;
         std::optional<net::endpoint> endpoint;
-        std::span<char> buffer;
+        std::optional<std::vector<std::span<char>>> buffer_list;
         u_long length;
     private:
         void init();
     private:
-	     void* _token;
-	     io_type _io_type;
+        std::span<char> _buffer;
+        void* _token;
+        io_type _io_type;
     };
-} // namespace net
+}

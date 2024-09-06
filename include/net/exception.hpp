@@ -5,7 +5,7 @@
 
 namespace net
 {
-    class exception : public std::exception
+    class exception final : public std::exception
     {
     public:
         explicit exception(std::string_view msg);
