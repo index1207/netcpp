@@ -4,10 +4,11 @@
 
 #include "net/ip_address.hpp"
 #include "net/native.hpp"
+#include "net/export.hpp"
 
 namespace net
 {
-    class endpoint
+    class NETCPP_API endpoint
     {
     public:
         endpoint() = default;

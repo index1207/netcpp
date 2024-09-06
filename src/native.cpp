@@ -158,7 +158,7 @@ bool native::demux(context* context, u_long transferred, bool success)
 			if (!observe(context->accept_socket.get()))
 				return false;
 
-			if (!context->accept_socket->set_option(options::level::socket, (net::option) SO_UPDATE_ACCEPT_CONTEXT, listen_socket->get_handle()))
+			if (!context->accept_socket->set_option(options::level::socket, static_cast<net::option>(SO_UPDATE_ACCEPT_CONTEXT), listen_socket->get_handle()))
 				return false;
 #else
 			context->accept_socket->close();
@@ -181,8 +181,7 @@ bool native::demux(context* context, u_long transferred, bool success)
 		if (success)
 		{
 #ifdef _WIN32
-			if (!static_cast<socket *>(context->_token)->set_option(options::level::socket,
-																  (net::option) SO_UPDATE_CONNECT_CONTEXT, nullptr))
+			if (!static_cast<socket*>(context->_token)->set_option(options::level::socket, static_cast<net::option>(SO_UPDATE_CONNECT_CONTEXT), nullptr))
 				return false;
 #endif
 		}
@@ -192,6 +191,8 @@ bool native::demux(context* context, u_long transferred, bool success)
 		context->completed(context, success);
 		break;
 	case io_type::receive:
+		if (transferred == 0)
+			success = true;
 	case io_type::send:
 		context->length = transferred;
 		context->completed(context, success);

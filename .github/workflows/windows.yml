@@ -18,12 +18,11 @@ jobs:
       - name: Configure CMake
         run: |
           cmake -B ${{github.workspace}}/build `
-                -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} `
-                -DINCLUDE_TEST=ON
+                -DNETCPP_TEST=ON
 
       - name: Build
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+        run: cmake --build ${{github.workspace}}\build --config ${{env.BUILD_TYPE}}
 
       - name: Google Test
-        working-directory: ${{github.workspace}}/build/test/${{env.BUILD_TYPE}}
-        run: ./unitTest.exe
+        working-directory: ${{github.workspace}}\build\bin\${{env.BUILD_TYPE}}
+        run: .\unitTest.exe

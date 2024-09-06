@@ -6,24 +6,17 @@ It supports windows and linux platform.
 ## Installation
 This library supports [vcpkg](https://github.com/microsoft/vcpkg) port. If you had already installed vcpkg, You can install this package simply with the command line below.
 ```shell
-vcpkg install netcpp
-```
-In manifest mode, you can add this package in `vcpkg.json`.
-```json
-{
-  "dependencies": [
-    "netcpp"
-  ]
-}
+vcpkg install netcpp  # In classic mode
+vcpkg add port netcpp # In manifest mode
 ```
 
 Or clone this repository, and execute the command line below.
 ```shell
 git clone https://github.com/index1207/netcpp.git && cd netcpp # clone and move directory
-cmake -B build # CMake Configuration
-cmake --build build --config Debug # Build Debug mode
-cmake --build build --config Release # Build Release mode
-cmake --install build --prefix {PATH_TO_INSTALL} # Install to other project
+cmake -B build                                                 # CMake Configuration
+cmake --build build --config Debug                             # Build Debug mode
+cmake --build build --config Release                           # Build Release mode
+cmake --install build --prefix {PATH_TO_INSTALL}               # Install to other project
 ```
 
 netcpp provides CMake targets:
@@ -31,6 +24,18 @@ netcpp provides CMake targets:
 find_package(netcpp CONFIG REQUIRED)
 target_link_libraries(main PRIVATE netcpp::netcpp)
 ```
+
+## CMake Options
+| Option                | Description                |
+|-----------------------|----------------------------|
+| `NETCPP_BUILD_SHARED` | Build by shared library    |
+| `NETCPP_TEST`         | Include unit test in build |
+
+## Macros
+| Macro           | Description                                              |
+|-----------------|----------------------------------------------------------|
+| `NETCPP_STATIC` | When use this library by static, You should define this. |
+
 
 ## Example
 - Create a socket
@@ -120,9 +125,6 @@ catch(std::exception& e) {
 	std::cout << e.what() << std::endl; // connect(): Cannot assign requested address. [10049]
 }
 ```
-
-## Cmake Options
-- `INCLUDE_TEST`: Include unit test in build.
 
 ## Dependencies
 | OS      | Library  |
