@@ -11,10 +11,10 @@ vcpkg add port netcpp # 매니페스트 모드에서
 
 직접 클론하고 빌드하여 사용할 수 있습니다.
 ```shell
-git clone https://github.com/index1207/netcpp.git && cd netcpp # 클론 및 디렉토리 이동
-cmake -B build                                                 # CMake 설정
-cmake --build build                                            # 빌드 라이브러리
-cmake --install build --prefix {PATH_TO_INSTALL}               # 다른 프로젝트에 설치
+git clone https://github.com/index1207/netcpp.git && cd netcpp         # 클론 및 디렉토리 이동
+cmake -B build                                                         # CMake 설정
+cmake --build build --config <BUILD_MODE>                              # 지정한 모드로 빌드
+cmake --install build --config <BUILD_MODE> --prefix <PATH_TO_INSTALL> # 지정된 경로에 설치
 ```
 
 netcpp는 다음의 CMake 타겟을 제공합니다.

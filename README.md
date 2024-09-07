@@ -12,10 +12,10 @@ vcpkg add port netcpp # In manifest mode
 
 Or clone this repository, and execute the command line below.
 ```shell
-git clone https://github.com/index1207/netcpp.git && cd netcpp # clone and move directory
-cmake -B build                                                 # CMake Configuration
-cmake --build build                                            # Build library
-cmake --install build --prefix {PATH_TO_INSTALL}               # Install to other project
+git clone https://github.com/index1207/netcpp.git && cd netcpp         # clone and move directory
+cmake -B build                                                         # CMake Configuration
+cmake --build build --config <BUILD_MODE>                              # Build library
+cmake --install build --config <BUILD_MODE> --prefix <PATH_TO_INSTALL> # Install to other project
 ```
 
 netcpp provides CMake targets:
