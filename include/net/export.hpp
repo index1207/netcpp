@@ -1,21 +1,19 @@
 #pragma once
 
-#ifndef NETCPP_STATIC
-    #ifdef _WIN32
-        #define NETCPP_API_EXPORT __declspec(dllexport)
-        #define NETCPP_API_IMPORT __declspec(dllimport)
+#ifdef _WIN32
+    #ifdef NETCPP_BUILD_SHARED
+        #define NETCPP_API __declspec(dllexport)
         #pragma warning(disable: 4251)
-    #else
-        #define NETCPP_API_EXPORT __attribute__((__visibility__("default")))
-        #define NETCPP_API_IMPORT __attribute__((__visibility__("default")))
+    #elif NETCPP_SHARED
+        #define NETCPP_API __declspec(dllimport)
     #endif
 #else
-    #define NETCPP_API_EXPORT
-    #define NETCPP_API_IMPORT
+    #ifdef NETCPP_BUILD_SHARED
+        #define NETCPP_API __attribute__((__visibility__("default")))
+    #elif NETCPP_SHARED
+        #define NETCPP_API __attribute__((__visibility__("default")))
+    #endif
 #endif
-
-#ifdef NETCPP_BUILD_SHARED
-#define NETCPP_API NETCPP_API_EXPORT
-#else
-#define NETCPP_API NETCPP_API_IMPORT
+#ifndef NETCPP_API
+    #define NETCPP_API
 #endif
