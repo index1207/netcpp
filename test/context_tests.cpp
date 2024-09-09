@@ -8,13 +8,33 @@ TEST(context, set_buffer_ptr)
     ctx.set_buffer(buffer, 0, 128);
 }
 
-TEST(context, set_buffer_ptr_failure)
+TEST(context, set_buffer_span)
 {
     char buffer[128] = "";
-    std::vector<std::span<char>> buffer_list;
-    buffer_list.push_back(buffer);
     net::context ctx;
-    ctx.buffer_list = buffer_list;
+    ctx.set_buffer(buffer);
+}
+
+TEST(context, add_data_ptr)
+{
+    char buffer[128] = "";
+    net::context ctx;
+    ctx.add_data(buffer, 0, sizeof(buffer));
+}
+
+TEST(context, add_data_span)
+{
+    char buffer[128] = "";
+    net::context ctx;
+    ctx.add_data(buffer);
+}
+
+TEST(context, set_buffer_ptr_failure)
+{
+    net::context ctx;
+
+    char buffer[128] = "";
+    ctx.add_data(buffer);
 
     try
     {
@@ -23,23 +43,17 @@ TEST(context, set_buffer_ptr_failure)
     catch (std::exception& e)
     {
         EXPECT_NE(e.what(), "");
+        return;
     }
-}
-
-TEST(context, set_buffer_span)
-{
-    char buffer[128] = "";
-    net::context ctx;
-    ctx.set_buffer(buffer);
+    EXPECT_EQ(true, false);
 }
 
 TEST(context, set_buffer_span_failure)
 {
-    char buffer[128] = "";
-    std::vector<std::span<char>> buffer_list;
-    buffer_list.push_back(buffer);
     net::context ctx;
-    ctx.buffer_list = buffer_list;
+
+    char buffer[128] = "";
+    ctx.add_data(buffer);
 
     try
     {
@@ -48,5 +62,7 @@ TEST(context, set_buffer_span_failure)
     catch (std::exception& e)
     {
         EXPECT_NE(e.what(), "");
+        return;
     }
+    EXPECT_EQ(true, false);
 }

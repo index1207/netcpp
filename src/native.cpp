@@ -195,8 +195,6 @@ bool native::demux(context* context, u_long transferred, bool success)
 		if (transferred == 0)
 			success = true;
 	case io_type::send:
-		if (context->_token)
-			delete static_cast<std::vector<iovec>*>(context->_token);
 		context->length = transferred;
 		context->completed(context, success);
 		break;

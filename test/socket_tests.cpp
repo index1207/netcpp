@@ -300,15 +300,13 @@ TEST(socket, async_send_buffer_list)
     std::atomic<std::optional<bool>> flag;
 
     std::string data1 = "Hello", data2 = "World";
-    std::vector<std::span<char>> buffer_list;
-    buffer_list.push_back(data1);
-    buffer_list.push_back(data2);
 
     auto ctx = new net::context;
     ctx->completed = [&flag](net::context* ctx, bool success) {
         flag = success && ctx->length > 0;
     };
-    ctx->buffer_list = buffer_list;
+    ctx->add_data(data1);
+    ctx->add_data(data2);
     EXPECT_EQ(sock.send(ctx), true);
 
     while(!flag.load().has_value()) {}
