@@ -12,11 +12,10 @@ vcpkg add port netcpp # In manifest mode
 
 Or clone this repository, and execute the command line below.
 ```shell
-git clone https://github.com/index1207/netcpp.git && cd netcpp # clone and move directory
-cmake -B build                                                 # CMake Configuration
-cmake --build build --config Debug                             # Build Debug mode
-cmake --build build --config Release                           # Build Release mode
-cmake --install build --prefix {PATH_TO_INSTALL}               # Install to other project
+git clone https://github.com/index1207/netcpp.git && cd netcpp         # clone and move directory
+cmake -B build                                                         # CMake Configuration
+cmake --build build --config <BUILD_MODE>                              # Build library
+cmake --install build --config <BUILD_MODE> --prefix <PATH_TO_INSTALL> # Install to other project
 ```
 
 netcpp provides CMake targets:
@@ -30,12 +29,6 @@ target_link_libraries(main PRIVATE netcpp::netcpp)
 |-----------------------|----------------------------|
 | `NETCPP_BUILD_SHARED` | Build by shared library    |
 | `NETCPP_TEST`         | Include unit test in build |
-
-## Macros
-| Macro           | Description                                              |
-|-----------------|----------------------------------------------------------|
-| `NETCPP_STATIC` | When use this library by static, You should define this. |
-
 
 ## Example
 - Create a socket

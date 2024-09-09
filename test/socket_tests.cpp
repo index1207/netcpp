@@ -274,13 +274,43 @@ TEST(socket, async_send)
 	auto ctx = new net::context;
 	ctx->completed = [&flag](net::context* ctx, bool success) {
 		flag = success && ctx->length > 0;
-		//delete ctx;
 	};
 	ctx->set_buffer(data);
 	EXPECT_EQ(sock.send(ctx), true);
 
 	while(!flag.load().has_value()) {}
 	EXPECT_EQ(flag.load(), true);
+
+    delete ctx;
+}
+
+TEST(socket, async_send_buffer_list)
+{
+    net::socket sock(net::protocol::tcp);
+    EXPECT_EQ(sock.is_open(), true);
+
+    auto httpsPort = 443;
+    auto example = "www.example.com";
+    auto entry = net::dns::get_host_entry(example);
+    EXPECT_GT(entry.address_list.size(), 0);
+
+    net::endpoint endpoint(entry.address_list[0], httpsPort);
+    EXPECT_EQ(sock.connect(endpoint), true);
+
+    std::atomic<std::optional<bool>> flag;
+
+    std::string data1 = "Hello", data2 = "World";
+
+    auto ctx = new net::context;
+    ctx->completed = [&flag](net::context* ctx, bool success) {
+        flag = success && ctx->length > 0;
+    };
+    ctx->add_data(data1);
+    ctx->add_data(data2);
+    EXPECT_EQ(sock.send(ctx), true);
+
+    while(!flag.load().has_value()) {}
+    EXPECT_EQ(flag.load(), true);
 }
 
 TEST(socket, sync_sendto)

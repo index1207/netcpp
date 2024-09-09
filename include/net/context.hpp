@@ -36,15 +36,23 @@ namespace net
     public:
         void set_buffer(char* buffer, int offset, int count);
         void set_buffer(std::span<char> buffer);
+
+        void add_data(char* buffer, int offset, int count);
+        void add_data(std::span<char> buffer);
     public:
         std::shared_ptr<net::socket> accept_socket;
         std::optional<net::endpoint> endpoint;
-        std::optional<std::vector<std::span<char>>> buffer_list;
         u_long length;
     private:
         void init();
     private:
         std::span<char> _buffer;
+#ifdef _WIN32
+        std::vector<WSABUF> _buffer_list;
+#else
+        std::vector<iovec> _buffer_list;
+#endif
+
         void* _token;
         io_type _io_type;
     };

@@ -11,11 +11,10 @@ vcpkg add port netcpp # 매니페스트 모드에서
 
 직접 클론하고 빌드하여 사용할 수 있습니다.
 ```shell
-git clone https://github.com/index1207/netcpp.git && cd netcpp # 클론 및 디렉토리 이동
-cmake -B build                                                 # CMake 설정
-cmake --build build --config Debug                             # 디버그 모드로 빌드
-cmake --build build --config Release                           # 릴리즈 모드로 빌드
-cmake --install build --prefix {PATH_TO_INSTALL}               # 다른 프로젝트에 설치
+git clone https://github.com/index1207/netcpp.git && cd netcpp         # 클론 및 디렉토리 이동
+cmake -B build                                                         # CMake 설정
+cmake --build build --config <BUILD_MODE>                              # 지정한 모드로 빌드
+cmake --install build --config <BUILD_MODE> --prefix <PATH_TO_INSTALL> # 지정된 경로에 설치
 ```
 
 netcpp는 다음의 CMake 타겟을 제공합니다.
@@ -29,12 +28,6 @@ target_link_libraries(main PRIVATE netcpp::netcpp)
 |-----------------------|-------------------|
 | `NETCPP_BUILD_SHARED` | 공유 라이브러리로 빌드합니다.  |
 | `NETCPP_TEST`         | 유닛테스트를 빌드에 포함합니다. |
-
-## 매크로
-| 매크로             | 설명                                    |
-|-----------------|---------------------------------------|
-| `NETCPP_STATIC` | 정적 라이브러리로 사용할 시, 반드시 이 매크로를 정의해야 합니다. |
-
 
 ## 예제
 - 소켓 생성

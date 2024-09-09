@@ -185,7 +185,7 @@ bool socket::send(context* context) const
     context->init();
     context->_io_type = io_type::send;
 #ifdef _WIN32
-    if (!context->buffer_list.has_value())
+    if (context->_buffer_list.empty())
     {
         WSABUF wsaBuf {
             .len = static_cast<ULONG>(context->_buffer.size()),
@@ -198,16 +198,8 @@ bool socket::send(context* context) const
     }
     else
     {
-        std::vector<WSABUF> wsabufs(context->buffer_list.value().size());
-        std::ranges::transform(context->buffer_list.value(), wsabufs.begin(), [](const auto& span) {
-            return WSABUF {
-                .len = static_cast<ULONG>(span.size()),
-                .buf = span.data()
-            };
-        });
-
         DWORD dwSent = 0;
-        if (SOCKET_ERROR == WSASend(_sock, wsabufs.data(), static_cast<DWORD>(wsabufs.size()), &dwSent, 0, context, nullptr))
+        if (SOCKET_ERROR == WSASend(_sock, context->_buffer_list.data(), static_cast<DWORD>(context->_buffer_list.size()), &dwSent, 0, context, nullptr))
         {
             return WSA_IO_PENDING == WSAGetLastError();
         }
@@ -216,23 +208,16 @@ bool socket::send(context* context) const
     auto uring = native::get_handle();
     auto sqe = io_uring_get_sqe(uring);
 
-    if (!context->buffer_list.has_value())
+    if (context->_buffer_list.empty())
     {
-        io_uring_prep_send(sqe, get_handle(), context->_buffer.data(), context->_buffer.size(), 0);
+        io_uring_prep_send(sqe, _sock, context->_buffer.data(), context->_buffer.size(), 0);
     }
     else
     {
-        std::vector<iovec> iovecs(context->buffer_list->size());
-        std::ranges::transform(context->buffer_list.value(), iovecs.begin(), [](const auto& span) {
-            return iovec {
-                .iov_base = span.data(),
-                .iov_len = span.size()
-            };
-        });;
         msghdr msg {};
-        msg.msg_iov = iovecs.data();
-        msg.msg_iovlen = iovecs.size();
-        io_uring_prep_sendmsg(sqe, get_handle(), &msg, 0);
+        msg.msg_iov = context->_buffer_list.data();
+        msg.msg_iovlen = context->_buffer_list.size();
+        io_uring_prep_sendmsg(sqe, _sock, &msg, 0);
     }
 
     io_uring_sqe_set_data(sqe, context);
@@ -250,7 +235,7 @@ bool socket::receive(context* context) const
     context->_io_type = io_type::receive;
 #ifdef _WIN32
     DWORD recvBytes = 0, flags = 0;
-    if (!context->buffer_list.has_value())
+    if (context->_buffer_list.empty())
     {
         WSABUF wsaBuf {
             .len = static_cast<ULONG>(context->_buffer.size()),
@@ -264,15 +249,7 @@ bool socket::receive(context* context) const
     }
     else
     {
-        std::vector<WSABUF> wsabufs(context->buffer_list->size());
-        std::ranges::transform(context->buffer_list.value(), wsabufs.begin(), [](const auto& span) {
-            return WSABUF {
-                .len = static_cast<ULONG>(span.size()),
-                .buf = span.data()
-            };
-        });
-
-        if (SOCKET_ERROR == WSARecv(_sock, wsabufs.data(), static_cast<DWORD>(wsabufs.size()), &recvBytes, &flags, context, nullptr))
+        if (SOCKET_ERROR == WSARecv(_sock, context->_buffer_list.data(), static_cast<DWORD>(context->_buffer_list.size()), &recvBytes, &flags, context, nullptr))
         {
             return WSA_IO_PENDING == WSAGetLastError();
         }
@@ -281,22 +258,15 @@ bool socket::receive(context* context) const
 	auto uring = native::get_handle();
 	auto sqe = io_uring_get_sqe(uring);
 
-    if (!context->buffer_list.has_value())
+    if (context->_buffer_list.empty())
     {
         io_uring_prep_recv(sqe, get_handle(), context->_buffer.data(), context->_buffer.size(), 0);
     }
     else
     {
-        std::vector<iovec> iovecs(context->buffer_list->size());
-        std::ranges::transform(context->buffer_list.value(), iovecs.begin(), [](const auto& span) {
-            return iovec {
-                .iov_base = span.data(),
-                .iov_len = span.size()
-            };
-        });;
         msghdr msg {};
-        msg.msg_iov = iovecs.data();
-        msg.msg_iovlen = iovecs.size();
+        msg.msg_iov = context->_buffer_list.data();
+        msg.msg_iovlen = context->_buffer_list.size();
         io_uring_prep_recvmsg(sqe, get_handle(), &msg, 0);
     }
 

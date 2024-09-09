@@ -153,7 +153,7 @@ bool native::demux(context* context, u_long transferred, bool success)
 	case io_type::accept:
 		if (success)
 		{
-			auto listen_socket = reinterpret_cast<const socket*>(context->_token);
+			auto listen_socket = static_cast<const socket*>(context->_token);
 #ifdef _WIN32
 			if (!observe(context->accept_socket.get()))
 				return false;
@@ -175,6 +175,7 @@ bool native::demux(context* context, u_long transferred, bool success)
 			endpoint.set_port(listen_socket->get_local_endpoint()->get_port());
 			context->accept_socket->_local_endpoint = endpoint;
 		}
+		context->_token = nullptr;
 		context->completed(context, success);
 		break;
 	case io_type::connect:
