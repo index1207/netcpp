@@ -44,7 +44,7 @@ void context::add_data(char* buffer, int offset, int count)
 #ifdef _WIN32
     _buffer_list.emplace_back(static_cast<ULONG>(count), buffer + offset);
 #else
-    _buffer_list.emplace_back(buffer + offset, static_cast<size_t>(count));
+    _buffer_list.push_back({buffer + offset, static_cast<size_t>(count)});
 #endif
 }
 
@@ -53,6 +53,6 @@ void context::add_data(std::span<char> buffer)
 #ifdef _WIN32
     _buffer_list.emplace_back(static_cast<ULONG>(buffer.size()), buffer.data());
 #else
-    _buffer_list.emplace_back(buffer.data(), buffer.size());
+    _buffer_list.push_back({buffer.data(), buffer.size()});
 #endif
 }
