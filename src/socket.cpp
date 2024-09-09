@@ -218,21 +218,25 @@ bool socket::send(context* context) const
 
     if (!context->buffer_list.has_value())
     {
-        io_uring_prep_send(sqe, get_handle(), context->_buffer.data(), context->_buffer.size(), 0);
+        io_uring_prep_send(sqe, _sock, context->_buffer.data(), context->_buffer.size(), 0);
     }
     else
     {
-        std::vector<iovec> iovecs(context->buffer_list->size());
-        std::ranges::transform(context->buffer_list.value(), iovecs.begin(), [](const auto& span) {
+        if (context->_token)
+            throw std::runtime_error("context::_token be nullptr");
+        auto iovecs = new std::vector<iovec>(context->buffer_list->size());
+        std::ranges::transform(context->buffer_list.value(), iovecs->begin(), [](const auto& span) {
             return iovec {
                 .iov_base = span.data(),
                 .iov_len = span.size()
             };
         });;
+        context->_token = iovecs;
+
         msghdr msg {};
-        msg.msg_iov = iovecs.data();
-        msg.msg_iovlen = iovecs.size();
-        io_uring_prep_sendmsg(sqe, get_handle(), &msg, 0);
+        msg.msg_iov = iovecs->data();
+        msg.msg_iovlen = iovecs->size();
+        io_uring_prep_sendmsg(sqe, _sock, &msg, 0);
     }
 
     io_uring_sqe_set_data(sqe, context);
