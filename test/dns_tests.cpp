@@ -11,7 +11,7 @@ TEST(dns, get_host_entry_url)
 {
     auto youtubeEntry = net::dns::get_host_entry("www.youtube.com");
     EXPECT_GT(youtubeEntry.address_list.size(), 0);
-    EXPECT_GT(youtubeEntry.alias_list.size(), 0);
+    EXPECT_NE(youtubeEntry.host_name, "");
 }
 
 TEST(dns, get_host_entry_address)

@@ -5,6 +5,8 @@
 #include "net/context.hpp"
 
 #include <future>
+#include <thread>
+#include <chrono>
 
 #define TEST_ENDPOINT net::endpoint(net::ip_address::loopback, 8888)
 
