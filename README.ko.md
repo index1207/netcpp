@@ -61,7 +61,7 @@ sock.connect(&connect_ctx); // 지정된 엔드포인트에 연결 시도
 - 기본 연결
 ```cpp
 // Server
-#include <net/Socket.hpp>
+#include <net/socket.hpp>
 #include <iostream>
       
 int main()
@@ -111,10 +111,10 @@ net::dns::get_host_entry("www.example.com") // www.example.com의 호스트 엔�
 ```cpp
 try {
 	if (!sock.connect(ENDPOINT))
-	    throw net::network_exception("connect()");
+	    throw net::exception("connect()");
 }
 catch(std::exception& e) {
-	std::cout << e.what() << std::endl; // connect(): 요청된 주소를 할당할 수 없습니다. [10049]
+	std::cout << e.what() << std::endl; // connect(): 요청된 주소를 할당할 수 없습니다.
 }
 ```
 

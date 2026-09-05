@@ -1,5 +1,5 @@
 # netcpp ![windows](https://github.com/index1207/netcpp/actions/workflows/windows.yml/badge.svg) ![linux](https://github.com/index1207/netcpp/actions/workflows/linux.yml/badge.svg) [![codecov](https://codecov.io/gh/index1207/netcpp/graph/badge.svg?_token=BVVUC5S422)](https://codecov.io/gh/index1207/netcpp) ![lang](https://img.shields.io/badge/language-C++20-blue) [![Vcpkg package](https://img.shields.io/badge/vcpkg-0.5.0-yellow)](https://github.com/microsoft/vcpkg/tree/master/ports/netcpp) [![License](https://img.shields.io/github/license/index1207/netcpp.svg)](LICENSE)
-[[한국어]](README_ko_KR.md) <br>
+[[한국어]](README.ko.md) <br>
 netcpp is **simple** C++ network library.
 It supports windows and linux platform.
 
@@ -62,7 +62,7 @@ sock.connect(&connect_ctx); // Connect to specified endpoint asynchronously.
 - Basic connection
 ```cpp
 // Server
-#include <net/Socket.hpp>
+#include <net/socket.hpp>
 #include <iostream>
       
 int main()
@@ -112,10 +112,10 @@ net::dns::get_host_entry("www.example.com") // get www.example.com's host entry
 ```cpp
 try {
 	if (!sock.connect(ENDPOINT))
-	    throw net::network_exception("connect()");
+	    throw net::exception("connect()");
 }
 catch(std::exception& e) {
-	std::cout << e.what() << std::endl; // connect(): Cannot assign requested address. [10049]
+	std::cout << e.what() << std::endl; // connect(): Cannot assign requested address.
 }
 ```
 
