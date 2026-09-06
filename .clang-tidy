@@ -1,0 +1,57 @@
+---
+# clang-tidy configuration for netcpp
+# Tuned to this project's C++20, cross-platform (Windows/Linux) code base.
+#
+# Run manually on a single translation unit:
+#   clang-tidy -p build/linux-x86_64-debug src/socket.cpp
+#
+# Or wire it into the build (optional):
+#   cmake -DCMAKE_CXX_CLANG_TIDY="clang-tidy;--warnings-as-errors=cert-*,bugfinders:*" ...
+#   # NOTE: only enable --warnings-as-errors once existing findings are resolved.
+
+Language: c++
+LanguageStandard: c++20
+
+# Only lint the library's own sources/headers; skip gtest, vcpkg and system headers.
+HeaderFilterRegex: '(^|[/\\])(src|include)[/\\].*$'
+
+Checks: |-
+  +bugfinders:*,
+  +modernize:*,
+  +readability:*,
+  +perf:*,
+  +portability:*,
+  # Naming is tuned below to the project's lowercase / snake_case convention.
+  -readability-identifier-naming,
+  # Existing style: single-statement branches omit braces, explicit socket types
+  # are used deliberately, and a few magic numbers remain. Silence those to keep
+  # the focus on real issues rather than style churn.
+  -readability-braces-around-statements,
+  -readability-inconsistent-control-flow,
+  -readability-magic-numbers,
+  -readability-non-const-parameter,
+  -readability-function-constant-members,
+  -readability-uppercase-literal-suffix,
+  -modernize-use-auto,
+  -modernize-pass-by-value
+
+readability-identifier-naming:
+  Case: linux
+  Class: '[a-z][a-z0-9_]*'
+  Struct: '[a-z][a-z0-9_]*'
+  EnumName: '[a-z][a-z0-9_]*'
+  Enumerator: '[a-z][a-z0-9_]*'
+  Function: '[a-z][a-z0-9_]*'
+  Variable: '[a-z][a-z0-9_]*'
+  Member: '[a-z][a-z0-9_]*'
+  StaticMember: '[a-z][a-z0-9_]*'
+  StaticVariable: '[a-z][a-z0-9_]*'
+  Parameter: '[a-z][a-z0-9_]*'
+  LocalVariable: '[a-z][a-z0-9_]*'
+  EnumConstantName: '[a-z][a-z0-9_]*'
+  Namespace: '[a-z][a-z0-9_]*'
+  MemberAllowedPrefixes: ['_', 'm_']
+  StaticMemberAllowedPrefixes: ['_', 'm_']
+  LocalVariableAllowedPrefixes: ['_', 'm_']
+
+...

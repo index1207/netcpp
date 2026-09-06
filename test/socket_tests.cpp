@@ -5,10 +5,28 @@
 #include "net/context.hpp"
 
 #include <future>
+#include <thread>
+#include <chrono>
 
 #define TEST_ENDPOINT net::endpoint(net::ip_address::loopback, 8888)
 
 using namespace std::chrono_literals;
+
+#ifdef _MSC_VER
+#define NETCPP_NOINLINE __declspec(noinline)
+#else
+#define NETCPP_NOINLINE __attribute__((noinline))
+#endif
+
+// Overwrites the stack region a just-returned callee was using. Async backends
+// keep reading caller-supplied structs (sockaddr, msghdr) after the submitting
+// function returns, so anything they point at must not live in a dead frame.
+NETCPP_NOINLINE static void clobber_callee_stack()
+{
+	volatile unsigned char scratch[1024];
+	for (size_t i = 0; i < sizeof(scratch); ++i)
+		scratch[i] = 0xAB;
+}
 
 TEST(socket, open)
 {
@@ -98,6 +116,32 @@ TEST(socket, async_connect)
 		flag = success;
 	};
 	EXPECT_EQ(sock.connect(&ctx), true);
+
+	while (!flag.load().has_value()) {}
+	EXPECT_EQ(flag.load(), true);
+}
+
+TEST(socket, async_connect_stack_reuse)
+{
+	net::socket sock(net::protocol::tcp);
+	EXPECT_EQ(sock.is_open(), true);
+
+	auto httpsPort = 443;
+	auto example = "www.example.com";
+	auto entry = net::dns::get_host_entry(example);
+	EXPECT_GT(entry.address_list.size(), 0);
+
+	net::endpoint endpoint(entry.address_list[0], httpsPort);
+	std::atomic<std::optional<bool>> flag;
+	net::context ctx;
+	ctx.endpoint = endpoint;
+	ctx.completed = [&flag](net::context*, bool success) {
+		flag = success;
+	};
+	EXPECT_EQ(sock.connect(&ctx), true);
+
+	// The target address must survive connect() returning.
+	clobber_callee_stack();
 
 	while (!flag.load().has_value()) {}
 	EXPECT_EQ(flag.load(), true);
@@ -326,6 +370,15 @@ TEST(socket, sync_sendto)
 	EXPECT_GE(client.send(buffer, TEST_ENDPOINT), 0);
 }
 
+TEST(socket, sync_send_failure)
+{
+    net::socket sock;
+    EXPECT_EQ(sock.is_open(), false);
+
+    char buffer[] = "Hello";
+    EXPECT_EQ(sock.send(buffer), false);
+}
+
 TEST(socket, sync_receive)
 {
     auto server = std::async(std::launch::async, [] {
@@ -387,6 +440,52 @@ TEST(socket, async_receive)
 		};
 		EXPECT_EQ(sock.receive(ctx), true);
 		while (!flag.load().has_value()) {};
+		return flag.load();
+	});
+
+	server.get();
+	EXPECT_EQ(client.get(), true);
+}
+
+TEST(socket, async_receive_buffer_list)
+{
+	auto server = std::async(std::launch::async, [] {
+		net::socket sock(net::protocol::tcp);
+		EXPECT_EQ(sock.is_open(), true);
+		EXPECT_EQ(sock.set_reuse_address(true), true);
+		EXPECT_EQ(sock.bind(TEST_ENDPOINT), true);
+		EXPECT_EQ(sock.listen(), true);
+
+		auto client = sock.accept();
+		EXPECT_EQ(client.is_open(), true);
+
+		std::string data = "HelloWorld";
+		EXPECT_GT(client.send(data), 0);
+	});
+
+	std::this_thread::sleep_for(100ms);
+
+	auto client = std::async(std::launch::async, [&] {
+		std::atomic<std::optional<bool>> flag;
+		net::socket sock(net::protocol::tcp);
+		EXPECT_EQ(sock.is_open(), true);
+		EXPECT_EQ(sock.connect(TEST_ENDPOINT), true);
+
+		auto ctx = new net::context;
+		char first[5] = { 0, }, second[5] = { 0, };
+		ctx->add_data(first);
+		ctx->add_data(second);
+		ctx->completed = [&flag](net::context* ctx, bool success) {
+			flag = success && ctx->length > 0;
+		};
+		EXPECT_EQ(sock.receive(ctx), true);
+		while (!flag.load().has_value()) {}
+
+		// the payload has to be scattered across both buffers
+		EXPECT_EQ(std::string(first, 5), "Hello");
+		EXPECT_EQ(std::string(second, 5), "World");
+
+		delete ctx;
 		return flag.load();
 	});
 

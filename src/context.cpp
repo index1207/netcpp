@@ -17,6 +17,8 @@ void context::init()
 {
 #ifdef _WIN32
     ZeroMemory(this, sizeof(OVERLAPPED));
+#else
+    ZeroMemory(&_msg, sizeof(_msg));
 #endif
 	_io_type = io_type::none;
 }

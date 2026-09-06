@@ -1,0 +1,71 @@
+{
+    "version": 4,
+    "configurePresets": [
+        {
+            "name": "win-x86_64-debug",
+            "displayName": "Windows x86_64 Debug",
+            "description": "vcpkg toolchain, x64-windows triplet",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "vcpkg/scripts/buildsystems/vcpkg.cmake",
+                "VCPKG_TARGET_TRIPLET": "x64-windows",
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "win-x86_64-release",
+            "displayName": "Windows x86_64 Release",
+            "description": "vcpkg toolchain, x64-windows-release triplet",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "vcpkg/scripts/buildsystems/vcpkg.cmake",
+                "VCPKG_TARGET_TRIPLET": "x64-windows-release",
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "linux-x86_64-debug",
+            "displayName": "Linux x86_64 Debug",
+            "description": "vcpkg toolchain, x64-linux triplet",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "vcpkg/scripts/buildsystems/vcpkg.cmake",
+                "VCPKG_TARGET_TRIPLET": "x64-linux",
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "linux-x86_64-release",
+            "displayName": "Linux x86_64 Release",
+            "description": "vcpkg toolchain, x64-linux-release triplet",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "vcpkg/scripts/buildsystems/vcpkg.cmake",
+                "VCPKG_TARGET_TRIPLET": "x64-linux-release",
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "mac-arm64-debug",
+            "displayName": "macOS arm64 Debug",
+            "description": "vcpkg toolchain, arm64-osx triplet",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "vcpkg/scripts/buildsystems/vcpkg.cmake",
+                "VCPKG_TARGET_TRIPLET": "arm64-osx",
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "mac-arm64-release",
+            "displayName": "macOS arm64 Release",
+            "description": "vcpkg toolchain, arm64-osx-release triplet",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "vcpkg/scripts/buildsystems/vcpkg.cmake",
+                "VCPKG_TARGET_TRIPLET": "arm64-osx-release",
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        }
+    ]
+}
