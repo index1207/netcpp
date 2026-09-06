@@ -157,9 +157,9 @@ bool socket::connect(context* context)
 
     context->_token = static_cast<void *>(this);
 
-    ip_address ipAdr = context->endpoint->get_address();
+    const ip_address& ipAdr = context->endpoint->get_address();
     DWORD dw;
-    if (!native::connect(_sock, reinterpret_cast<SOCKADDR *>(&ipAdr), sizeof(SOCKADDR_IN), nullptr, NULL, &dw,
+    if (!native::connect(_sock, reinterpret_cast<const SOCKADDR *>(&ipAdr), sizeof(SOCKADDR_IN), nullptr, NULL, &dw,
                            reinterpret_cast<LPOVERLAPPED>(context)))
     {
         const auto err = WSAGetLastError();
@@ -169,8 +169,10 @@ bool socket::connect(context* context)
 	auto uring = native::get_handle();
 	auto sqe = io_uring_get_sqe(uring);
 
-	auto addr = context->endpoint->get_address();
-	io_uring_prep_connect(sqe, get_handle(), reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
+	// Bound by reference: io_uring may read the sockaddr after this function
+	// returns, so it must live in the context, not in this frame.
+	const auto& addr = context->endpoint->get_address();
+	io_uring_prep_connect(sqe, get_handle(), reinterpret_cast<const sockaddr*>(&addr), sizeof(sockaddr_in));
 	io_uring_sqe_set_data(sqe, context);
 	io_uring_submit(uring);
 #endif
@@ -214,7 +216,7 @@ bool socket::send(context* context) const
     }
     else
     {
-        msghdr msg {};
+        auto& msg = context->_msg;
         msg.msg_iov = context->_buffer_list.data();
         msg.msg_iovlen = context->_buffer_list.size();
         io_uring_prep_sendmsg(sqe, _sock, &msg, 0);
@@ -264,7 +266,7 @@ bool socket::receive(context* context) const
     }
     else
     {
-        msghdr msg {};
+        auto& msg = context->_msg;
         msg.msg_iov = context->_buffer_list.data();
         msg.msg_iovlen = context->_buffer_list.size();
         io_uring_prep_recvmsg(sqe, get_handle(), &msg, 0);

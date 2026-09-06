@@ -51,6 +51,9 @@ namespace net
         std::vector<WSABUF> _buffer_list;
 #else
         std::vector<iovec> _buffer_list;
+        // Must outlive the submitted SQE: io_uring may read the msghdr after
+        // io_uring_submit() returns (when the request is punted to io-wq).
+        msghdr _msg;
 #endif
 
         void* _token;
