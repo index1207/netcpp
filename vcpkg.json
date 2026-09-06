@@ -1,0 +1,13 @@
+{
+  "name": "netcpp",
+  "version": "0.5",
+  "description": "A simple C++20 network library for Windows, Linux and macOS.",
+  "homepage": "https://github.com/index1207/netcpp",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "liburing",
+      "platform": "!windows"
+    }
+  ]
+}
