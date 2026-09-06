@@ -60,7 +60,7 @@ target_link_libraries(main PRIVATE netcpp::netcpp)
 - **Namespace**: all code lives inside `namespace net`.
 - **Public API**: keep headers under `include/net/` only, and mark them with `NETCPP_API` (export/import).
 - **Platform branching**: split Windows/Linux with `#ifdef _WIN32`. Windows uses OVERLAPPED + IOCP; Linux uses io_uring.
-- **Dependencies**: Windows=`ws2_32` (Winsock2), Linux/POSIX=`liburing`.
+- **Dependencies**: Windows=`ws2_32` (Winsock2), Linux/POSIX=`liburing`. Declared in the root `vcpkg.json` manifest and installed through the vcpkg toolchain (`CMAKE_TOOLCHAIN_FILE` set in `CMakePresets.json`). `liburing` is consumed via `pkg_check_modules` (the vcpkg `liburing` port ships only a pkg-config file, not a CMake config).
 
 ## C++ style
 
