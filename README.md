@@ -1,7 +1,7 @@
 # netcpp ![windows](https://github.com/index1207/netcpp/actions/workflows/windows.yml/badge.svg) ![linux](https://github.com/index1207/netcpp/actions/workflows/linux.yml/badge.svg) [![codecov](https://codecov.io/gh/index1207/netcpp/graph/badge.svg?_token=BVVUC5S422)](https://codecov.io/gh/index1207/netcpp) ![lang](https://img.shields.io/badge/language-C++20-blue) [![Vcpkg package](https://img.shields.io/badge/vcpkg-0.5.0-yellow)](https://github.com/microsoft/vcpkg/tree/master/ports/netcpp) [![License](https://img.shields.io/github/license/index1207/netcpp.svg)](LICENSE)
 [[한국어]](README.ko.md) <br>
-netcpp is **simple** C++ network library.
-It supports windows and linux platform.
+netcpp is a **simple** cross-platform C++ network library.
+It supports Windows, Linux, and macOS.
 
 ## Installation
 This library supports [vcpkg](https://github.com/microsoft/vcpkg) port. If you had already installed vcpkg, You can install this package simply with the command line below.
@@ -124,13 +124,18 @@ catch(std::exception& e) {
 |---------|----------|
 | Windows | Winsock2 |
 | Linux   | liburing |
+| macOS   | liburing |
 
 ## Contribute
 The repository is whenever welcome any issues or PRs!
 
 ## Minimum required compiler version
+
+The library requires **CMake 3.23+** and targets **C++20**.
+
 - Windows
-  - Visual Studio 2019
+  - Visual Studio 2019 16.10+ (Visual Studio 2022 recommended)
 - Linux
-  - Clang 12
-  - GCC 10
+  - GCC 10 / Clang 12 (CI uses g++-10)
+- macOS
+  - Apple Clang (Xcode 13+)

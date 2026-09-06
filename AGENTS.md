@@ -2,6 +2,10 @@
 
 **netcpp** — a **simple C++20 network library** for Windows, Linux, and macOS.
 
+- **Repo**: <https://github.com/index1207/netcpp> (main branch: `develop`, synced with `origin/develop`)
+- **Version**: `0.4` (`project(netcpp VERSION 0.4 ...)` in root `CMakeLists.txt`)
+- **Distribution**: published as a [vcpkg](https://github.com/microsoft/vcpkg) port
+
 ```
 netcpp/
 ├── include/net/*.hpp   # public headers (API)
@@ -64,6 +68,8 @@ target_link_libraries(main PRIVATE netcpp::netcpp)
 - Use `#pragma once` in headers.
 - Include order: standard headers → project headers (`net/...`) → platform headers.
 - Mark public class members explicitly with `public:`/`private:` sections.
+- **Identifier naming**: lowercase `snake_case` for functions, variables, members, enums, and namespaces. Enforced by `.clang-tidy` (`Case: linux`); member prefixes `_` / `m_` are allowed.
+- **Linting**: a tuned `.clang-tidy` config exists at the repo root (C++20, cross-platform; lints only `src/` + `include/`). Run manually with `clang-tidy -p build/<preset> src/<file>.cpp`. There is **no `.clang-format`** yet — formatting is done manually and kept uniform.
 
 ## Tests
 
@@ -72,12 +78,18 @@ target_link_libraries(main PRIVATE netcpp::netcpp)
 - Tests are placed 1:1 with the source and only build when `NETCPP_TEST=ON`.
 - Linux builds enable code coverage (`--coverage` / `-fcoverage-mapping`) and upload it to codecov.
 
+## CI
+
+- `.github/workflows/windows.yml` and `.github/workflows/linux.yml` — build + run tests on push/PR.
+- `.github/workflows/cov.yml` — upload coverage to Codecov; runs on `release`, configures bare CMake with `g++-10` + `liburing-dev` (no vcpkg toolchain / preset).
+- macOS is configured via presets but has **no CI** job.
+
 ## Git
 
 - Commit messages are currently written in casual English (`Fix receive event bug`, `Change accpet async logic`, etc.).
 - **Proposed (needs confirmation)**: adopt Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`).
-- Branches: `develop` is the main development branch, synced with `origin/develop`.
-- `vcpkg` is managed as a git submodule.
+- Branches: `develop` is the main development branch, synced with `origin/develop`. (`release` is used for coverage builds.)
+- `vcpkg` is managed as a git submodule (`.gitmodules`).
 
 ## Editor tip
 
@@ -86,8 +98,9 @@ target_link_libraries(main PRIVATE netcpp::netcpp)
 
 ---
 
-## [TBD / Needs confirmation]
+## Open items / to confirm
 
-- **Formatter/linter**: no `.clang-format`, ESLint, or similar configuration exists in the project. Decide whether to add one.
-- **Commit convention**: confirm whether to formalize Conventional Commits as proposed above.
-- **Minimum compiler**: `CMakeLists.txt` requires CMake 3.23, but the README states "VS 2019" as the minimum — the docs and reality do not match. Needs correction.
+- **Formatter**: `.clang-tidy` exists, but there is still **no `.clang-format`**. Decide whether to add one (and wire `clang-format` into CI).
+- **Commit convention**: still casual English — confirm whether to formalize Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`).
+- **Minimum compiler docs**: README lists Windows = VS 2019, Linux = Clang 12 / GCC 10; CMake requires 3.23+ and CI uses `g++-10`. These are consistent axes, but keep the README in sync with the toolchains actually tested. (VS 2019's C++20 support is limited — verify it still builds, otherwise bump the stated minimum.)
+- **README vs platforms**: README says "It supports windows and linux platform," but `CMakePresets.json` and the non-Windows compile path include **macOS**. Consider updating the README to list macOS.
